@@ -1,0 +1,358 @@
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瑜的神祕妙妙工具屋</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700&display=swap" rel="stylesheet">
+    <!-- 引入 Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #020617;
+            color: white;
+        }
+
+        /* 背景畫布 - 真正的全螢幕 */
+        #canvas-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at center, #1e1b4b 0%, #020617 100%);
+        }
+
+        /* 玻璃擬態卡片 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-style: preserve-3d;
+        }
+
+        .glass-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(56, 189, 248, 0.5);
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.2);
+        }
+
+        /* 側邊欄玻璃效果 */
+        .sidebar-glass {
+            background: rgba(2, 6, 23, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* 故障文字效果 Glitch */
+        .glitch {
+            position: relative;
+            font-weight: bold;
+        }
+
+        .glitch::before,
+        .glitch::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .glitch::before {
+            left: 2px;
+            text-shadow: -2px 0 #ff00c1;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+
+        .glitch::after {
+            left: -2px;
+            text-shadow: -2px 0 #00fff9;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim2 5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(14px, 9999px, 89px, 0); }
+            20% { clip: rect(66px, 9999px, 11px, 0); }
+            40% { clip: rect(25px, 9999px, 98px, 0); }
+            60% { clip: rect(54px, 9999px, 44px, 0); }
+            80% { clip: rect(12px, 9999px, 5px, 0); }
+            100% { clip: rect(78px, 9999px, 95px, 0); }
+        }
+
+        @keyframes glitch-anim2 {
+            0% { clip: rect(65px, 9999px, 10px, 0); }
+            20% { clip: rect(3px, 9999px, 76px, 0); }
+            40% { clip: rect(98px, 9999px, 5px, 0); }
+            60% { clip: rect(43px, 9999px, 12px, 0); }
+            80% { clip: rect(23px, 9999px, 87px, 0); }
+            100% { clip: rect(56px, 9999px, 45px, 0); }
+        }
+
+        /* 浮動動畫 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-float-delay { animation: float 8s ease-in-out infinite; animation-delay: 2s; }
+
+        /* 隱藏卷軸 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+    </style>
+</head>
+<body class="min-h-screen selection:bg-cyan-500 selection:text-white">
+
+    <!-- 背景特效 Canvas -->
+    <canvas id="canvas-bg"></canvas>
+
+    <!-- 側邊欄按鈕 -->
+    <button id="menu-btn" onclick="toggleSidebar()" class="fixed top-8 left-8 z-50 p-4 rounded-xl bg-white/5 hover:bg-cyan-500/20 backdrop-blur-xl border border-white/10 text-white transition-all duration-300 group shadow-2xl">
+        <i class="fa-solid fa-bars-staggered text-xl group-hover:scale-110 transition-transform"></i>
+    </button>
+
+    <!-- 側邊欄本體 -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-80 sidebar-glass transform -translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-40 flex flex-col pt-32 px-8 shadow-2xl">
+        <div class="mb-12 border-b border-white/10 pb-6">
+            <h2 class="text-2xl font-bold text-cyan-400 mb-2 glitch" data-text="控制台">控制台</h2>
+            <p class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Encryption: AES-256 Enabled</p>
+        </div>
+
+        <nav class="flex flex-col space-y-6">
+            <a href="#" class="flex items-center space-x-4 group p-2">
+                <div class="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300 shadow-lg">
+                    <i class="fa-solid fa-house"></i>
+                </div>
+                <span class="text-slate-300 group-hover:text-white text-lg font-medium transition-colors">中央大廳</span>
+            </a>
+
+            <!-- 替換你的工具網址 -->
+            <a href="https://your-github-username.github.io/taiwan-map-quiz" target="_blank" class="flex items-center space-x-4 group p-2">
+                <div class="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 shadow-lg">
+                    <i class="fa-solid fa-map-location-dot"></i>
+                </div>
+                <span class="text-slate-300 group-hover:text-white text-lg font-medium transition-colors">行政區測驗</span>
+            </a>
+
+            <a href="https://your-github-username.github.io/physics-sim" target="_blank" class="flex items-center space-x-4 group p-2">
+                <div class="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-lg">
+                    <i class="fa-solid fa-atom"></i>
+                </div>
+                <span class="text-slate-300 group-hover:text-white text-lg font-medium transition-colors">物理模擬器</span>
+            </a>
+        </nav>
+
+        <div class="mt-auto mb-10 p-4 rounded-xl bg-white/5 border border-white/5 font-mono text-[10px] text-slate-500">
+            <div class="flex justify-between mb-1"><span>COORDS:</span> <span id="coords" class="text-cyan-800">0.0, 0.0</span></div>
+            <div class="flex justify-between"><span>P-MODE:</span> <span class="text-emerald-800">ACTIVE</span></div>
+        </div>
+    </aside>
+
+    <!-- 遮罩 -->
+    <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden opacity-0 transition-opacity duration-500"></div>
+
+    <!-- 主要內容 -->
+    <main class="relative z-10 container mx-auto px-6 min-h-screen flex flex-col items-center justify-center py-20">
+        
+        <!-- Logo -->
+        <div class="mb-10 relative group cursor-pointer animate-float">
+            <div class="absolute -inset-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000"></div>
+            <div class="relative w-40 h-40 rounded-full bg-slate-900 ring-1 ring-white/20 flex items-center justify-center overflow-hidden shadow-2xl">
+                <span class="text-7xl group-hover:scale-110 transition-transform duration-500">🔮</span>
+            </div>
+        </div>
+
+        <!-- 標題 -->
+        <div class="text-center mb-16">
+            <h1 class="text-5xl md:text-7xl font-bold mb-6 glitch tracking-tighter" data-text="瑜的神祕妙妙工具屋">瑜的神祕妙妙工具屋</h1>
+            <div class="h-1 w-24 bg-gradient-to-r from-transparent via-cyan-500 to-transparent mx-auto mb-6"></div>
+            <p class="text-slate-400 text-lg md:text-xl font-light tracking-[0.3em] uppercase">Beyond Ordinary, Into Magic</p>
+        </div>
+
+        <!-- 工具傳送門 -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl px-4">
+            
+            <!-- 臺灣行政區填圖 -->
+            <a href="https://your-github-username.github.io/taiwan-map-quiz" target="_blank" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-colors"></div>
+                <div class="w-20 h-20 bg-cyan-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-[10deg] transition-transform shadow-inner">
+                    <i class="fa-solid fa-map-location-dot text-4xl text-cyan-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-3 text-white">行政區填圖</h3>
+                <p class="text-slate-400 leading-relaxed text-sm">重新定義你的地理認知，在那張地圖上，沒有任何一塊是多餘的。</p>
+            </a>
+
+            <!-- 祕密筆記 -->
+            <a href="#" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden animate-float-delay">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-colors"></div>
+                <div class="w-20 h-20 bg-purple-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-[-10deg] transition-transform shadow-inner">
+                    <i class="fa-solid fa-book-journal-whills text-4xl text-purple-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-3 text-white">瑜的祕密筆記</h3>
+                <p class="text-slate-400 leading-relaxed text-sm">關於程式碼、關於生活、關於那些在深夜靈光一現的破碎語錄。</p>
+            </a>
+
+            <!-- 物理動畫模擬 -->
+            <a href="https://your-github-username.github.io/physics-sim" target="_blank" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors"></div>
+                <div class="w-20 h-20 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-[10deg] transition-transform shadow-inner">
+                    <i class="fa-solid fa-atom text-4xl text-emerald-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-3 text-white">物理模擬器</h3>
+                <p class="text-slate-400 leading-relaxed text-sm">在這裡，你可以調戲牛頓，修改重力，或者看著方塊無盡的彈跳。</p>
+            </a>
+
+            <!-- 聯絡 -->
+            <a href="mailto:your-email@example.com" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden animate-float-delay">
+                <div class="absolute -right-10 -top-10 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-colors"></div>
+                <div class="w-20 h-20 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-[-10deg] transition-transform shadow-inner">
+                    <i class="fa-solid fa-paper-plane text-4xl text-orange-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold mb-3 text-white">召喚瑜瑜</h3>
+                <p class="text-slate-400 leading-relaxed text-sm">如果你發現了系統漏洞，或是單純想聊聊魔法，儘管發送訊息。</p>
+            </a>
+            
+        </div>
+
+        <!-- 惡搞按鈕 -->
+        <button onclick="toggleChaos()" class="mt-20 px-10 py-4 rounded-full border border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all duration-500 group relative">
+            <span class="relative z-10 text-slate-500 group-hover:text-red-500 transition-colors">不要點擊這枚不穩定的核心</span>
+        </button>
+
+    </main>
+
+    <footer class="relative z-10 py-12 text-center text-slate-600 text-xs tracking-widest uppercase">
+        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.0-STABLE</p>
+    </footer>
+
+    <script>
+        document.getElementById('year').innerText = new Date().getFullYear();
+
+        // 側邊欄與座標
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const btn = document.getElementById('menu-btn');
+            const isOpen = !sidebar.classList.contains('-translate-x-full');
+
+            if (isOpen) {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+                overlay.classList.remove('opacity-100');
+                btn.innerHTML = '<i class="fa-solid fa-bars-staggered text-xl"></i>';
+            } else {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+                setTimeout(() => overlay.classList.add('opacity-100'), 10);
+                btn.innerHTML = '<i class="fa-solid fa-xmark text-xl"></i>';
+            }
+        }
+
+        window.addEventListener('mousemove', (e) => {
+            const coords = document.getElementById('coords');
+            if(coords) coords.innerText = `${(e.clientX/100).toFixed(1)}, ${(e.clientY/100).toFixed(1)}`;
+        });
+
+        // 粒子背景
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.init();
+            }
+            init() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.3;
+                this.vy = (Math.random() - 0.5) * 0.3;
+                this.size = Math.random() * 2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+            draw() {
+                ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        for(let i=0; i<80; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+            // 畫線
+            ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+            ctx.lineWidth = 0.5;
+            for(let i=0; i<particles.length; i++) {
+                for(let j=i+1; j<particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 惡搞模式
+        function toggleChaos() {
+            document.body.style.filter = document.body.style.filter ? '' : 'invert(1) hue-rotate(180deg)';
+        }
+
+        // 3D Tilt
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                card.style.transform = `perspective(1000px) rotateX(${y * -15}deg) rotateY(${x * 15}deg) translateY(-10px)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = '';
+            });
+        });
+    </script>
+</body>
+</html>
