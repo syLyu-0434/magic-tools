@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多拋體模擬器 (混沌模式) | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #020617; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .canvas-container {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #020617;
+            border-radius: 1rem;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+            cursor: crosshair;
+        }
+
+        .magic-input, select.magic-input {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #fff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .magic-input:focus {
+            outline: none;
+            border-color: #ef4444;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.3);
+        }
+
+        /* Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 16px;
+            width: 16px;
+            border-radius: 50%;
+            background: #ef4444;
+            cursor: pointer;
+            margin-top: -6px;
+            box-shadow: 0 0 10px rgba(239, 68, 68, 0.8);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #334155;
+            border-radius: 2px;
+        }
+
+        .magic-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .magic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+            filter: brightness(1.1);
+        }
+        
+        .magic-btn-outline {
+            background: transparent;
+            color: #fca5a5;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+        .magic-btn-outline:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: white;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: rgba(239, 68, 68, 0.5);
+            transform: translateX(-5px);
+        }
+
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #b91c1c; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+        
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 6px;
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+            font-size: 12px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <div class="bg-glow"></div>
+
+    <nav class="w-full max-w-6xl mb-8 flex justify-between items-center z-10">
+        <a href="physics-hub.html" class="nav-btn px-4 py-2 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+            <span>返回實驗室</span>
+        </a>
+        <div class="text-right">
+            <h1 class="text-2xl font-black text-red-400 tracking-tight flex items-center gap-2 justify-end">
+                <i class="fa-solid fa-meteor"></i> 多拋體模擬器
+            </h1>
+            <p class="text-xs text-slate-500 font-mono tracking-widest">CHAOS TRAJECTORY SYSTEM</p>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 左側：控制面板 -->
+        <div class="glass-panel p-6 lg:col-span-1 h-fit">
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-red-400"></i> 發射參數
+            </h2>
+            
+            <div class="space-y-4">
+                
+                <!-- 數量控制 -->
+                <div class="mb-2">
+                    <div class="flex justify-between mb-1">
+                        <label class="text-xs text-slate-400">發射數量 (N)</label>
+                        <span id="countVal" class="text-xs font-bold text-red-400">5</span>
+                    </div>
+                    <input type="range" id="count" min="1" max="10" value="5" class="w-full">
+                </div>
+
+                <!-- 變量模式選擇 -->
+                <div class="bg-red-500/10 p-3 rounded-xl border border-red-500/20">
+                    <label class="text-xs font-bold text-red-300 uppercase tracking-wider block mb-2">變數控制 (Spread)</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">變化項目</label>
+                            <select id="variableMode" class="magic-input text-sm">
+                                <option value="angle">發射角度</option>
+                                <option value="v0">初速度</option>
+                                <option value="k">阻力係數</option>
+                                <option value="n">阻力次方</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label id="spreadLabel" class="text-xs text-slate-400 block mb-1">間距 (deg)</label>
+                            <input type="number" id="spread" value="10" step="0.1" class="magic-input">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 基礎數值 -->
+                <div class="space-y-3 pt-2">
+                    <label class="text-xs font-bold text-slate-400 uppercase tracking-wider block">基準數值 (Base)</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-500 block mb-1">基準初速 (m/s)</label>
+                            <input type="number" id="v0" value="30" step="1" min="0.1" class="magic-input">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 block mb-1">基準角度 (°)</label>
+                            <input type="number" id="angle" value="45" step="0.1" min="0" max="90" class="magic-input">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 block mb-1">基準阻力 k</label>
+                            <input type="number" id="k" value="0" step="0.01" min="0" class="magic-input">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-500 block mb-1">基準次方 n</label>
+                            <input type="number" id="n" value="1" step="0.1" min="1" max="2" class="magic-input">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-4">
+                    <button id="startBtn" class="magic-btn flex-1 flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-play"></i> 發射
+                    </button>
+                    <button id="resetBtn" class="magic-btn-outline flex-1 flex justify-center items-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> 重設
+                    </button>
+                </div>
+            </div>
+
+            <!-- 落點數據 -->
+            <div class="mt-6 pt-4 border-t border-white/10">
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
+                    <i class="fa-solid fa-location-dot"></i> 落點數據
+                </label>
+                <div id="results" class="bg-[#020617] border border-white/10 rounded-xl p-3 font-mono text-xs text-slate-300 h-32 overflow-y-auto shadow-inner space-y-1">
+                    <div class="text-slate-600 italic text-center mt-8">等待發射...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：Canvas -->
+        <div class="glass-panel p-4 lg:col-span-2 flex flex-col">
+            <div class="flex justify-between items-center mb-2 px-2">
+                <span class="text-xs text-slate-400 font-mono">SIMULATION VIEW</span>
+                <span class="badge" id="cursorInfo">x = - m</span>
+            </div>
+            <div class="canvas-container w-full aspect-[4/3] relative rounded-xl overflow-hidden">
+                <canvas id="canvas" class="w-full h-full block"></canvas>
+            </div>
+            <div class="mt-3 flex justify-between items-center px-2">
+                <div class="text-[10px] text-slate-500">
+                    <i class="fa-solid fa-circle-info"></i> 高精度模式 (dt=0.002s)
+                </div>
+                <div id="legend" class="flex gap-1 overflow-x-auto max-w-[200px] no-scrollbar">
+                    <!-- 動態生成圖例 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const resultsEl = document.getElementById("results");
+        const cursorInfo = document.getElementById("cursorInfo");
+        const countSlider = document.getElementById("count");
+        const countVal = document.getElementById("countVal");
+        const variableModeEl = document.getElementById("variableMode");
+        const spreadLabelEl = document.getElementById("spreadLabel");
+        
+        // 滑桿事件
+        countSlider.oninput = function() { countVal.textContent = this.value; }
+
+        // 更新間距標籤
+        const UNIT_MAP = {
+            'angle': '間距 (deg)',
+            'v0': '間距 (m/s)',
+            'k': '間距 (val)',
+            'n': '間距 (val)'
+        };
+        variableModeEl.onchange = function() {
+            spreadLabelEl.textContent = UNIT_MAP[this.value];
+        }
+
+        document.getElementById("startBtn").onclick = startSimulation;
+        document.getElementById("resetBtn").onclick = resetSimulation;
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            if (!running && projectiles.length === 0) {
+                resetSimulation();
+            } else if (!running && projectiles.length > 0) {
+                 render();
+            }
+        }
+        window.addEventListener('resize', resizeCanvas);
+        
+        // ----- Physics/View -----
+        // 修正：提高精度 dt = 0.002
+        const g = 9.81, dt = 0.002;
+        let scale = 5; 
+        const marginL = 50, marginB = 50, marginT = 20, marginR = 20;
+        let originX = marginL, originY = 0;
+
+        // ----- State -----
+        let projectiles = [];
+        let labels = []; // 儲存每顆球的標籤文字 (例如 "30°" 或 "10m/s")
+        let allPositions = []; 
+        let landed = [];
+        let projectileColors = [];
+        let fitted = false;    
+        let running = false;   
+
+        // Cursor & tracking
+        let mouseX = null, mouseY = null; 
+        let trackedIdx = -1;              
+        const SWITCH_THRESHOLD_PX = 20;   
+
+        canvas.addEventListener('mousemove', (e) => {
+            const r = canvas.getBoundingClientRect();
+            mouseX = e.clientX - r.left;
+            mouseY = e.clientY - r.top;
+        });
+        canvas.addEventListener('mouseleave', () => {
+            mouseX = null; mouseY = null;
+            cursorInfo.textContent = 'x = - m';
+        });
+
+        // ----- Helpers -----
+        const W2Sx = x => originX + x * scale;
+        const W2Sy = y => originY - y * scale;
+        const S2Wx = sx => (sx - originX) / scale;
+
+        function fillBackground(){ 
+            ctx.fillStyle = "#020617"; 
+            ctx.fillRect(0,0,canvas.width,canvas.height); 
+        }
+
+        function niceTick(stepPxTarget=60){
+            const metersPerPx = 1/scale;
+            const target = stepPxTarget * metersPerPx;
+            const p10 = Math.pow(10, Math.floor(Math.log10(target)));
+            const candidates = [1,2,5].map(c=>c*p10);
+            for (const c of candidates) if (c>=target) return c;
+            return candidates[candidates.length-1]*2;
+        }
+
+        function drawAxes(){
+            const axis="#334155", font="#94a3b8";
+            ctx.strokeStyle=axis; ctx.lineWidth=1;
+            
+            ctx.beginPath(); ctx.moveTo(0,originY); ctx.lineTo(canvas.width,originY); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(originX,0); ctx.lineTo(originX,canvas.height); ctx.stroke();
+            
+            const tickM = niceTick(60), tickPx = tickM*scale;
+            ctx.fillStyle=font; ctx.font="12px monospace";
+            ctx.textAlign = "center";
+            
+            for(let sx=originX; sx<=canvas.width-1; sx+=tickPx){
+                const m = Math.round((sx-originX)/scale);
+                ctx.beginPath(); ctx.moveTo(sx,originY-5); ctx.lineTo(sx,originY+5); ctx.stroke();
+                ctx.fillText(`${m}m`, sx, originY+20);
+            }
+            ctx.textAlign = "right";
+            for(let sy=originY; sy>=0; sy-=tickPx){
+                const m = Math.round((originY-sy)/scale);
+                if(m === 0) continue; 
+                ctx.beginPath(); ctx.moveTo(originX-5,sy); ctx.lineTo(originX+5,sy); ctx.stroke();
+                ctx.fillText(`${m}m`, originX-10, sy + 4);
+            }
+        }
+
+        function sampleAtX(pos, wx) {
+            if (!pos || pos.length === 0) return { x: 0, y: 0, idx: -1, t: 0 };
+            let fallbackIdx = 0, fallbackDx = Infinity;
+            for (let i = 0; i < pos.length - 1; i++) {
+                const x1 = pos[i].x,   y1 = pos[i].y;
+                const x2 = pos[i+1].x, y2 = pos[i+1].y;
+                const segDx = Math.min(Math.abs(wx - x1), Math.abs(wx - x2));
+                if (segDx < fallbackDx) { fallbackDx = segDx; fallbackIdx = i; }
+                const cross = (wx - x1) * (wx - x2) <= 0 && x1 !== x2;
+                if (cross) {
+                    const t = (wx - x1) / (x2 - x1);
+                    const y = y1 + t * (y2 - y1);
+                    return { x: wx, y, idx: i, t };
+                }
+            }
+            const i = fallbackIdx;
+            const useSecond = Math.abs(wx - pos[i+1].x) < Math.abs(wx - pos[i].x);
+            const x = useSecond ? pos[i+1].x : pos[i].x;
+            const y = useSecond ? pos[i+1].y : pos[i].y;
+            return { x, y, idx: i, t: useSecond ? 1 : 0 };
+        }
+
+        function drawTrajectories(){
+            for(let i=0;i<allPositions.length;i++){
+                const pos = allPositions[i];
+                if(!pos.length) continue;
+                
+                const color = projectileColors[i];
+
+                ctx.save();
+                ctx.shadowColor = color;
+                ctx.shadowBlur = 8;
+                ctx.beginPath();
+                ctx.moveTo(W2Sx(pos[0].x), W2Sy(pos[0].y));
+                for(let j=1;j<pos.length;j++) ctx.lineTo(W2Sx(pos[j].x), W2Sy(pos[j].y));
+                ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+                ctx.restore();
+
+                const p = projectiles[i];
+                const last = landed[i] ? pos[pos.length-1] : {x:p.x,y:p.y};
+                ctx.beginPath(); ctx.arc(W2Sx(last.x), W2Sy(last.y), 4, 0, Math.PI*2);
+                ctx.fillStyle = color; ctx.fill();
+                ctx.beginPath(); ctx.arc(W2Sx(last.x), W2Sy(last.y), 1.5, 0, Math.PI*2);
+                ctx.fillStyle = "#fff"; ctx.fill();
+            }
+        }
+
+        function drawCursorHelpers(){
+            if (mouseX == null || mouseY == null) return;
+
+            ctx.save();
+            ctx.strokeStyle = "rgba(255,255,255,0.2)";
+            ctx.setLineDash([4,4]);
+            ctx.beginPath();
+            ctx.moveTo(mouseX, 0); ctx.lineTo(mouseX, canvas.height);
+            ctx.stroke();
+            ctx.restore();
+
+            const wx = S2Wx(mouseX);
+            cursorInfo.textContent = `x = ${wx.toFixed(2)} m`;
+
+            const samples = [];
+            for (let i = 0; i < allPositions.length; i++) {
+                const pos = allPositions[i];
+                if (!pos || pos.length < 2) { samples.push(null); continue; }
+                const s = sampleAtX(pos, wx);
+                samples.push({ sx: W2Sx(s.x), sy: W2Sy(s.y), x: s.x, y: s.y, color: projectileColors[i] });
+            }
+
+            let bestIdx = -1, bestDist = Infinity;
+            for (let i = 0; i < samples.length; i++) {
+                const s = samples[i]; if (!s) continue;
+                const dy = Math.abs(s.sy - mouseY);
+                if (dy < bestDist) { bestDist = dy; bestIdx = i; }
+            }
+            if (bestIdx === -1) return;
+
+            if (trackedIdx !== -1 && samples[trackedIdx]) {
+                const currDy = Math.abs(samples[trackedIdx].sy - mouseY);
+                if (bestDist + SWITCH_THRESHOLD_PX >= currDy) bestIdx = trackedIdx;
+            }
+            trackedIdx = bestIdx;
+
+            const t = samples[trackedIdx];
+            ctx.beginPath(); ctx.arc(t.sx, t.sy, 6, 0, Math.PI*2);
+            ctx.fillStyle = t.color; ctx.fill();
+            ctx.strokeStyle = "#fff"; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = "#e9eefc";
+            ctx.font = "12px monospace";
+            ctx.fillText(`(${t.x.toFixed(2)}, ${t.y.toFixed(2)})`, t.sx + 10, t.sy - 10);
+        }
+
+        function fitViewToTrajectories(){
+            let maxX=1, maxY=1;
+            for(const traj of allPositions){
+                for(const p of traj){ if(p.x>maxX) maxX=p.x; if(p.y>maxY) maxY=p.y; }
+            }
+            maxX*=1.10; maxY*=1.10;
+            const usableW = canvas.width  - marginL - marginR;
+            const usableH = canvas.height - marginT - marginB;
+            const sx = usableW/maxX, sy = usableH/maxY;
+            scale = Math.min(sx, sy);
+            render();
+        }
+
+        function physicsStep(){
+            // 物理步進次數增加，因為 dt 變小了，為了保持動畫速度，我們可以每幀多算幾次
+            // 但為了精確演示，這裡保持 1:1，動畫會變慢動作一點，反而更適合觀察
+            let allDone = true;
+            for(let i=0; i<projectiles.length; i++){
+                const p = projectiles[i]; 
+                if(!p) continue;
+                if(!landed[i]){
+                    p.xPrev=p.x; p.yPrev=p.y;
+                    const v = Math.hypot(p.vx,p.vy);
+                    const vn_1 = (v===0)?0:Math.pow(v, p.n-1);
+                    const ax = -p.k*vn_1*p.vx;
+                    const ay = -g  -p.k*vn_1*p.vy;
+                    p.vx += ax*dt; p.vy += ay*dt;
+                    p.x  += p.vx*dt; p.y  += p.vy*dt;
+                    allPositions[i].push({x:p.x,y:p.y});
+
+                    if(p.y < 0){
+                        landed[i] = true;
+                        const t = p.yPrev/(p.yPrev - p.y);
+                        const xLand = p.xPrev + (p.x - p.xPrev)*t;
+                        allPositions[i].push({x:xLand,y:0});
+                        
+                        const row = document.createElement('div');
+                        row.style.color = projectileColors[i];
+                        row.className = "flex justify-between items-center border-b border-white/5 py-1 text-xs";
+                        row.innerHTML = `<span>#${i+1} [${labels[i]}]</span> <span>${xLand.toFixed(2)} m</span>`;
+                        resultsEl.appendChild(row);
+                    } else {
+                        allDone = false;
+                    }
+                }
+            }
+            return allDone;
+        }
+
+        function render(){ 
+            originY = canvas.height - marginB; 
+            fillBackground(); 
+            drawAxes(); 
+            drawTrajectories(); 
+            drawCursorHelpers(); 
+        }
+
+        function loop(){
+            // 為了不讓模擬太慢（因為 dt 變小了），我們一幀跑 5 次物理計算
+            const stepsPerFrame = 5; 
+            let allDone = true;
+            for(let k=0; k<stepsPerFrame; k++){
+                if(!physicsStep()) allDone = false;
+            }
+
+            if(allDone && !fitted){ 
+                fitViewToTrajectories(); 
+                fitted = true; 
+            }
+            render(); 
+            if(!allDone || running) requestAnimationFrame(loop);
+        }
+
+        // ---- 控制 ----
+        function startSimulation(){
+            resetSimulation();
+            const count = parseInt(countSlider.value);
+            const mode = variableModeEl.value;
+            const spread = parseFloat(document.getElementById('spread').value) || 0;
+            
+            // Base values
+            const baseV0 = Math.max(parseFloat(document.getElementById('v0').value)||0, 0.1);
+            const baseAngle = parseFloat(document.getElementById('angle').value);
+            const baseK = Math.max(parseFloat(document.getElementById('k').value)||0, 0);
+            const baseN = Math.min(2, Math.max(1, parseFloat(document.getElementById('n').value)||1));
+
+            projectiles=[]; labels=[]; allPositions=[]; 
+            landed=new Array(count).fill(false);
+            projectileColors = [];
+            fitted=false; trackedIdx=-1;
+
+            resultsEl.innerHTML = '';
+            const legendEl = document.getElementById('legend');
+            legendEl.innerHTML = '';
+
+            for(let i=0; i<count; i++){
+                const hue = count > 1 ? (300 * i / (count - 1)) : 0; 
+                const color = `hsl(${hue}, 100%, 65%)`;
+                projectileColors.push(color);
+
+                const dot = document.createElement('div');
+                dot.className = 'w-3 h-3 rounded-full flex-shrink-0';
+                dot.style.backgroundColor = color;
+                legendEl.appendChild(dot);
+
+                // 計算變量偏移
+                let offset = 0;
+                if(count > 1) {
+                    offset = (i - (count - 1) / 2) * spread;
+                }
+
+                // 套用偏移到對應的屬性
+                let curV0 = baseV0, curAngle = baseAngle, curK = baseK, curN = baseN;
+                let labelText = "";
+
+                if(mode === 'angle') {
+                    curAngle += offset;
+                    labelText = `${curAngle.toFixed(1)}°`;
+                } else if(mode === 'v0') {
+                    curV0 += offset;
+                    if(curV0 < 0) curV0 = 0.1; // 防止負速度
+                    labelText = `${curV0.toFixed(1)}m/s`;
+                } else if(mode === 'k') {
+                    curK += offset;
+                    if(curK < 0) curK = 0;
+                    labelText = `k=${curK.toFixed(2)}`;
+                } else if(mode === 'n') {
+                    curN += offset;
+                    // N 限制在 1~2 之間比較合理，或者稍微放寬，但不要負數
+                    if(curN < 0.1) curN = 0.1;
+                    labelText = `n=${curN.toFixed(2)}`;
+                }
+
+                labels.push(labelText);
+                
+                const rad = curAngle * Math.PI / 180;
+                const vx = curV0 * Math.cos(rad);
+                const vy = curV0 * Math.sin(rad);
+                
+                projectiles.push({x:0, y:0, vx, vy, k:curK, n:curN, xPrev:0, yPrev:0});
+                allPositions.push([]);
+            }
+            if(!running){ running=true; requestAnimationFrame(loop); }
+        }
+
+        function resetSimulation(){
+            running=false;
+            resultsEl.innerHTML='<div class="text-slate-600 italic text-center mt-10">等待發射...</div>';
+            projectiles=[]; labels=[]; allPositions=[]; 
+            scale=5; 
+            originX=marginL; 
+            originY=canvas.height - marginB;
+            fitted=false; trackedIdx=-1;
+            cursorInfo.textContent = 'x = - m';
+            document.getElementById('legend').innerHTML = ''; 
+            render(); 
+        }
+
+        // 初始化
+        resizeCanvas();
+        resetSimulation();
+    </script>
+</body>
+</html>
