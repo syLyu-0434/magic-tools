@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>斜向拋射擬合 (算命專區) | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 更新 Plotly 至具體版本以解決警告 -->
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #020617; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* 背景光暈 */
+        .bg-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.15) 0%, rgba(0, 0, 0, 0) 70%); /* Indigo tint */
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* 玻璃面板 */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* 輸入框樣式 */
+        .magic-input {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #fff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .magic-input:focus {
+            outline: none;
+            border-color: #818cf8;
+            box-shadow: 0 0 15px rgba(129, 140, 248, 0.3);
+        }
+
+        /* 按鈕樣式 */
+        .magic-btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .magic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.6);
+            filter: brightness(1.1);
+        }
+
+        /* 導航按鈕 */
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: rgba(129, 140, 248, 0.2);
+            border-color: rgba(129, 140, 248, 0.5);
+            transform: translateX(-5px);
+        }
+
+        /* 滾動條 */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #4338ca; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6366f1; }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <div class="bg-glow"></div>
+
+    <!-- 頂部導航 -->
+    <nav class="w-full max-w-6xl mb-8 flex justify-between items-center z-10">
+        <a href="physics-hub.html" class="nav-btn px-4 py-2 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+            <span>返回實驗室</span>
+        </a>
+        <div class="text-right">
+            <h1 class="text-2xl font-black text-indigo-400 tracking-tight flex items-center gap-2 justify-end">
+                <i class="fa-solid fa-chart-line"></i> 斜向拋射參數擬合
+            </h1>
+            <p class="text-xs text-slate-500 font-mono tracking-widest">PROJECTILE FORECASTING SYSTEM</p>
+        </div>
+    </nav>
+
+    <!-- 主要內容區 -->
+    <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 左側：控制面板 -->
+        <div class="glass-panel p-6 lg:col-span-1 h-fit">
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-indigo-400"></i> 參數設定
+            </h2>
+            
+            <div class="space-y-4">
+                <!-- 物理參數 -->
+                <div class="space-y-3">
+                    <label class="text-xs font-bold text-indigo-300 uppercase tracking-wider block">物理性質</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">初速度 (m/s)</label>
+                            <input type="number" id="v0" value="30" step="1" min="0" class="magic-input">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">阻力係數 k</label>
+                            <input type="number" id="k" value="0" step="0.01" min="0" class="magic-input">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="text-xs text-slate-400 block mb-1">阻力次方 n (1~2)</label>
+                            <input type="number" id="n" value="1" step="0.1" min="1" max="2" class="magic-input">
+                            <p class="text-[10px] text-slate-500 mt-1">* n=1 線性阻力, n=2 二次阻力</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 模擬範圍 -->
+                <div class="space-y-3 pt-2 border-t border-white/5">
+                    <label class="text-xs font-bold text-indigo-300 uppercase tracking-wider block">掃描範圍</label>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">起始角度 (°)</label>
+                            <input type="number" id="angleStart" value="30" step="0.1" min="0" max="90" class="magic-input">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">終止角度 (°)</label>
+                            <input type="number" id="angleEnd" value="60" step="0.1" min="0" max="90" class="magic-input">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">間距 (°)</label>
+                            <input type="number" id="angleStep" value="1" step="0.1" min="0.1" class="magic-input">
+                        </div>
+                        <div>
+                            <label class="text-xs text-slate-400 block mb-1">時間步長 dt</label>
+                            <input type="number" id="dt" value="0.005" step="0.001" min="0.001" class="magic-input">
+                        </div>
+                    </div>
+                </div>
+
+                <button id="runBtn" class="magic-btn w-full mt-4 flex justify-center items-center gap-2">
+                    <i class="fa-solid fa-play"></i> 開始擬合運算
+                </button>
+            </div>
+        </div>
+
+        <!-- 右側：圖表與數據 -->
+        <div class="glass-panel p-6 lg:col-span-2 flex flex-col gap-6">
+            
+            <!-- 圖表區 -->
+            <div class="relative w-full h-[400px] bg-slate-900/50 rounded-xl border border-white/5 overflow-hidden">
+                <div id="chart" class="w-full h-full"></div>
+            </div>
+
+            <!-- 分析摘要 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-indigo-900/20 border border-indigo-500/30 rounded-xl p-4 flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-indigo-400">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-indigo-300 uppercase">最佳發射角度</div>
+                        <div id="best-angle" class="text-2xl font-black text-white">--°</div>
+                    </div>
+                </div>
+                <div class="bg-emerald-900/20 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                        <i class="fa-solid fa-ruler"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-emerald-300 uppercase">最遠射程</div>
+                        <div id="max-range" class="text-2xl font-black text-white">-- m</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 詳細數據表 -->
+            <div class="flex-grow">
+                <label class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 block">
+                    <i class="fa-solid fa-table"></i> 運算日誌
+                </label>
+                <div class="bg-[#020617] border border-white/10 rounded-xl p-4 font-mono text-sm text-slate-300 h-48 overflow-y-auto shadow-inner" id="output">
+                    <!-- 數據將輸出於此 -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const g = 9.81;
+
+        // 讀值輔助函數
+        function num(id, def) {
+            const v = parseFloat(document.getElementById(id).value);
+            return Number.isFinite(v) ? v : def;
+        }
+
+        // 驗證輸入
+        function validateInputs(v0, k, n, a0, a1, da, dt) {
+            if (k < 0) return "空氣阻力 k 必須 ≥ 0";
+            if (n < 1 || n > 2) return "阻力次方 n 必須在 1～2 之間";
+            if (a0 <= 0 || a0 > a1) return "角度起點設定錯誤";
+            if (a1 >= 90 || a1 < a0) return "角度終點設定錯誤";
+            if (da <= 0) return "間距必須大於 0";
+            if (dt <= 0) return "時間步長 dt 必須大於 0";
+            return "";
+        }
+
+        // 模擬單一角度
+        function simulateOnce(v0, k, n, angleDeg, dt) {
+            const rad = angleDeg * Math.PI / 180;
+            let x = 0, y = 0;
+            let vx = v0 * Math.cos(rad);
+            let vy = v0 * Math.sin(rad);
+
+            let xPrev = x, yPrev = y;
+            let steps = 0, maxSteps = 5e6;
+
+            while (y >= 0 && steps < maxSteps) {
+                xPrev = x; yPrev = y;
+                const v = Math.hypot(vx, vy);
+                const vn_1 = (v === 0) ? 0 : Math.pow(v, n - 1); // |v|^{n-1}
+                const ax = -k * vn_1 * vx;
+                const ay = -g - k * vn_1 * vy;
+
+                vx += ax * dt;
+                vy += ay * dt;
+                x += vx * dt;
+                y += vy * dt;
+                steps++;
+            }
+
+            if (yPrev === y) return x; 
+            const tRatio = yPrev / (yPrev - y);
+            return xPrev + (x - xPrev) * tRatio;
+        }
+
+        function simulateAll() {
+            const v0 = num("v0", 30);
+            const k  = Math.max(num("k", 0), 0);
+            const n  = Math.min(2, Math.max(1, num("n", 1)));
+            const a0 = num("angleStart", 30);
+            const a1 = num("angleEnd", 60);
+            const da = num("angleStep", 1);
+            const dt = num("dt", 0.005);
+
+            const err = validateInputs(v0, k, n, a0, a1, da, dt);
+            if (err) { alert(err); return; }
+
+            const EPS = 1e-12;
+            const angles = [];
+            const ranges = [];
+            
+            // 建立表格 Header
+            let tableHtml = `<table class="w-full text-left"><thead><tr class="text-indigo-400 border-b border-white/10"><th class="pb-2">角度 (deg)</th><th class="pb-2 text-right">射程 (m)</th></tr></thead><tbody>`;
+
+            for (let angle = a0; angle <= a1 + EPS; angle += da) {
+                const xRange = simulateOnce(v0, k, n, angle, dt);
+                angles.push(+angle.toFixed(2));
+                ranges.push(xRange);
+                tableHtml += `<tr class="border-b border-white/5 hover:bg-white/5"><td class="py-1">${angle.toFixed(2)}</td><td class="py-1 text-right text-emerald-300">${xRange.toFixed(2)}</td></tr>`;
+            }
+            tableHtml += `</tbody></table>`;
+
+            // 尋找最大值
+            let maxIdx = 0;
+            for (let i = 1; i < ranges.length; i++) if (ranges[i] > ranges[maxIdx]) maxIdx = i;
+            const maxAngle = angles[maxIdx];
+            const maxRange = ranges[maxIdx];
+
+            // 更新摘要數據
+            document.getElementById("best-angle").innerText = `${maxAngle.toFixed(2)}°`;
+            document.getElementById("max-range").innerText = `${maxRange.toFixed(2)} m`;
+            document.getElementById("output").innerHTML = tableHtml;
+
+            // Plotly 設定 (配合網站主題)
+            const traceMain = {
+                x: angles, y: ranges, type: "scatter", mode: "lines+markers",
+                line: { width: 3, color: '#818cf8', shape: 'spline' }, // Indigo-400
+                marker: { size: 6, color: '#6366f1' },
+                name: "落地距離",
+                hovertemplate: '角度: %{x}°<br>射程: %{y:.2f} m<extra></extra>'
+            };
+            
+            const traceMax = {
+                x: [maxAngle], y: [maxRange], type: "scatter", mode: "markers",
+                marker: { size: 14, color: '#10b981', symbol: "diamond", line: {width: 2, color: '#fff'} }, // Emerald-500
+                name: "最遠點",
+                hoverinfo: 'skip'
+            };
+
+            const layout = {
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { color: '#94a3b8', family: 'Zen Maru Gothic' },
+                margin: { l: 50, r: 20, t: 30, b: 40 },
+                xaxis: { 
+                    title: '發射角度 (°)', 
+                    gridcolor: '#1e293b', 
+                    zerolinecolor: '#334155' 
+                },
+                yaxis: { 
+                    title: '落地距離 (m)', 
+                    gridcolor: '#1e293b', 
+                    zerolinecolor: '#334155' 
+                },
+                showlegend: false,
+                hovermode: 'closest',
+                shapes: [{
+                    type: "line", x0: maxAngle, x1: maxAngle, xref: "x",
+                    y0: 0, y1: 1, yref: "paper",
+                    line: { width: 1, color: '#10b981', dash: "dot" }
+                }]
+            };
+
+            Plotly.newPlot("chart", [traceMain, traceMax], layout, {
+                responsive: true, 
+                displayModeBar: false
+            });
+        }
+
+        // Debounce 自動運算
+        function debounce(fn, wait = 300) {
+            let t; return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), wait); };
+        }
+        const debouncedRun = debounce(simulateAll, 300);
+
+        ["v0", "k", "n", "angleStart", "angleEnd", "angleStep", "dt"].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener("input", debouncedRun);
+        });
+        document.getElementById("runBtn").addEventListener("click", simulateAll);
+
+        // 初始化
+        simulateAll();
+        
+        // 視窗縮放時重繪圖表
+        window.addEventListener('resize', () => {
+            Plotly.Plots.resize('chart');
+        });
+    </script>
+</body>
+</html>
