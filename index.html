@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -17,6 +18,7 @@
             overflow-x: hidden;
             background-color: #020617;
             color: white;
+            transition: filter 0.5s ease;
         }
 
         /* 背景畫布 - 真正的全螢幕 */
@@ -112,6 +114,44 @@
         .animate-float { animation: float 6s ease-in-out infinite; }
         .animate-float-delay { animation: float 8s ease-in-out infinite; animation-delay: 2s; }
 
+        /* 時空裂縫效果 */
+        #rift-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: black;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .rift-crack {
+            width: 2px;
+            height: 100vh;
+            background: #a855f7;
+            box-shadow: 0 0 20px #d946ef, 0 0 60px #7c3aed;
+            animation: rift-open 2s forwards ease-in-out;
+        }
+
+        @keyframes rift-open {
+            0% { transform: scaleY(0); opacity: 1; width: 2px; }
+            50% { transform: scaleY(1); opacity: 1; width: 4px; }
+            100% { transform: scaleY(1); width: 100vw; opacity: 0; }
+        }
+
+        .shake {
+            animation: shake-anim 0.2s infinite;
+        }
+
+        @keyframes shake-anim {
+            0% { transform: translate(0,0); }
+            25% { transform: translate(5px, 5px); }
+            50% { transform: translate(-5px, 0px); }
+            75% { transform: translate(5px, -5px); }
+            100% { transform: translate(0,0); }
+        }
+
         /* 隱藏卷軸 */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #020617; }
@@ -123,6 +163,15 @@
 
     <!-- 背景特效 Canvas -->
     <canvas id="canvas-bg"></canvas>
+
+    <!-- 時空裂縫遮罩 -->
+    <div id="rift-overlay">
+        <div class="rift-crack"></div>
+        <div class="absolute text-center">
+            <h2 class="text-6xl font-bold text-white tracking-widest opacity-0 animate-[pulse_2s_infinite] rift-text">時空裂縫已開啟</h2>
+            <p class="text-purple-400 mt-4 font-mono opacity-0 rift-text">正在進入未知維度...</p>
+        </div>
+    </div>
 
     <!-- 側邊欄按鈕 -->
     <button id="menu-btn" onclick="toggleSidebar()" class="fixed top-8 left-8 z-50 p-4 rounded-xl bg-white/5 hover:bg-cyan-500/20 backdrop-blur-xl border border-white/10 text-white transition-all duration-300 group shadow-2xl">
@@ -144,7 +193,6 @@
                 <span class="text-slate-300 group-hover:text-white text-lg font-medium transition-colors">中央大廳</span>
             </a>
 
-            <!-- 替換你的工具網址 -->
             <a href="https://your-github-username.github.io/taiwan-map-quiz" target="_blank" class="flex items-center space-x-4 group p-2">
                 <div class="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 shadow-lg">
                     <i class="fa-solid fa-map-location-dot"></i>
@@ -188,7 +236,7 @@
         </div>
 
         <!-- 工具傳送門 -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 w-full max-w-7xl px-4" id="tool-grid">
             
             <!-- 臺灣行政區填圖 -->
             <a href="https://your-github-username.github.io/taiwan-map-quiz" target="_blank" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden">
@@ -232,19 +280,26 @@
             
         </div>
 
-        <!-- 惡搞按鈕 -->
-        <button onclick="toggleChaos()" class="mt-20 px-10 py-4 rounded-full border border-white/10 hover:border-red-500/50 hover:bg-red-500/5 transition-all duration-500 group relative">
-            <span class="relative z-10 text-slate-500 group-hover:text-red-500 transition-colors">不要點！</span>
+        <!-- 惡搞按鈕 (不穩定的核心) -->
+        <button id="chaos-btn" onclick="handleChaosClick()" class="mt-20 px-10 py-4 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:shadow-[0_0_40px_rgba(220,38,38,0.8)] active:scale-95 group relative">
+            <span class="relative z-10 flex items-center gap-2">
+                <i class="fa-solid fa-radiation animate-spin-slow"></i>
+                不要點擊這枚不穩定的核心
+            </span>
+            <div class="absolute inset-0 rounded-full bg-white opacity-0 group-hover:animate-ping pointer-events-none"></div>
         </button>
 
     </main>
 
     <footer class="relative z-10 py-12 text-center text-slate-600 text-xs tracking-widest uppercase">
-        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.0-STABLE</p>
+        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.1-RIFT_READY</p>
     </footer>
 
     <script>
         document.getElementById('year').innerText = new Date().getFullYear();
+
+        let clickCount = 0;
+        let isChaos = false;
 
         // 側邊欄與座標
         function toggleSidebar() {
@@ -271,6 +326,62 @@
             if(coords) coords.innerText = `${(e.clientX/100).toFixed(1)}, ${(e.clientY/100).toFixed(1)}`;
         });
 
+        // 處理混沌核心點擊
+        function handleChaosClick() {
+            clickCount++;
+            toggleChaos();
+
+            // 彩蛋：按 20 次觸發時空裂縫
+            if (clickCount >= 20) {
+                triggerTimeRift();
+            }
+        }
+
+        // 惡搞模式 (面板傾斜與濾鏡)
+        function toggleChaos() {
+            isChaos = !isChaos;
+            const body = document.body;
+            const cards = document.querySelectorAll('.glass-card');
+            const btn = document.getElementById('chaos-btn');
+
+            if (isChaos) {
+                body.style.filter = 'invert(1) hue-rotate(180deg) contrast(1.2)';
+                cards.forEach(card => {
+                    const randomRot = Math.random() * 20 - 10;
+                    const randomTrans = Math.random() * 20 - 10;
+                    card.style.transform = `rotate(${randomRot}deg) translate(${randomTrans}px, ${randomTrans}px)`;
+                });
+                btn.innerText = "快停下來！現實正在崩塌！";
+            } else {
+                body.style.filter = '';
+                cards.forEach(card => card.style.transform = '');
+                btn.innerHTML = `<span class="relative z-10 flex items-center gap-2"><i class="fa-solid fa-radiation animate-spin-slow"></i>不要點！</span>`;
+            }
+        }
+
+        // 時空裂縫觸發
+        function triggerTimeRift() {
+            const rift = document.getElementById('rift-overlay');
+            const body = document.body;
+            
+            // 震動全螢幕
+            body.classList.add('shake');
+            
+            setTimeout(() => {
+                rift.style.display = 'flex';
+                // 顯示文字
+                setTimeout(() => {
+                    document.querySelectorAll('.rift-text').forEach(el => el.style.opacity = '1');
+                }, 1000);
+
+                // 3秒後重置或前往神祕地點
+                setTimeout(() => {
+                    alert("你發現了瑜的終極祕密：其實這裡只是一個寫 code 寫到瘋掉的人的避難所。");
+                    location.reload(); // 重新載入，修復現實
+                }, 5000);
+            }, 1000);
+        }
+
         // 粒子背景
         const canvas = document.getElementById('canvas-bg');
         const ctx = canvas.getContext('2d');
@@ -284,9 +395,7 @@
         resize();
 
         class Particle {
-            constructor() {
-                this.init();
-            }
+            constructor() { this.init(); }
             init() {
                 this.x = Math.random() * canvas.width;
                 this.y = Math.random() * canvas.height;
@@ -295,16 +404,13 @@
                 this.size = Math.random() * 2;
             }
             update() {
-                this.x += this.vx;
-                this.y += this.vy;
+                this.x += this.vx; this.y += this.vy;
                 if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
                 if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
             }
             draw() {
                 ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
             }
         }
 
@@ -312,11 +418,7 @@
 
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(p => {
-                p.update();
-                p.draw();
-            });
-            // 畫線
+            particles.forEach(p => { p.update(); p.draw(); });
             ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
             ctx.lineWidth = 0.5;
             for(let i=0; i<particles.length; i++) {
@@ -325,10 +427,8 @@
                     const dy = particles[i].y - particles[j].y;
                     const dist = Math.sqrt(dx*dx + dy*dy);
                     if(dist < 150) {
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
+                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
                     }
                 }
             }
@@ -336,20 +436,17 @@
         }
         animate();
 
-        // 惡搞模式
-        function toggleChaos() {
-            document.body.style.filter = document.body.style.filter ? '' : 'invert(1) hue-rotate(180deg)';
-        }
-
-        // 3D Tilt
+        // 3D Tilt (非混沌模式時有效)
         document.querySelectorAll('.glass-card').forEach(card => {
             card.addEventListener('mousemove', e => {
+                if (isChaos) return;
                 const rect = card.getBoundingClientRect();
                 const x = (e.clientX - rect.left) / rect.width - 0.5;
                 const y = (e.clientY - rect.top) / rect.height - 0.5;
                 card.style.transform = `perspective(1000px) rotateX(${y * -15}deg) rotateY(${x * 15}deg) translateY(-10px)`;
             });
             card.addEventListener('mouseleave', () => {
+                if (isChaos) return;
                 card.style.transform = '';
             });
         });
