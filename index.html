@@ -18,7 +18,7 @@
             overflow-x: hidden;
             background-color: #020617;
             color: white;
-            transition: filter 0.5s ease;
+            transition: filter 0.5s ease, background-color 0.5s ease;
         }
 
         /* 背景畫布 - 真正的全螢幕 */
@@ -113,6 +113,24 @@
 
         .animate-float { animation: float 6s ease-in-out infinite; }
         .animate-float-delay { animation: float 8s ease-in-out infinite; animation-delay: 2s; }
+
+        /* 混沌模式專用樣式 */
+        .chaos-active {
+            animation: tremor 0.15s infinite;
+            background-color: #300 !important;
+        }
+
+        @keyframes tremor {
+            0% { transform: translate(0, 0); filter: saturate(1.5) hue-rotate(0deg); }
+            25% { transform: translate(2px, -2px); filter: saturate(3) hue-rotate(10deg); }
+            50% { transform: translate(-2px, 2px); filter: saturate(1.5) hue-rotate(0deg); }
+            75% { transform: translate(2px, 2px); filter: saturate(3) hue-rotate(-10deg); }
+            100% { transform: translate(0, 0); }
+        }
+
+        .chaos-card-distort {
+            filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5)) blur(1px) !important;
+        }
 
         /* 時空裂縫效果 */
         #rift-overlay {
@@ -218,7 +236,7 @@
     <div id="overlay" onclick="toggleSidebar()" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-30 hidden opacity-0 transition-opacity duration-500"></div>
 
     <!-- 主要內容 -->
-    <main class="relative z-10 container mx-auto px-6 min-h-screen flex flex-col items-center justify-center py-20">
+    <main class="relative z-10 container mx-auto px-6 min-h-screen flex flex-col items-center justify-center py-20" id="main-content">
         
         <!-- Logo -->
         <div class="mb-10 relative group cursor-pointer animate-float">
@@ -281,7 +299,7 @@
         </div>
 
         <!-- 惡搞按鈕 (不穩定的核心) -->
-        <button id="chaos-btn" onclick="handleChaosClick()" class="mt-20 px-10 py-4 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:shadow-[0_0_40px_rgba(220,38,38,0.8)] active:scale-95 group relative">
+        <button id="chaos-btn" onclick="handleChaosClick()" class="mt-20 px-10 py-4 rounded-full bg-red-600 hover:bg-red-500 text-white font-bold transition-all duration-300 shadow-[0_0_20px_rgba(220,38,38,0.5)] hover:shadow-[0_0_40px_rgba(220,38,38,0.8)] active:scale-95 group relative z-50">
             <span class="relative z-10 flex items-center gap-2">
                 <i class="fa-solid fa-radiation animate-spin-slow"></i>
                 不要點擊這枚不穩定的核心
@@ -292,7 +310,7 @@
     </main>
 
     <footer class="relative z-10 py-12 text-center text-slate-600 text-xs tracking-widest uppercase">
-        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.1-RIFT_READY</p>
+        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.2-CHAOS_OVERDRIVE</p>
     </footer>
 
     <script>
@@ -337,7 +355,7 @@
             }
         }
 
-        // 惡搞模式 (面板傾斜與濾鏡)
+        // 混沌模式 (數位崩壞風格)
         function toggleChaos() {
             isChaos = !isChaos;
             const body = document.body;
@@ -345,17 +363,27 @@
             const btn = document.getElementById('chaos-btn');
 
             if (isChaos) {
-                body.style.filter = 'invert(1) hue-rotate(180deg) contrast(1.2)';
+                body.classList.add('chaos-active');
                 cards.forEach(card => {
-                    const randomRot = Math.random() * 20 - 10;
-                    const randomTrans = Math.random() * 20 - 10;
-                    card.style.transform = `rotate(${randomRot}deg) translate(${randomTrans}px, ${randomTrans}px)`;
+                    // 隨機彈開與劇烈旋轉
+                    const randomX = Math.random() * 60 - 30;
+                    const randomY = Math.random() * 60 - 30;
+                    const randomRot = Math.random() * 50 - 25;
+                    const randomScale = 0.8 + Math.random() * 0.4;
+                    
+                    card.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRot}deg) scale(${randomScale})`;
+                    card.classList.add('chaos-card-distort');
                 });
-                btn.innerText = "快停下來！現實正在崩塌！";
+                btn.innerText = "偵測到核心超載！警告！";
+                btn.style.boxShadow = "0 0 60px rgba(255, 0, 0, 1)";
             } else {
-                body.style.filter = '';
-                cards.forEach(card => card.style.transform = '');
+                body.classList.remove('chaos-active');
+                cards.forEach(card => {
+                    card.style.transform = '';
+                    card.classList.remove('chaos-card-distort');
+                });
                 btn.innerHTML = `<span class="relative z-10 flex items-center gap-2"><i class="fa-solid fa-radiation animate-spin-slow"></i>不要點擊這枚不穩定的核心</span>`;
+                btn.style.boxShadow = "";
             }
         }
 
@@ -374,10 +402,10 @@
                     document.querySelectorAll('.rift-text').forEach(el => el.style.opacity = '1');
                 }, 1000);
 
-                // 3秒後重置或前往神祕地點
+                // 5秒後重新載入
                 setTimeout(() => {
-                    alert("你發現了瑜的終極祕密：其實這裡只是一個寫 code 寫到瘋掉的人的避難所。");
-                    location.reload(); // 重新載入，修復現實
+                    alert("你知道就算是時空裂縫也要建置嗎？啊我就還沒想到要放什麼咩");
+                    location.reload(); 
                 }, 5000);
             }, 1000);
         }
@@ -409,7 +437,7 @@
                 if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
             }
             draw() {
-                ctx.fillStyle = 'rgba(56, 189, 248, 0.3)';
+                ctx.fillStyle = isChaos ? 'rgba(255, 50, 50, 0.4)' : 'rgba(56, 189, 248, 0.3)';
                 ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
             }
         }
@@ -419,7 +447,8 @@
         function animate() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particles.forEach(p => { p.update(); p.draw(); });
-            ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)';
+            
+            ctx.strokeStyle = isChaos ? 'rgba(255, 0, 0, 0.1)' : 'rgba(56, 189, 248, 0.05)';
             ctx.lineWidth = 0.5;
             for(let i=0; i<particles.length; i++) {
                 for(let j=i+1; j<particles.length; j++) {
