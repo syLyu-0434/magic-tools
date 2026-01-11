@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>臺灣行政區縣市挑戰 | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background-color: #020617; 
+            overflow: hidden; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: white;
+        }
+        
+        /* 背景裝飾 */
+        .bg-glow {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        #map-container {
+            width: 100%;
+            height: calc(100vh - 160px);
+            background: rgba(15, 23, 42, 0.5); /* 深色海洋 */
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            cursor: grab;
+            position: relative;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        #map-container:active { cursor: grabbing; }
+
+        /* 地圖樣式 */
+        .county {
+            fill: rgba(30, 41, 59, 0.8); /* 陸地預設深色 */
+            stroke: rgba(56, 189, 248, 0.4); 
+            stroke-width: 0.5;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .county:hover { 
+            fill: rgba(56, 189, 248, 0.3); 
+            cursor: pointer;
+            stroke-width: 1.5;
+            stroke: #38bdf8;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.5));
+        }
+        
+        /* 狀態顏色 */
+        .county.found { fill: rgba(34, 197, 94, 0.4) !important; stroke: #22c55e !important; }
+        .county.revealed { fill: rgba(168, 85, 247, 0.4) !important; stroke: #a855f7 !important; }
+        .county.selected { fill: rgba(245, 158, 11, 0.4) !important; stroke: #f59e0b !important; stroke-width: 2; }
+
+        /* 玻璃擬態彈窗 */
+        .glass-modal {
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* 提示框 */
+        #tooltip {
+            position: absolute;
+            pointer-events: none;
+            background: rgba(15, 23, 42, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 50;
+            backdrop-filter: blur(5px);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; }
+
+        /* 返回按鈕樣式 */
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.5);
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 h-screen flex flex-col max-w-7xl mx-auto">
+
+    <div class="bg-glow"></div>
+
+    <!-- 頂部導航與標題 -->
+    <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+        <div class="flex items-center gap-4">
+            <a href="index.html" class="back-btn p-3 rounded-xl text-slate-400 hover:text-cyan-400">
+                <i class="fa-solid fa-arrow-left"></i>
+            </a>
+            <div>
+                <h1 class="text-3xl font-black text-white tracking-tight flex items-center gap-2">
+                    <span class="text-cyan-400">📍</span> 臺灣行政區挑戰
+                </h1>
+                <p class="text-slate-500 font-medium">在神祕的地圖中，尋找被遺忘的縣市全名</p>
+            </div>
+        </div>
+        
+        <div class="flex gap-4">
+            <div class="glass-modal rounded-2xl px-8 py-3 text-center min-w-[160px] border-t-2 border-cyan-500">
+                <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">解鎖頻率</span>
+                <div class="flex items-baseline justify-center gap-1">
+                    <span id="found-count" class="text-3xl font-black text-cyan-400">0</span>
+                    <span class="text-slate-600 font-bold text-lg">/ 22</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- 地圖顯示區域 -->
+    <main class="relative flex-grow">
+        <div id="map-container">
+            <div id="loading" class="absolute inset-0 flex items-center justify-center z-10 bg-[#020617]/80 rounded-2xl">
+                <div class="text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-cyan-500 mb-4 mx-auto"></div>
+                    <p class="text-cyan-500 font-bold animate-pulse">正在讀取地圖數據...</p>
+                </div>
+            </div>
+            <div id="tooltip">❓</div>
+        </div>
+
+        <!-- 猜測視窗 -->
+        <div id="guess-modal" class="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md hidden pointer-events-none z-50">
+            <div class="glass-modal p-10 rounded-[2.5rem] w-full max-w-md pointer-events-auto transform transition-all duration-300 scale-95 opacity-0" id="modal-box">
+                <div class="mb-8 text-center">
+                    <div class="w-20 h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/30">
+                        <i class="fa-solid fa-location-crosshairs text-3xl text-cyan-400"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-white mb-2">座標確認</h3>
+                    <p class="text-slate-400 text-sm">請輸入該區域的正確術語 (如：彰化縣)</p>
+                </div>
+
+                <input type="text" id="county-input" autocomplete="off"
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 mb-8 focus:border-cyan-500 focus:bg-white/10 focus:outline-none text-2xl font-bold text-center text-white placeholder-slate-600 transition-all"
+                    placeholder="輸入名稱...">
+                
+                <div class="grid grid-cols-1 gap-4">
+                    <button id="submit-guess" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-cyan-500/40">送出咒語</button>
+                    <div class="flex gap-3">
+                        <button id="show-answer" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-3 rounded-xl transition text-sm">不知道 (魔法破解)</button>
+                        <button id="cancel-guess" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-500 font-bold py-3 rounded-xl transition text-sm">關閉</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast -->
+        <div id="toast" class="fixed bottom-12 left-1/2 -translate-x-1/2 px-10 py-4 rounded-full text-white font-bold opacity-0 transition-all pointer-events-none z-[60] shadow-2xl backdrop-blur-xl border border-white/10 flex items-center gap-3">
+        </div>
+    </main>
+
+    <script>
+        // 核心邏輯保持不變，優化互動細節
+        const taiwanData = {
+            "Taipei City": ["台北市", "臺北市"], "Taipei": ["台北市", "臺北市"],
+            "New Taipei City": ["新北市"], "New Taipei": ["新北市"],
+            "Keelung City": ["基隆市"], "Keelung": ["基隆市"],
+            "Taoyuan City": ["桃園市"], "Taoyuan": ["桃園市"],
+            "Hsinchu City": ["新竹市"], "Hsinchu": ["新竹縣"], "Hsinchu County": ["新竹縣"],
+            "Yilan County": ["宜蘭縣"], "Yilan": ["宜蘭縣"], "Ilan": ["宜蘭縣"],
+            "Miaoli County": ["苗栗縣"], "Miaoli": ["苗栗縣"],
+            "Taichung City": ["台中市", "臺中市"], "Taichung": ["台中市", "臺中市"],
+            "Changhua County": ["彰化縣"], "Changhua": ["彰化縣"],
+            "Nantou County": ["南投縣"], "Nantou": ["南投縣"],
+            "Yunlin County": ["雲林縣"], "Yunlin": ["雲林縣"],
+            "Chiayi City": ["嘉義市"], "Chiayi": ["嘉義縣"], "Chiayi County": ["嘉義縣"],
+            "Tainan City": ["台南市", "臺南市"], "Tainan": ["台南市", "臺南市"],
+            "Kaohsiung City": ["高雄市"], "Kaohsiung": ["高雄市"],
+            "Pingtung County": ["屏東縣"], "Pingtung": ["屏東縣"],
+            "Hualien County": ["花蓮縣"], "Hualien": ["花蓮縣"],
+            "Taitung County": ["台東縣", "臺東縣"], "Taitung": ["台東縣", "臺東縣"],
+            "Penghu County": ["澎湖縣"], "Penghu": ["澎湖縣"],
+            "Kinmen County": ["金門縣"], "Kinmen": ["金門縣"],
+            "Lienchiang County": ["連江縣"], "Lienchiang": ["連江縣"], "Matsu": ["連江縣"]
+        };
+
+        let foundCounties = new Set();
+        let selectedElement = null;
+        let selectedData = null;
+        let currentFeatures = null;
+
+        const container = document.getElementById('map-container');
+        let width = container.clientWidth;
+        let height = container.clientHeight;
+
+        const svg = d3.select("#map-container").append("svg")
+            .attr("width", "100%").attr("height", "100%")
+            .attr("viewBox", `0 0 ${width} ${height}`);
+
+        const g = svg.append("g");
+        const projection = d3.geoMercator();
+        const path = d3.geoPath().projection(projection);
+
+        const zoom = d3.zoom()
+            .scaleExtent([1, 40])
+            .on("zoom", (e) => g.attr("transform", e.transform));
+        svg.call(zoom);
+
+        function getProperty(properties, keys) {
+            for (const key of keys) { if (properties[key]) return properties[key]; }
+            return "";
+        }
+
+        async function init() {
+            const url = 'https://code.highcharts.com/mapdata/countries/tw/tw-all.topo.json';
+            try {
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Network fail');
+                const tw = await response.json();
+                document.getElementById('loading').style.display = 'none';
+
+                const objectKey = Object.keys(tw.objects)[0]; 
+                const features = topojson.feature(tw, tw.objects[objectKey]).features;
+                currentFeatures = features;
+
+                projection.fitExtent([[50, 50], [width - 50, height - 50]], {type: "FeatureCollection", features: features});
+                features.sort((a, b) => d3.geoArea(b) - d3.geoArea(a));
+
+                renderMap();
+            } catch (err) {
+                document.getElementById('loading').innerHTML = `<p class="text-red-500">地圖召喚失敗，請重新連線。</p>`;
+            }
+        }
+
+        function renderMap() {
+             g.selectAll("path")
+                .data(currentFeatures)
+                .join("path")
+                .attr("d", path)
+                .attr("class", d => {
+                    const name = getProperty(d.properties, ['name', 'COUNTYNAME', 'NAME']);
+                    let cls = "county";
+                    if (foundCounties.has(name)) cls += " found";
+                    return cls;
+                })
+                .on("mousemove", function(event, d) {
+                    const tooltip = document.getElementById('tooltip');
+                    const name = getProperty(d.properties, ['name', 'COUNTYNAME', 'NAME']);
+                    let isFound = false;
+                    if (foundCounties.has(name) || (taiwanData[name] && taiwanData[name].some(n => foundCounties.has(n)))) isFound = true;
+                    
+                    tooltip.innerText = isFound ? (taiwanData[name] ? taiwanData[name][0] : name) : "❓ 這是哪裡？";
+                    tooltip.style.opacity = 1;
+                    tooltip.style.left = (event.pageX + 15) + "px";
+                    tooltip.style.top = (event.pageY + 15) + "px";
+                })
+                .on("mouseout", () => document.getElementById('tooltip').style.opacity = 0)
+                .on("click", function(e, d) {
+                    const name = getProperty(d.properties, ['name', 'COUNTYNAME']);
+                    if (foundCounties.has(name) || (taiwanData[name] && taiwanData[name].some(n => foundCounties.has(n)))) {
+                        showToast("✨ 此維度已被解鎖", "bg-cyan-500/20");
+                        return;
+                    }
+                    openModal(this, d);
+                });
+        }
+
+        function openModal(el, d) {
+            if (selectedElement) d3.select(selectedElement).classed("selected", false);
+            selectedElement = el; selectedData = d;
+            d3.select(el).classed("selected", true);
+
+            const modal = document.getElementById('guess-modal');
+            const box = document.getElementById('modal-box');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                box.classList.replace('opacity-0', 'opacity-100');
+                box.classList.replace('scale-95', 'scale-100');
+                document.getElementById('county-input').value = "";
+                document.getElementById('county-input').focus();
+            }, 50);
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('guess-modal');
+            const box = document.getElementById('modal-box');
+            box.classList.replace('opacity-100', 'opacity-0');
+            box.classList.replace('scale-100', 'scale-95');
+            if (selectedElement) d3.select(selectedElement).classed("selected", false);
+            setTimeout(() => modal.classList.add('hidden'), 200);
+        }
+
+        function checkGuess() {
+            const input = document.getElementById('county-input').value.trim();
+            if (!input || !selectedData) return;
+            const rawName = getProperty(selectedData.properties, ['name', 'COUNTYNAME', 'NAME']);
+            
+            let validNames = taiwanData[rawName] ? [...taiwanData[rawName]] : [];
+            if (/[\u4e00-\u9fa5]/.test(rawName)) validNames.push(rawName);
+
+            if (validNames.includes(input)) {
+                handleSuccess(input, "found", `✅ 咒語正確！解鎖：${input}`);
+            } else {
+                showToast("❌ 咒語無效，請檢查全稱", "bg-red-500/80");
+                const box = document.getElementById('modal-box');
+                box.classList.add('shake');
+                setTimeout(() => box.classList.remove('shake'), 300);
+            }
+        }
+
+        function giveUp() {
+            const rawName = getProperty(selectedData.properties, ['name', 'COUNTYNAME']);
+            const displayName = taiwanData[rawName] ? taiwanData[rawName][0] : rawName;
+            handleSuccess(displayName, "revealed", `💡 魔法顯影：${displayName}`);
+        }
+
+        function handleSuccess(name, cls, msg) {
+            foundCounties.add(name);
+            d3.select(selectedElement).attr("class", `county ${cls}`).classed("selected", false);
+            
+            // 計算中文字名稱的數量
+            const count = Array.from(foundCounties).filter(n => /[\u4e00-\u9fa5]/.test(n)).length;
+            document.getElementById('found-count').innerText = Math.min(count, 22);
+
+            showToast(msg, cls === "found" ? "bg-cyan-600" : "bg-purple-600");
+            closeModal();
+        }
+
+        function showToast(msg, color) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.className = `fixed bottom-12 left-1/2 -translate-x-1/2 px-10 py-4 rounded-full text-white font-bold transition-all duration-300 z-[60] shadow-2xl backdrop-blur-xl border border-white/10 ${color}`;
+            t.style.opacity = 1;
+            t.style.transform = "translate(-50%, -20px)";
+            setTimeout(() => { t.style.opacity = 0; t.style.transform = "translate(-50%, 0)"; }, 2500);
+        }
+
+        document.getElementById('cancel-guess').onclick = closeModal;
+        document.getElementById('submit-guess').onclick = checkGuess;
+        document.getElementById('show-answer').onclick = giveUp;
+        document.getElementById('county-input').onkeydown = (e) => {
+            if (e.key === 'Enter') checkGuess();
+            if (e.key === 'Escape') closeModal();
+        };
+
+        window.onload = init;
+        window.onresize = () => {
+            width = container.clientWidth; height = container.clientHeight;
+            svg.attr("viewBox", `0 0 ${width} ${height}`);
+            if (currentFeatures) {
+                projection.fitExtent([[50, 50], [width - 50, height - 50]], {type: "FeatureCollection", features: currentFeatures});
+                g.selectAll("path").attr("d", path);
+            }
+        };
+    </script>
+</body>
+</html>
