@@ -86,7 +86,7 @@
         /* 模擬雷射光條紋容器 */
         #pattern-container {
             width: 100%;
-            height: 80px;
+            height: 100px; /* 修正：設為 100px */
             background: black;
             border-radius: 0.5rem;
             margin-bottom: 1rem;
@@ -136,7 +136,18 @@
                         </div>
                     </div>
                     <input type="range" id="lambda" min="100" max="1000" value="600" class="w-full accent-blue-500">
-                    <div class="w-full h-1 mt-1 rounded-full" style="background: linear-gradient(to right, #444 0%, #444 28%, #8B00FF 38%, #0000FF 45%, #00FF00 52%, #FFFF00 55%, #FF8000 60%, #FF0000 75%, #444 85%, #444 100%);"></div>
+                    <!-- 光譜條：加粗至 h-6 (24px) -->
+                    <div class="w-full h-6 mt-2 rounded-full border border-white/10" style="background: linear-gradient(to right, 
+                        #333 0%, 
+                        #333 31%, 
+                        #8b00ff 31%, 
+                        #0000ff 36%, 
+                        #00ff00 44%, 
+                        #ffff00 53%, 
+                        #ffa500 58%, 
+                        #ff0000 72%, 
+                        #333 72%, 
+                        #333 100%);"></div>
                 </div>
 
                 <!-- 狹縫寬度 -->
@@ -349,7 +360,6 @@
             const rgbMatch = color.match(/\d+/g);
             const R = parseInt(rgbMatch[0]), G = parseInt(rgbMatch[1]), B = parseInt(rgbMatch[2]);
 
-            // 這裡不使用 steps 映射，而是直接遍歷 patternCanvas 的每一個像素列 (pX)
             for (let pX = 0; pX < wP; pX++) {
                 const x_pos = -range + (pX / wP) * (2 * range);
                 const theta = Math.atan(x_pos / L);
