@@ -319,13 +319,13 @@
 
                 <!-- 手機優化：enterkeyhint="go" 讓鍵盤顯示前往按鈕 -->
                 <input type="text" id="county-input" autocomplete="off" enterkeyhint="go"
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 mb-6 md:mb-8 focus:border-cyan-500 focus:bg-white/10 focus:outline-none text-xl md:text-2xl font-bold text-center text-white placeholder-slate-600 transition-all"
-                    placeholder="輸入名稱...">
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 mb-6 md:mb-8 focus:border-cyan-500 focus:bg-white/10 focus:outline-none text-xl md:text-2xl font-bold text-center text-white placeholder-slate-600 transition-all shadow-inner"
+                    placeholder="例如：新北市">
                 
                 <div class="grid grid-cols-1 gap-3 md:gap-4">
                     <button id="submit-guess" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 md:py-4 rounded-xl transition shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-cyan-500/40 active:scale-95">送出咒語</button>
                     <div class="flex gap-3">
-                        <button id="show-answer" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-3 rounded-xl transition text-sm active:bg-white/10">不知道</button>
+                        <button id="show-answer" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-3 rounded-xl transition text-sm active:bg-white/10">不知道 (魔法破解)</button>
                         <button id="cancel-guess" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-500 font-bold py-3 rounded-xl transition text-sm active:bg-white/10">關閉</button>
                     </div>
                 </div>
@@ -341,7 +341,7 @@
                 
                 <div class="bg-white/5 rounded-xl p-4 mb-8 border border-white/10">
                     <p class="text-[10px] text-slate-600 font-mono tracking-widest">
-                        聽說點擊右上角「解鎖進度」7 次<br>會有可怕的事情發生...
+                        聽說點擊右上角「解鎖進度」7 次<br>會出事...
                     </p>
                 </div>
 
@@ -357,8 +357,9 @@
     </main>
 
     <script>
-        // 縣市名稱對照表 (支援 taiwan-atlas 的屬性)
+        // 縣市名稱對照表 (全面擴充以支援各種資料來源與「台/臺」混用)
         const countyData = {
+            // 標準繁體 (taiwan-atlas, ronnywang)
             "臺北市": ["台北市", "臺北市"],
             "新北市": ["新北市"],
             "基隆市": ["基隆市"],
@@ -380,7 +381,37 @@
             "臺東縣": ["台東縣", "臺東縣"],
             "澎湖縣": ["澎湖縣"],
             "金門縣": ["金門縣"],
-            "連江縣": ["連江縣"]
+            "連江縣": ["連江縣"],
+            
+            // 異體字「台」作為 Key (防止資料來源本身使用「台」)
+            "台北市": ["台北市", "臺北市"],
+            "台中市": ["台中市", "臺中市"],
+            "台南市": ["台南市", "臺南市"],
+            "台東縣": ["台東縣", "臺東縣"],
+
+            // 英文 Key (支援 deldersveld 或其他備用來源)
+            "Taipei City": ["台北市", "臺北市"], "Taipei": ["台北市", "臺北市"],
+            "New Taipei City": ["新北市"], "New Taipei": ["新北市"],
+            "Keelung City": ["基隆市"], "Keelung": ["基隆市"],
+            "Taoyuan City": ["桃園市"], "Taoyuan": ["桃園市"],
+            "Hsinchu City": ["新竹市"], 
+            "Hsinchu County": ["新竹縣"], "Hsinchu": ["新竹縣"],
+            "Yilan County": ["宜蘭縣"], "Yilan": ["宜蘭縣"],
+            "Miaoli County": ["苗栗縣"], "Miaoli": ["苗栗縣"],
+            "Taichung City": ["台中市", "臺中市"], "Taichung": ["台中市", "臺中市"],
+            "Changhua County": ["彰化縣"], "Changhua": ["彰化縣"],
+            "Nantou County": ["南投縣"], "Nantou": ["南投縣"],
+            "Yunlin County": ["雲林縣"], "Yunlin": ["雲林縣"],
+            "Chiayi City": ["嘉義市"],
+            "Chiayi County": ["嘉義縣"], "Chiayi": ["嘉義縣"],
+            "Tainan City": ["台南市", "臺南市"], "Tainan": ["台南市", "臺南市"],
+            "Kaohsiung City": ["高雄市"], "Kaohsiung": ["高雄市"],
+            "Pingtung County": ["屏東縣"], "Pingtung": ["屏東縣"],
+            "Hualien County": ["花蓮縣"], "Hualien": ["花蓮縣"],
+            "Taitung County": ["台東縣", "臺東縣"], "Taitung": ["台東縣", "臺東縣"],
+            "Penghu County": ["澎湖縣"], "Penghu": ["澎湖縣"],
+            "Kinmen County": ["金門縣"], "Kinmen": ["金門縣"],
+            "Lienchiang County": ["連江縣"], "Lienchiang": ["連江縣"], "Matsu": ["連江縣"]
         };
 
         // 狀態變數
@@ -504,7 +535,7 @@
                 document.getElementById('loading').style.display = 'none';
 
                 svg.call(zoom.transform, d3.zoomIdentity);
-                projection.fitExtent([[50, 50], [width - 50, height - 50]], {type: "FeatureCollection", features: features});
+                projection.fitExtent([[20, 20], [width - 20, height - 20]], {type: "FeatureCollection", features: features});
                 
                 features.sort((a, b) => d3.geoArea(b) - d3.geoArea(a));
 
@@ -521,7 +552,7 @@
             }
         }
 
-        // 彩蛋邏輯：點擊計分板
+        // 彩蛋邏輯：改為點擊計分板
         document.getElementById('score-board').addEventListener('click', function() {
             if (isUnlocked && !document.getElementById('mode-controls').classList.contains('hidden-mode')) return;
 
@@ -535,7 +566,7 @@
             clearTimeout(clickTimer);
             clickTimer = setTimeout(() => { clickCount = 0; }, 2000); 
 
-            if (clickCount === 3) showToast("🧐 進度板好像鬆動了...", "bg-slate-700");
+            if (clickCount === 2) showToast("🧐 進度板好像鬆動了...", "bg-slate-700");
             if (clickCount === 5) showToast("⚠️ 再戳下去會發生可怕的事！", "bg-orange-600");
 
             if (clickCount >= 7) {
@@ -600,7 +631,7 @@
             document.getElementById('title-text').innerText = '368 鄉鎮煉獄挑戰';
             document.getElementById('title-icon').innerText = '🔥';
             document.getElementById('title-icon').classList.replace('text-cyan-400', 'text-red-500');
-            document.getElementById('game-desc').innerText = "沒有回頭路，只能一個個填滿... (輸入全名如「板橋區」)";
+            document.getElementById('game-desc').innerText = "沒有回頭路，只能一個個填滿... (輸入全名如「香山區」)";
             document.getElementById('score-board').style.borderColor = "#ef4444"; 
             document.getElementById('found-count').classList.replace('text-cyan-400', 'text-red-500');
             
@@ -736,6 +767,11 @@
             setTimeout(() => modal.classList.add('hidden'), 200);
         }
 
+        // 字串標準化：統一將 "台" 轉為 "臺"
+        function normalizeTai(str) {
+            return str.replace(/台/g, '臺');
+        }
+
         function checkGuess() {
             const inputField = document.getElementById('county-input');
             const input = inputField.value.trim();
@@ -756,19 +792,43 @@
             }
 
             if (isHardMode) {
-                // 煉獄模式：強制全名完全符合
-                if (input === rawName) {
+                // 煉獄模式：強制全名完全符合 (但容許台/臺互通)
+                if (normalizeTai(input) === normalizeTai(rawName)) {
                     isCorrect = true;
                     correctName = rawName;
                 }
             } else {
                 // 正常模式：查表，但也必須是全名
+                // 先嘗試直接查表
                 let validNames = countyData[rawName] ? [...countyData[rawName]] : [];
-                if (/[\u4e00-\u9fa5]/.test(rawName)) validNames.push(rawName);
                 
+                // 如果查不到表 (可能地圖來源用了特殊 key)，但 rawName 本身是中文，就加入列表
+                if (validNames.length === 0 && /[\u4e00-\u9fa5]/.test(rawName)) {
+                    validNames.push(rawName);
+                }
+
+                // 比對邏輯：檢查輸入是否在合法列表中 (支援台/臺互通)
+                // 1. 直接包含
                 if (validNames.includes(input)) {
                     isCorrect = true;
-                    correctName = validNames[0]; // 顯示標準名稱
+                    correctName = validNames[0]; 
+                } 
+                // 2. 正規化後比對
+                else {
+                    const normInput = normalizeTai(input);
+                    // 針對列表中的每個名字做正規化比對
+                    for (const name of validNames) {
+                        if (normalizeTai(name) === normInput) {
+                            isCorrect = true;
+                            correctName = validNames[0]; // 顯示標準名稱
+                            break;
+                        }
+                    }
+                    // 3. 最後一招：直接比對 rawName 的正規化結果 (防止字典遺漏)
+                    if (!isCorrect && normalizeTai(rawName) === normInput) {
+                        isCorrect = true;
+                        correctName = rawName;
+                    }
                 }
             }
 
@@ -855,7 +915,7 @@
             svg.attr("viewBox", `0 0 ${width} ${height}`);
             if (currentFeatures) {
                 svg.call(zoom.transform, d3.zoomIdentity);
-                projection.fitExtent([[50, 50], [width - 50, height - 50]], {type: "FeatureCollection", features: currentFeatures});
+                projection.fitExtent([[20, 20], [width - 20, height - 20]], {type: "FeatureCollection", features: currentFeatures});
                 g.selectAll("path.county").attr("d", path);
                 g.selectAll("path.county-boundary").attr("d", path);
             }
