@@ -418,6 +418,51 @@
             }
         }
 
+        // 取得時空裂縫目的地 (節日彩蛋版)
+        function getRiftConfig() {
+            const now = new Date();
+            const month = now.getMonth() + 1; // 1-12
+            const date = now.getDate();
+
+            // 1. 新年期間 (1月21日 - 2月20日)
+            if ((month === 1 && date >= 21) || (month === 2 && date <= 20)) {
+                return {
+                    url: "https://youtu.be/b4SRZurGg1c?si=3WmUlu1ynrfyhScb",
+                    msg: "警告：偵測到極高濃度的紅包能量，正在強制連線..."
+                };
+            }
+
+            // 2. 師大生日 (6月5日)
+            if (month === 6 && date === 5) {
+                return {
+                    url: "https://youtu.be/rardz_MoF4c?si=Y8nVhc6qxWUu-Z7N",
+                    msg: "警告：偵測到校慶鐘聲訊號，正在強制連線..."
+                };
+            }
+
+            // 3. 雙十節 (10月10日)
+            if (month === 10 && date === 10) {
+                return {
+                    url: "https://youtu.be/litAUHhL-jU?si=8hKt8yL7cKTCL7jF",
+                    msg: "警告：偵測到雙十慶典能量，正在強制連線..."
+                };
+            }
+
+            // 4. 聖誕節期間 (12月20日 - 12月31日)
+            if (month === 12 && date >= 20) {
+                return {
+                    url: "https://youtu.be/aAkMkVFwAoo?si=WrE4B0jY_3lVjg3I",
+                    msg: "警告：偵測到大量馴鹿與鈴聲訊號，正在強制連線..."
+                };
+            }
+
+            // 預設：Rickroll
+            return {
+                url: "https://youtu.be/dQw4w9WgXcQ?si=LWwqxxL5KwV9BaPh",
+                msg: "警告：偵測到不明訊號源，正在強制連線..."
+            };
+        }
+
         // 時空裂縫觸發
         function triggerTimeRift() {
             const rift = document.getElementById('rift-overlay');
@@ -426,6 +471,9 @@
             // 震動全螢幕
             body.classList.add('shake');
             
+            // 取得當前時段的配置
+            const config = getRiftConfig();
+
             setTimeout(() => {
                 rift.style.display = 'flex';
                 // 顯示文字
@@ -433,10 +481,10 @@
                     document.querySelectorAll('.rift-text').forEach(el => el.style.opacity = '1');
                 }, 1000);
 
-                // 5秒後跳轉 Rickroll
+                // 3秒後跳轉
                 setTimeout(() => {
-                    alert("警告：偵測到不明訊號源，正在強制連線...");
-                    window.location.href = "https://youtu.be/dQw4w9WgXcQ?si=LWwqxxL5KwV9BaPh";
+                    alert(config.msg);
+                    window.location.href = config.url;
                 }, 3000);
             }, 1000);
         }
