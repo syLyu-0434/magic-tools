@@ -18,7 +18,7 @@
             overflow-x: hidden;
             background-color: #020617;
             color: white;
-            transition: filter 0.5s ease, background-color 0.5s ease;
+            transition: filter 0.2s ease, background-color 0.5s ease;
         }
 
         /* 背景畫布 - 真正的全螢幕 */
@@ -346,11 +346,13 @@
 
         // 處理混沌核心點擊
         function handleChaosClick() {
-            // 防止重複觸發：如果已經達到 20 次，就不再執行後續動作
+            // 防止重複觸發
             if (clickCount >= 20) return;
 
             clickCount++;
-            toggleChaos();
+            
+            // 更新混沌視覺效果
+            updateChaosVisuals();
 
             // 彩蛋：按 20 次觸發時空裂縫
             if (clickCount === 20) {
@@ -358,35 +360,61 @@
             }
         }
 
-        // 混沌模式 (數位崩壞風格)
-        function toggleChaos() {
-            isChaos = !isChaos;
+        // 漸進式混沌視覺效果
+        function updateChaosVisuals() {
             const body = document.body;
             const cards = document.querySelectorAll('.glass-card');
             const btn = document.getElementById('chaos-btn');
+            const btnTextSpan = btn.querySelector('span');
+            
+            // 強度係數 (0.05 ~ 1.0)
+            const intensity = clickCount / 20;
 
-            if (isChaos) {
+            if (clickCount > 0) {
                 body.classList.add('chaos-active');
+                
+                // 背景濾鏡：隨次數加重
+                // saturate: 1 -> 5
+                // hue-rotate: 0 -> 180deg
+                // contrast: 1 -> 2
+                body.style.filter = `saturate(${1 + intensity * 4}) hue-rotate(${intensity * 180}deg) contrast(${1 + intensity})`;
+
+                // 卡片亂數變換
                 cards.forEach(card => {
-                    // 隨機彈開與劇烈旋轉
-                    const randomX = Math.random() * 60 - 30;
-                    const randomY = Math.random() * 60 - 30;
-                    const randomRot = Math.random() * 50 - 25;
-                    const randomScale = 0.8 + Math.random() * 0.4;
-                    
-                    card.style.transform = `translate(${randomX}px, ${randomY}px) rotate(${randomRot}deg) scale(${randomScale})`;
+                    // 關鍵修正：強制移除 CSS 動畫，讓 JS 的 transform 生效
+                    card.style.animation = 'none';
                     card.classList.add('chaos-card-distort');
+
+                    // 隨機參數隨強度增加
+                    // Translate: 範圍加大 (最多 50px * 20 = 1000px 偏移)
+                    // 這裡設個上限比較合理，比如最多偏 200px
+                    const maxOffset = 10 + intensity * 200;
+                    const tx = (Math.random() - 0.5) * maxOffset;
+                    const ty = (Math.random() - 0.5) * maxOffset;
+                    
+                    // Rotate: 角度加大 (最多 180度)
+                    const rot = (Math.random() - 0.5) * 180 * intensity;
+                    
+                    // Scale: 縮放更劇烈 (0.5 ~ 1.5)
+                    const scale = 1 + (Math.random() - 0.5) * intensity;
+
+                    card.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${scale})`;
                 });
-                btn.innerText = "偵測到核心超載！警告！";
-                btn.style.boxShadow = "0 0 60px rgba(255, 0, 0, 1)";
-            } else {
-                body.classList.remove('chaos-active');
-                cards.forEach(card => {
-                    card.style.transform = '';
-                    card.classList.remove('chaos-card-distort');
-                });
-                btn.innerHTML = `<span class="relative z-10 flex items-center gap-2"><i class="fa-solid fa-radiation animate-spin-slow"></i>不要點擊這枚不穩定的核心</span>`;
-                btn.style.boxShadow = "";
+
+                // 按鈕本身的反應
+                const btnScale = 1 + intensity * 0.5;
+                const btnRot = (Math.random() - 0.5) * 30 * intensity;
+                btn.style.transform = `scale(${btnScale}) rotate(${btnRot}deg)`;
+                btn.style.boxShadow = `0 0 ${20 + intensity * 50}px rgba(255, 0, 0, ${0.5 + intensity * 0.5})`;
+
+                // 更改文字
+                if(btnTextSpan) {
+                    const btnIcon = '<i class="fa-solid fa-radiation animate-spin-slow"></i>';
+                    if (clickCount < 5) btnTextSpan.innerHTML = `${btnIcon} 核心不穩定 (${clickCount}/20)`;
+                    else if (clickCount < 10) btnTextSpan.innerHTML = `${btnIcon} 警告：現實解離中 (${clickCount}/20)`;
+                    else if (clickCount < 15) btnTextSpan.innerHTML = `${btnIcon} 錯誤！錯誤！錯誤！ (${clickCount}/20)`;
+                    else btnTextSpan.innerHTML = `${btnIcon} 系統即將崩潰 (${clickCount}/20)`;
+                }
             }
         }
 
@@ -405,13 +433,48 @@
                     document.querySelectorAll('.rift-text').forEach(el => el.style.opacity = '1');
                 }, 1000);
 
-                // 5秒後重新載入 -> 改為跳轉
+                // 5秒後跳轉 Rickroll
                 setTimeout(() => {
                     alert("警告：偵測到不明訊號源，正在強制連線...");
                     window.location.href = "https://youtu.be/dQw4w9WgXcQ?si=LWwqxxL5KwV9BaPh";
-                }, 5000);
+                }, 3000);
             }, 1000);
         }
+
+        // --- 強制重置現實 (修復上一頁卡住的問題) ---
+        // 監聽 pageshow 事件，這是瀏覽器快取 (BFCache) 的剋星
+        window.addEventListener('pageshow', (event) => {
+            // 如果頁面是從快取中恢復的 (user 按了上一頁)，或者單純重新載入時
+            // 我們都要確保裂縫是關閉的，次數是歸零的
+            
+            const rift = document.getElementById('rift-overlay');
+            const body = document.body;
+            const btn = document.getElementById('chaos-btn');
+            const cards = document.querySelectorAll('.glass-card');
+
+            // 1. 隱藏裂縫
+            if(rift) rift.style.display = 'none';
+            
+            // 2. 移除所有 CSS 特效
+            body.classList.remove('shake', 'chaos-active');
+            body.style.filter = '';
+            cards.forEach(card => {
+                card.style.transform = '';
+                card.classList.remove('chaos-card-distort');
+                card.style.animation = ''; // 恢復原本的 CSS 動畫
+            });
+
+            // 3. 重置按鈕文字與樣式
+            if(btn) {
+                btn.innerHTML = `<span class="relative z-10 flex items-center gap-2"><i class="fa-solid fa-radiation animate-spin-slow"></i>不要點擊這枚不穩定的核心</span>`;
+                btn.style.transform = '';
+                btn.style.boxShadow = '';
+            }
+
+            // 4. 重置變數
+            clickCount = 0;
+            isChaos = false;
+        });
 
         // 粒子背景
         const canvas = document.getElementById('canvas-bg');
@@ -471,14 +534,16 @@
         // 3D Tilt (非混沌模式時有效)
         document.querySelectorAll('.glass-card').forEach(card => {
             card.addEventListener('mousemove', e => {
-                if (isChaos) return;
+                // 如果已經進入混沌模式 (clickCount > 0)，就停止互動 Tilt，完全交給 updateChaosVisuals 控制
+                if (clickCount > 0) return;
+                
                 const rect = card.getBoundingClientRect();
                 const x = (e.clientX - rect.left) / rect.width - 0.5;
                 const y = (e.clientY - rect.top) / rect.height - 0.5;
                 card.style.transform = `perspective(1000px) rotateX(${y * -15}deg) rotateY(${x * 15}deg) translateY(-10px)`;
             });
             card.addEventListener('mouseleave', () => {
-                if (isChaos) return;
+                if (clickCount > 0) return;
                 card.style.transform = '';
             });
         });
