@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>臺灣行政區縣市挑戰 | 瑜的神祕妙妙工具屋</title>
+    <title>臺灣行政區挑戰 | 瑜的神祕妙妙工具屋</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
@@ -15,6 +15,8 @@
             overflow: hidden; 
             font-family: 'Zen Maru Gothic', sans-serif; 
             color: white;
+            transition: background-color 1s ease;
+            user-select: none;
         }
         
         /* 背景裝飾 */
@@ -28,44 +30,84 @@
             background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
             z-index: -1;
             pointer-events: none;
+            transition: background 1s ease;
+        }
+
+        /* 368 模式的背景 */
+        body.hard-mode .bg-glow {
+            background: radial-gradient(circle, rgba(220, 38, 38, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
         }
 
         #map-container {
             width: 100%;
             height: calc(100vh - 160px);
-            background: rgba(15, 23, 42, 0.5); /* 深色海洋 */
+            background: rgba(15, 23, 42, 0.5); 
             backdrop-filter: blur(10px);
             border-radius: 2rem;
             cursor: grab;
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            transition: all 0.5s ease;
         }
+        
+        body.hard-mode #map-container {
+            border-color: rgba(239, 68, 68, 0.5);
+            background: rgba(20, 0, 0, 0.6);
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.2);
+        }
+
         #map-container:active { cursor: grabbing; }
 
         /* 地圖樣式 */
         .county {
-            fill: rgba(30, 41, 59, 0.8); /* 陸地預設深色 */
+            fill: rgba(30, 41, 59, 0.8);
             stroke: rgba(56, 189, 248, 0.4); 
             stroke-width: 0.5;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            vector-effect: non-scaling-stroke; 
         }
+        
+        /* 煉獄模式線條設定 */
+        body.hard-mode .county {
+            stroke: rgba(239, 68, 68, 0.5); 
+            stroke-width: 0.6; 
+        }
+
+        /* 煉獄模式中的「縣市界線」 */
+        .county-boundary {
+            fill: none;
+            stroke: #fbbf24; /* Amber-400 */
+            stroke-width: 0.8; /* 變細：原 1.5 -> 0.8 */
+            /* stroke-dasharray: 4 4;  移除虛線，改為實線 */
+            pointer-events: none; /* 讓滑鼠事件穿透 */
+            opacity: 0.8;
+            filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+        }
+
         .county:hover { 
             fill: rgba(56, 189, 248, 0.3); 
             cursor: pointer;
-            stroke-width: 1.5;
             stroke: #38bdf8;
-            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.5));
+            stroke-width: 1.5;
+            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5));
+        }
+
+        body.hard-mode .county:hover {
+            fill: rgba(239, 68, 68, 0.5);
+            stroke: #f87171;
+            stroke-width: 1.5; 
+            filter: drop-shadow(0 0 10px rgba(239, 68, 68, 0.6));
         }
         
         /* 狀態顏色 */
         .county.found { fill: rgba(34, 197, 94, 0.4) !important; stroke: #22c55e !important; }
         .county.revealed { fill: rgba(168, 85, 247, 0.4) !important; stroke: #a855f7 !important; }
-        .county.selected { fill: rgba(245, 158, 11, 0.4) !important; stroke: #f59e0b !important; stroke-width: 2; }
+        .county.selected { fill: rgba(245, 158, 11, 0.5) !important; stroke: #f59e0b !important; stroke-width: 2 !important; }
 
         /* 玻璃擬態彈窗 */
         .glass-modal {
-            background: rgba(15, 23, 42, 0.8);
+            background: rgba(15, 23, 42, 0.9);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -86,26 +128,65 @@
             transition: opacity 0.2s;
             z-index: 50;
             backdrop-filter: blur(5px);
+            white-space: nowrap;
         }
 
+        /* 動畫 */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+            20%, 40%, 60%, 80% { transform: translateX(4px); }
         }
-        .shake { animation: shake 0.3s ease-in-out; }
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
-        /* 返回按鈕樣式 */
-        .back-btn {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s;
+        @keyframes unlock-pulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        .back-btn:hover {
-            background: rgba(56, 189, 248, 0.2);
-            border-color: rgba(56, 189, 248, 0.5);
-            transform: translateX(-5px);
+        .unlock-anim { animation: unlock-pulse 1s ease-out; }
+
+        /* 隱藏元素 */
+        .hidden-mode { display: none !important; }
+
+        /* 標題與計分板點擊區 */
+        #title-container { user-select: none; }
+        #score-board { cursor: pointer; user-select: none; transition: transform 0.1s; }
+        #score-board:active { transform: scale(0.95); }
+
+        /* 模式切換按鈕 */
+        .mode-btn {
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #94a3b8;
+        }
+        .mode-btn:hover { background: rgba(255, 255, 255, 0.1); color: white; }
+        .mode-btn.active { border-color: currentColor; background: rgba(255, 255, 255, 0.1); }
+        .mode-btn.normal.active { color: #38bdf8; border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.2); }
+        .mode-btn.hard.active { color: #ef4444; border-color: #ef4444; box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+
+        /* 輸入框樣式 */
+        .input-correct { border-color: #22c55e !important; background-color: rgba(34, 197, 94, 0.1) !important; }
+        .input-wrong { border-color: #ef4444 !important; background-color: rgba(239, 68, 68, 0.1) !important; animation: shake 0.3s; }
+
+        /* 錯誤重試按鈕 */
+        #retry-btn {
+            background: #ef4444; color: white; padding: 8px 16px; border-radius: 8px; margin-top: 10px; cursor: pointer;
+            transition: all 0.2s; border: 1px solid rgba(255,255,255,0.2);
+        }
+        #retry-btn:hover { background: #dc2626; transform: scale(1.05); }
+
+        /* 勝利視窗樣式 */
+        .victory-text {
+            background: linear-gradient(to right, #facc15, #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
     </style>
 </head>
@@ -116,23 +197,31 @@
     <!-- 頂部導航與標題 -->
     <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
         <div class="flex items-center gap-4">
-            <a href="index.html" class="back-btn p-3 rounded-xl text-slate-400 hover:text-cyan-400">
+            <a href="index.html" class="back-btn p-3 rounded-xl text-slate-400 hover:text-cyan-400 border border-transparent hover:border-cyan-500/30 transition-all">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
-            <div>
-                <h1 class="text-3xl font-black text-white tracking-tight flex items-center gap-2">
-                    <span class="text-cyan-400">📍</span> 臺灣行政區挑戰
+            <div id="title-container">
+                <h1 class="text-3xl font-black text-white tracking-tight flex items-center gap-2" id="game-title">
+                    <span class="text-cyan-400 transition-colors duration-500" id="title-icon">📍</span> 
+                    <span id="title-text">臺灣行政區挑戰</span>
                 </h1>
-                <p class="text-slate-500 font-medium">在神祕的地圖中，尋找被遺忘的縣市全名</p>
+                <p class="text-slate-500 font-medium text-sm mt-1" id="game-desc">在神祕的地圖中，尋找被遺忘的縣市全名</p>
             </div>
         </div>
         
-        <div class="flex gap-4">
-            <div class="glass-modal rounded-2xl px-8 py-3 text-center min-w-[160px] border-t-2 border-cyan-500">
-                <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1">解鎖頻率</span>
+        <div class="flex items-center gap-3">
+            <!-- 模式切換按鈕區 (預設隱藏，解鎖後顯示) -->
+            <div id="mode-controls" class="flex bg-slate-800/50 p-1 rounded-xl backdrop-blur-sm border border-white/5 hidden-mode transition-all">
+                <button onclick="switchMode(false)" id="btn-normal" class="mode-btn normal active">縣市</button>
+                <button onclick="switchMode(true)" id="btn-hard" class="mode-btn hard">368 煉獄</button>
+            </div>
+
+            <!-- 計分板 (彩蛋觸發點) -->
+            <div id="score-board" class="glass-modal rounded-2xl px-6 py-2 text-center min-w-[140px] border-t-2 border-cyan-500 transition-all select-none">
+                <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1" id="score-label">解鎖進度</span>
                 <div class="flex items-baseline justify-center gap-1">
                     <span id="found-count" class="text-3xl font-black text-cyan-400">0</span>
-                    <span class="text-slate-600 font-bold text-lg">/ 22</span>
+                    <span class="text-slate-600 font-bold text-lg" id="total-count">/ 22</span>
                 </div>
             </div>
         </div>
@@ -141,32 +230,34 @@
     <!-- 地圖顯示區域 -->
     <main class="relative flex-grow">
         <div id="map-container">
-            <div id="loading" class="absolute inset-0 flex items-center justify-center z-10 bg-[#020617]/80 rounded-2xl">
-                <div class="text-center">
-                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-cyan-500 mb-4 mx-auto"></div>
-                    <p class="text-cyan-500 font-bold animate-pulse">正在讀取地圖數據...</p>
+            <div id="loading" class="absolute inset-0 flex items-center justify-center z-10 bg-[#020617]/90 rounded-2xl">
+                <div class="text-center p-6 max-w-sm">
+                    <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-cyan-500 mb-4 mx-auto" id="loading-spinner"></div>
+                    <p class="text-cyan-500 font-bold animate-pulse text-lg" id="loading-text">正在讀取地圖數據...</p>
+                    <p class="text-slate-500 text-sm mt-2 hidden" id="loading-subtext">嘗試切換線路中，請稍候...</p>
+                    <button id="retry-btn" class="hidden" onclick="location.reload()">重新載入</button>
                 </div>
             </div>
-            <div id="tooltip">❓</div>
+            <div id="tooltip">❓ 這是哪裡？</div>
         </div>
 
         <!-- 猜測視窗 -->
         <div id="guess-modal" class="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md hidden pointer-events-none z-50">
-            <div class="glass-modal p-10 rounded-[2.5rem] w-full max-w-md pointer-events-auto transform transition-all duration-300 scale-95 opacity-0" id="modal-box">
-                <div class="mb-8 text-center">
-                    <div class="w-20 h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/30">
-                        <i class="fa-solid fa-location-crosshairs text-3xl text-cyan-400"></i>
+            <div class="glass-modal p-8 md:p-10 rounded-[2.5rem] w-full max-w-md pointer-events-auto transform transition-all duration-300 scale-95 opacity-0" id="modal-box">
+                <div class="mb-6 text-center">
+                    <div class="w-20 h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/30 transition-colors duration-300" id="modal-icon-bg">
+                        <i class="fa-solid fa-location-crosshairs text-3xl text-cyan-400" id="modal-icon"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-white mb-2">座標確認</h3>
-                    <p class="text-slate-400 text-sm">請輸入該區域的正確術語 (如：彰化縣)</p>
+                    <h3 class="text-2xl font-black text-white mb-2" id="modal-title">座標確認</h3>
+                    <p class="text-slate-400 text-sm" id="modal-hint">請輸入完整全名 (含縣/市/鄉/鎮/區)</p>
                 </div>
 
                 <input type="text" id="county-input" autocomplete="off"
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 mb-8 focus:border-cyan-500 focus:bg-white/10 focus:outline-none text-2xl font-bold text-center text-white placeholder-slate-600 transition-all"
-                    placeholder="輸入名稱...">
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 mb-6 focus:border-cyan-500 focus:bg-white/10 focus:outline-none text-2xl font-bold text-center text-white placeholder-slate-600 transition-all shadow-inner"
+                    placeholder="例如：臺北市">
                 
-                <div class="grid grid-cols-1 gap-4">
-                    <button id="submit-guess" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-cyan-500/40">送出咒語</button>
+                <div class="grid grid-cols-1 gap-3">
+                    <button id="submit-guess" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-cyan-500/40 transform active:scale-95">送出咒語</button>
                     <div class="flex gap-3">
                         <button id="show-answer" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-3 rounded-xl transition text-sm">不知道 (魔法破解)</button>
                         <button id="cancel-guess" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-500 font-bold py-3 rounded-xl transition text-sm">關閉</button>
@@ -174,41 +265,70 @@
                 </div>
             </div>
         </div>
+        
+        <!-- 勝利視窗 (Normal Mode) -->
+        <div id="victory-modal" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md hidden pointer-events-none z-[55]">
+            <div class="glass-modal p-8 md:p-12 rounded-[2.5rem] w-full max-w-lg pointer-events-auto text-center border-2 border-yellow-500/30 shadow-[0_0_50px_rgba(234,179,8,0.2)]">
+                <i class="fa-solid fa-trophy text-6xl text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"></i>
+                <h2 class="text-4xl font-black text-white mb-2 victory-text">恭喜通關！</h2>
+                <p class="text-slate-300 text-lg mb-8">你已經找出了全臺 22 個縣市！</p>
+                
+                <div class="bg-white/5 rounded-xl p-4 mb-8 border border-white/10">
+                    <p class="text-[10px] text-slate-600 font-mono tracking-widest">
+                        聽說點擊右上角「解鎖進度」7 次<br>會有可怕的事情發生...
+                    </p>
+                </div>
+
+                <button onclick="closeVictoryModal()" class="px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-xl font-bold transition">
+                    太棒了
+                </button>
+            </div>
+        </div>
 
         <!-- Toast -->
-        <div id="toast" class="fixed bottom-12 left-1/2 -translate-x-1/2 px-10 py-4 rounded-full text-white font-bold opacity-0 transition-all pointer-events-none z-[60] shadow-2xl backdrop-blur-xl border border-white/10 flex items-center gap-3">
+        <div id="toast" class="fixed bottom-12 left-1/2 -translate-x-1/2 px-8 py-3 rounded-2xl text-white font-bold opacity-0 transition-all pointer-events-none z-[60] shadow-2xl backdrop-blur-xl border border-white/10 flex items-center gap-3 text-center whitespace-nowrap">
         </div>
     </main>
 
     <script>
-        // 核心邏輯保持不變，優化互動細節
-        const taiwanData = {
-            "Taipei City": ["台北市", "臺北市"], "Taipei": ["台北市", "臺北市"],
-            "New Taipei City": ["新北市"], "New Taipei": ["新北市"],
-            "Keelung City": ["基隆市"], "Keelung": ["基隆市"],
-            "Taoyuan City": ["桃園市"], "Taoyuan": ["桃園市"],
-            "Hsinchu City": ["新竹市"], "Hsinchu": ["新竹縣"], "Hsinchu County": ["新竹縣"],
-            "Yilan County": ["宜蘭縣"], "Yilan": ["宜蘭縣"], "Ilan": ["宜蘭縣"],
-            "Miaoli County": ["苗栗縣"], "Miaoli": ["苗栗縣"],
-            "Taichung City": ["台中市", "臺中市"], "Taichung": ["台中市", "臺中市"],
-            "Changhua County": ["彰化縣"], "Changhua": ["彰化縣"],
-            "Nantou County": ["南投縣"], "Nantou": ["南投縣"],
-            "Yunlin County": ["雲林縣"], "Yunlin": ["雲林縣"],
-            "Chiayi City": ["嘉義市"], "Chiayi": ["嘉義縣"], "Chiayi County": ["嘉義縣"],
-            "Tainan City": ["台南市", "臺南市"], "Tainan": ["台南市", "臺南市"],
-            "Kaohsiung City": ["高雄市"], "Kaohsiung": ["高雄市"],
-            "Pingtung County": ["屏東縣"], "Pingtung": ["屏東縣"],
-            "Hualien County": ["花蓮縣"], "Hualien": ["花蓮縣"],
-            "Taitung County": ["台東縣", "臺東縣"], "Taitung": ["台東縣", "臺東縣"],
-            "Penghu County": ["澎湖縣"], "Penghu": ["澎湖縣"],
-            "Kinmen County": ["金門縣"], "Kinmen": ["金門縣"],
-            "Lienchiang County": ["連江縣"], "Lienchiang": ["連江縣"], "Matsu": ["連江縣"]
+        // 縣市名稱對照表 (支援 taiwan-atlas 的屬性)
+        const countyData = {
+            "臺北市": ["台北市", "臺北市"],
+            "新北市": ["新北市"],
+            "基隆市": ["基隆市"],
+            "桃園市": ["桃園市"],
+            "新竹市": ["新竹市"],
+            "新竹縣": ["新竹縣"],
+            "宜蘭縣": ["宜蘭縣"],
+            "苗栗縣": ["苗栗縣"],
+            "臺中市": ["台中市", "臺中市"],
+            "彰化縣": ["彰化縣"],
+            "南投縣": ["南投縣"],
+            "雲林縣": ["雲林縣"],
+            "嘉義市": ["嘉義市"],
+            "嘉義縣": ["嘉義縣"],
+            "臺南市": ["台南市", "臺南市"],
+            "高雄市": ["高雄市"],
+            "屏東縣": ["屏東縣"],
+            "花蓮縣": ["花蓮縣"],
+            "臺東縣": ["台東縣", "臺東縣"],
+            "澎湖縣": ["澎湖縣"],
+            "金門縣": ["金門縣"],
+            "連江縣": ["連江縣"]
         };
 
-        let foundCounties = new Set();
+        // 狀態變數
+        let isHardMode = false;
+        let foundItems = new Set();
         let selectedElement = null;
         let selectedData = null;
         let currentFeatures = null;
+        let totalItems = 22;
+        
+        // 彩蛋變數
+        let clickCount = 0;
+        let clickTimer = null;
+        let isUnlocked = false;
 
         const container = document.getElementById('map-container');
         let width = container.clientWidth;
@@ -219,60 +339,247 @@
             .attr("viewBox", `0 0 ${width} ${height}`);
 
         const g = svg.append("g");
-        const projection = d3.geoMercator();
+        const projection = d3.geoMercator(); 
         const path = d3.geoPath().projection(projection);
 
         const zoom = d3.zoom()
-            .scaleExtent([1, 40])
+            .scaleExtent([1, 60])
             .on("zoom", (e) => g.attr("transform", e.transform));
         svg.call(zoom);
 
-        function getProperty(properties, keys) {
-            for (const key of keys) { if (properties[key]) return properties[key]; }
-            return "";
+        // 備援 Fetch 函數
+        async function fetchWithFallback(urls) {
+            let lastError;
+            const subtext = document.getElementById('loading-subtext');
+            
+            for (let i = 0; i < urls.length; i++) {
+                const url = urls[i];
+                try {
+                    console.log(`Trying source ${i + 1}: ${url}`);
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    return await response.json();
+                } catch (err) {
+                    console.warn(`Source ${i + 1} failed: ${err.message}`);
+                    lastError = err;
+                    if (i < urls.length - 1) {
+                        subtext.style.display = 'block';
+                        subtext.innerText = `線路 ${i + 1} 擁塞，切換至備用線路 ${i + 2}...`;
+                    }
+                }
+            }
+            throw lastError;
         }
 
-        async function init() {
-            const url = 'https://code.highcharts.com/mapdata/countries/tw/tw-all.topo.json';
+        // 初始化
+        async function init(hardMode = false) {
+            isHardMode = hardMode;
+            foundItems.clear();
+            selectedElement = null;
+            selectedData = null;
+            
+            // UI 重置
+            document.getElementById('found-count').innerText = "0";
+            document.getElementById('loading').style.display = 'flex';
+            document.getElementById('loading-subtext').style.display = 'none';
+            document.getElementById('retry-btn').style.display = 'none';
+            document.getElementById('loading-text').innerHTML = isHardMode ? '正在召喚 368 鄉鎮惡靈...' : '正在讀取地圖數據...';
+            document.getElementById('loading-text').className = isHardMode ? "text-red-500 font-bold animate-pulse text-lg" : "text-cyan-500 font-bold animate-pulse text-lg";
+            document.getElementById('loading-spinner').className = isHardMode ? "animate-spin rounded-full h-12 w-12 border-t-2 border-red-500 mb-4 mx-auto" : "animate-spin rounded-full h-12 w-12 border-t-2 border-cyan-500 mb-4 mx-auto";
+
+            // 設定目標 URL 列表
+            let urls = [];
+            
+            if (isHardMode) {
+                totalItems = 368;
+                setHardModeUI();
+                urls = [
+                    'https://unpkg.com/taiwan-atlas/towns-10t.json',
+                    'https://cdn.jsdelivr.net/npm/taiwan-atlas/towns-10t.json',
+                    'https://cdn.statically.io/gh/ronnywang/twgeojson/master/topojson/town_2019.json'
+                ];
+            } else {
+                totalItems = 22;
+                setNormalModeUI();
+                urls = [
+                    'https://unpkg.com/taiwan-atlas/counties-10t.json',
+                    'https://cdn.jsdelivr.net/npm/taiwan-atlas/counties-10t.json',
+                    'https://cdn.statically.io/gh/ronnywang/twgeojson/master/topojson/county_2019.json'
+                ];
+            }
+            document.getElementById('total-count').innerText = `/ ${totalItems}`;
+
             try {
-                const response = await fetch(url);
-                if (!response.ok) throw new Error('Network fail');
-                const tw = await response.json();
+                const data = await fetchWithFallback(urls);
+                
+                let objectKey = Object.keys(data.objects)[0]; 
+                
+                if (data.objects['counties']) objectKey = 'counties';
+                if (data.objects['towns']) objectKey = 'towns';
+                
+                if (!objectKey) throw new Error("TopoJSON structure invalid");
+                console.log(`Loaded map key: ${objectKey}`);
+                
+                let features = topojson.feature(data, data.objects[objectKey]).features;
+                
+                if (!features || features.length === 0) throw new Error("No features found");
+
+                currentFeatures = features;
                 document.getElementById('loading').style.display = 'none';
 
-                const objectKey = Object.keys(tw.objects)[0]; 
-                const features = topojson.feature(tw, tw.objects[objectKey]).features;
-                currentFeatures = features;
-
-                projection.fitExtent([[50, 50], [width - 50, height - 50]], {type: "FeatureCollection", features: features});
+                svg.call(zoom.transform, d3.zoomIdentity);
+                projection.fitExtent([[20, 20], [width - 20, height - 20]], {type: "FeatureCollection", features: features});
+                
                 features.sort((a, b) => d3.geoArea(b) - d3.geoArea(a));
 
-                renderMap();
+                renderMap(data, objectKey); // Pass raw data for mesh calculation
             } catch (err) {
-                document.getElementById('loading').innerHTML = `<p class="text-red-500">地圖召喚失敗，請重新連線。</p>`;
+                console.error(err);
+                document.getElementById('loading-spinner').style.display = 'none';
+                document.getElementById('loading-text').innerText = "地圖數據讀取失敗";
+                document.getElementById('loading-text').classList.replace('text-cyan-500', 'text-red-500');
+                document.getElementById('loading-subtext').innerHTML = "請檢查網路連線。<br>如果使用的是公司網路，可能被防火牆阻擋。<br>錯誤資訊: " + err.message;
+                document.getElementById('loading-subtext').style.display = 'block';
+                document.getElementById('loading-subtext').classList.add('text-red-400');
+                document.getElementById('retry-btn').style.display = 'inline-block';
             }
         }
 
-        function renderMap() {
-             g.selectAll("path")
+        // 彩蛋邏輯：改為點擊計分板
+        document.getElementById('score-board').addEventListener('click', function() {
+            if (isUnlocked && !document.getElementById('mode-controls').classList.contains('hidden-mode')) return;
+
+            clickCount++;
+            const board = document.getElementById('score-board');
+            
+            // 點擊回饋
+            board.style.transform = `scale(${1 - clickCount * 0.02})`;
+            setTimeout(() => board.style.transform = 'scale(1)', 100);
+
+            clearTimeout(clickTimer);
+            clickTimer = setTimeout(() => { clickCount = 0; }, 2000); 
+
+            if (clickCount === 3) showToast("🧐 進度板好像鬆動了...", "bg-slate-700");
+            if (clickCount === 5) showToast("⚠️ 再戳下去會發生可怕的事！", "bg-orange-600");
+
+            if (clickCount >= 7) {
+                isUnlocked = true;
+                clickCount = 0;
+                unlockHellMode();
+            }
+        });
+
+        function unlockHellMode() {
+            document.body.classList.add('shake');
+            setTimeout(() => document.body.classList.remove('shake'), 500);
+            
+            showToast("🔥 煉獄之門已開啟！", "bg-red-600");
+            
+            const controls = document.getElementById('mode-controls');
+            controls.classList.remove('hidden-mode');
+            controls.classList.add('unlock-anim');
+
+            switchMode(true);
+        }
+
+        function switchMode(toHard) {
+            if (isHardMode === toHard) return;
+            
+            const btnNormal = document.getElementById('btn-normal');
+            const btnHard = document.getElementById('btn-hard');
+            
+            if (toHard) {
+                btnNormal.classList.remove('active');
+                btnHard.classList.add('active');
+                init(true);
+            } else {
+                // 切換回縣市模式：重新鎖定煉獄模式
+                btnHard.classList.remove('active');
+                btnNormal.classList.add('active');
+                
+                // 隱藏選單與重置變數
+                document.getElementById('mode-controls').classList.add('hidden-mode');
+                isUnlocked = false;
+                
+                init(false);
+            }
+        }
+
+        function setNormalModeUI() {
+            document.body.classList.remove('hard-mode');
+            document.getElementById('title-text').innerText = '臺灣行政區挑戰';
+            document.getElementById('title-icon').innerText = '📍';
+            document.getElementById('title-icon').classList.replace('text-red-500', 'text-cyan-400');
+            document.getElementById('game-desc').innerText = "在神祕的地圖中，尋找被遺忘的縣市全名";
+            document.getElementById('score-board').style.borderColor = "#06b6d4"; 
+            document.getElementById('found-count').classList.replace('text-red-500', 'text-cyan-400');
+            
+            document.getElementById('modal-icon-bg').className = "w-20 h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/30 transition-colors";
+            document.getElementById('modal-icon').className = "fa-solid fa-location-crosshairs text-3xl text-cyan-400";
+            document.getElementById('submit-guess').className = "w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-cyan-500/40";
+        }
+
+        function setHardModeUI() {
+            document.body.classList.add('hard-mode');
+            document.getElementById('title-text').innerText = '368 鄉鎮煉獄挑戰';
+            document.getElementById('title-icon').innerText = '🔥';
+            document.getElementById('title-icon').classList.replace('text-cyan-400', 'text-red-500');
+            document.getElementById('game-desc').innerText = "沒有回頭路，只能一個個填滿... (輸入全名如「板橋區」)";
+            document.getElementById('score-board').style.borderColor = "#ef4444"; 
+            document.getElementById('found-count').classList.replace('text-cyan-400', 'text-red-500');
+            
+            document.getElementById('modal-icon-bg').className = "w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-red-500/30 transition-colors";
+            document.getElementById('modal-icon').className = "fa-solid fa-skull-crossbones text-3xl text-red-500";
+            document.getElementById('submit-guess').className = "w-full bg-red-800 hover:bg-red-700 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(220,38,38,0.3)] hover:shadow-red-500/40";
+        }
+
+        function getRegionName(d) {
+            // taiwan-atlas 的屬性: properties.name (中文)
+            if (d.properties.name && /[\u4e00-\u9fa5]/.test(d.properties.name)) {
+                return d.properties.name;
+            }
+            if (isHardMode) {
+                return d.properties.TOWNNAME || d.properties.name || "";
+            } else {
+                return d.properties.COUNTYNAME || d.properties.name || d.properties.NAME || "";
+            }
+        }
+
+        function renderMap(rawData, objectKey) {
+            g.selectAll("path").remove();
+
+            // 1. 繪製所有區域
+            g.selectAll("path.county")
                 .data(currentFeatures)
                 .join("path")
                 .attr("d", path)
                 .attr("class", d => {
-                    const name = getProperty(d.properties, ['name', 'COUNTYNAME', 'NAME']);
+                    const uniqueId = getUniqueId(d);
                     let cls = "county";
-                    if (foundCounties.has(name)) cls += " found";
+                    if (foundItems.has(uniqueId)) cls += " found";
                     return cls;
                 })
                 .on("mousemove", function(event, d) {
                     const tooltip = document.getElementById('tooltip');
-                    const name = getProperty(d.properties, ['name', 'COUNTYNAME', 'NAME']);
-                    let isFound = false;
-                    if (foundCounties.has(name) || (taiwanData[name] && taiwanData[name].some(n => foundCounties.has(n)))) isFound = true;
+                    const name = getRegionName(d);
+                    const uniqueId = getUniqueId(d);
+                    let isFound = foundItems.has(uniqueId);
                     
-                    tooltip.innerText = isFound ? (taiwanData[name] ? taiwanData[name][0] : name) : "❓ 這是哪裡？";
-                    
-                    // 修正座標計算：轉換為相對於 map-container 的局部座標
+                    if (isFound) {
+                        let displayName = name;
+                        if (!isHardMode && countyData[name]) displayName = countyData[name][0];
+                        if (isHardMode) {
+                            const county = d.properties.county || d.properties.COUNTYNAME || "";
+                            displayName = county + name;
+                        }
+                        
+                        tooltip.innerText = displayName;
+                        tooltip.style.background = isHardMode ? "rgba(220, 38, 38, 0.9)" : "rgba(15, 23, 42, 0.9)";
+                    } else {
+                        tooltip.innerText = "❓ 這是哪裡？";
+                        tooltip.style.background = "rgba(15, 23, 42, 0.9)";
+                    }
+
                     const container = document.getElementById('map-container');
                     const rect = container.getBoundingClientRect();
                     const x = event.clientX - rect.left;
@@ -284,13 +591,38 @@
                 })
                 .on("mouseout", () => document.getElementById('tooltip').style.opacity = 0)
                 .on("click", function(e, d) {
-                    const name = getProperty(d.properties, ['name', 'COUNTYNAME']);
-                    if (foundCounties.has(name) || (taiwanData[name] && taiwanData[name].some(n => foundCounties.has(n)))) {
-                        showToast("✨ 此維度已被解鎖", "bg-cyan-500/20");
+                    const uniqueId = getUniqueId(d);
+                    if (foundItems.has(uniqueId)) {
+                        showToast("✨ 此區域已被解鎖", isHardMode ? "bg-red-500/20" : "bg-cyan-500/20");
                         return;
                     }
                     openModal(this, d);
                 });
+
+            // 2. 煉獄模式下：繪製「縣市界線」 (使用 topojson.mesh)
+            if (isHardMode && rawData && objectKey) {
+                // 算出哪些邊界是屬於不同縣市的 (properties.county 不同)
+                const countyMesh = topojson.mesh(rawData, rawData.objects[objectKey], (a, b) => {
+                    // 相容不同的屬性名稱
+                    const ca = a.properties.county || a.properties.COUNTYNAME;
+                    const cb = b.properties.county || b.properties.COUNTYNAME;
+                    return ca !== cb; // 如果兩邊的縣市名稱不同，這條線就要畫出來
+                });
+
+                g.append("path")
+                    .datum(countyMesh)
+                    .attr("d", path)
+                    .attr("class", "county-boundary");
+            }
+        }
+
+        function getUniqueId(d) {
+            if (d.id) return d.id;
+            if (d.properties.TOWNID) return d.properties.TOWNID;
+            if (d.properties.COUNTYID) return d.properties.COUNTYID;
+            const name = getRegionName(d);
+            const county = d.properties.county || d.properties.COUNTYNAME || "";
+            return county + name;
         }
 
         function openModal(el, d) {
@@ -301,10 +633,14 @@
             const modal = document.getElementById('guess-modal');
             const box = document.getElementById('modal-box');
             modal.classList.remove('hidden');
+            
+            document.getElementById('modal-title').innerText = isHardMode ? "這是哪個鄉鎮區？" : "這是哪個縣市？";
+            
             setTimeout(() => {
                 box.classList.replace('opacity-0', 'opacity-100');
                 box.classList.replace('scale-95', 'scale-100');
                 document.getElementById('county-input').value = "";
+                document.getElementById('county-input').classList.remove('input-wrong', 'input-correct');
                 document.getElementById('county-input').focus();
             }, 50);
         }
@@ -319,45 +655,105 @@
         }
 
         function checkGuess() {
-            const input = document.getElementById('county-input').value.trim();
+            const inputField = document.getElementById('county-input');
+            const input = inputField.value.trim();
             if (!input || !selectedData) return;
-            const rawName = getProperty(selectedData.properties, ['name', 'COUNTYNAME', 'NAME']);
-            
-            let validNames = taiwanData[rawName] ? [...taiwanData[rawName]] : [];
-            if (/[\u4e00-\u9fa5]/.test(rawName)) validNames.push(rawName);
 
-            if (validNames.includes(input)) {
-                handleSuccess(input, "found", `✅ 咒語正確！解鎖：${input}`);
+            let isCorrect = false;
+            let correctName = "";
+            const rawName = getRegionName(selectedData);
+
+            // 檢查輸入是否為完整名稱 (包含後綴)
+            const hasSuffix = /[縣市鄉鎮區]$/.test(input);
+
+            if (!hasSuffix) {
+                showToast("⚠️ 請輸入完整全名 (含縣/市/鄉/鎮/區)", "bg-orange-500");
+                inputField.classList.add('input-wrong');
+                setTimeout(() => inputField.classList.remove('input-wrong'), 500);
+                return;
+            }
+
+            if (isHardMode) {
+                // 煉獄模式：強制全名完全符合
+                if (input === rawName) {
+                    isCorrect = true;
+                    correctName = rawName;
+                }
             } else {
-                showToast("❌ 咒語無效，請檢查全稱", "bg-red-500/80");
-                const box = document.getElementById('modal-box');
-                box.classList.add('shake');
-                setTimeout(() => box.classList.remove('shake'), 300);
+                // 正常模式：查表，但也必須是全名
+                let validNames = countyData[rawName] ? [...countyData[rawName]] : [];
+                if (/[\u4e00-\u9fa5]/.test(rawName)) validNames.push(rawName);
+                
+                if (validNames.includes(input)) {
+                    isCorrect = true;
+                    correctName = validNames[0]; // 顯示標準名稱
+                }
+            }
+
+            if (isCorrect) {
+                inputField.classList.add('input-correct');
+                setTimeout(() => {
+                   handleSuccess(selectedData, "found", `✅ 正確！是${correctName}`);
+                }, 400); 
+            } else {
+                inputField.classList.add('input-wrong');
+                showToast("❌ 咒語無效，請檢查名稱", "bg-red-500/80");
+                setTimeout(() => inputField.classList.remove('input-wrong'), 500);
             }
         }
 
         function giveUp() {
-            const rawName = getProperty(selectedData.properties, ['name', 'COUNTYNAME']);
-            const displayName = taiwanData[rawName] ? taiwanData[rawName][0] : rawName;
-            handleSuccess(displayName, "revealed", `💡 魔法顯影：${displayName}`);
+            const rawName = getRegionName(selectedData);
+            let displayName = rawName;
+            
+            if (!isHardMode && countyData[rawName]) {
+                displayName = countyData[rawName][0];
+            } else if (isHardMode) {
+                const county = selectedData.properties.county || selectedData.properties.COUNTYNAME || "";
+                displayName = county + rawName;
+            }
+
+            handleSuccess(selectedData, "revealed", `💡 答案是：${displayName}`);
         }
 
-        function handleSuccess(name, cls, msg) {
-            foundCounties.add(name);
+        function handleSuccess(d, cls, msg) {
+            const uniqueId = getUniqueId(d);
+            foundItems.add(uniqueId);
+            
             d3.select(selectedElement).attr("class", `county ${cls}`).classed("selected", false);
             
-            // 計算中文字名稱的數量
-            const count = Array.from(foundCounties).filter(n => /[\u4e00-\u9fa5]/.test(n)).length;
-            document.getElementById('found-count').innerText = Math.min(count, 22);
+            const unlockedCount = foundItems.size;
+            document.getElementById('found-count').innerText = unlockedCount;
 
-            showToast(msg, cls === "found" ? "bg-cyan-600" : "bg-purple-600");
+            showToast(msg, cls === "found" ? (isHardMode ? "bg-red-600" : "bg-cyan-600") : "bg-purple-600");
             closeModal();
+            
+            if (unlockedCount >= totalItems) {
+                if (isHardMode) {
+                    showToast("🏆 傳說誕生！全臺 368 鄉鎮制霸！", "bg-yellow-500");
+                } else {
+                    // 普通模式完成：顯示恭喜視窗
+                    showVictoryModal();
+                }
+            }
+        }
+
+        // 勝利視窗控制
+        function showVictoryModal() {
+            const modal = document.getElementById('victory-modal');
+            modal.classList.remove('hidden');
+            // 特效：標題跳動
+            document.getElementById('game-title').classList.add('animate-bounce');
+        }
+
+        function closeVictoryModal() {
+            document.getElementById('victory-modal').classList.add('hidden');
         }
 
         function showToast(msg, color) {
             const t = document.getElementById('toast');
             t.innerText = msg;
-            t.className = `fixed bottom-12 left-1/2 -translate-x-1/2 px-10 py-4 rounded-full text-white font-bold transition-all duration-300 z-[60] shadow-2xl backdrop-blur-xl border border-white/10 ${color}`;
+            t.className = `fixed bottom-12 left-1/2 -translate-x-1/2 px-8 py-3 rounded-2xl text-white font-bold transition-all duration-300 z-[60] shadow-2xl backdrop-blur-xl border border-white/10 text-center whitespace-nowrap ${color}`;
             t.style.opacity = 1;
             t.style.transform = "translate(-50%, -20px)";
             setTimeout(() => { t.style.opacity = 0; t.style.transform = "translate(-50%, 0)"; }, 2500);
@@ -371,13 +767,15 @@
             if (e.key === 'Escape') closeModal();
         };
 
-        window.onload = init;
+        window.onload = () => init(false);
         window.onresize = () => {
             width = container.clientWidth; height = container.clientHeight;
             svg.attr("viewBox", `0 0 ${width} ${height}`);
             if (currentFeatures) {
-                projection.fitExtent([[50, 50], [width - 50, height - 50]], {type: "FeatureCollection", features: currentFeatures});
-                g.selectAll("path").attr("d", path);
+                svg.call(zoom.transform, d3.zoomIdentity);
+                projection.fitExtent([[20, 20], [width - 20, height - 20]], {type: "FeatureCollection", features: currentFeatures});
+                g.selectAll("path.county").attr("d", path);
+                g.selectAll("path.county-boundary").attr("d", path);
             }
         };
     </script>
