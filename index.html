@@ -132,6 +132,13 @@
             filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.5)) blur(1px) !important;
         }
 
+        /* 消失特效 (用於側邊欄) */
+        .vanish {
+            opacity: 0 !important;
+            pointer-events: none !important;
+            transition: opacity 2s ease-out !important;
+        }
+
         /* 時空裂縫效果 */
         #rift-overlay {
             position: fixed;
@@ -198,37 +205,58 @@
 
     <!-- 側邊欄本體 -->
     <aside id="sidebar" class="fixed inset-y-0 left-0 w-80 sidebar-glass transform -translate-x-full transition-transform duration-500 ease-[cubic-bezier(0.4,0,0.2,1)] z-40 flex flex-col pt-32 px-8 shadow-2xl">
-        <div class="mb-12 border-b border-white/10 pb-6">
+        <div class="mb-8 border-b border-white/10 pb-6">
             <h2 class="text-2xl font-bold text-cyan-400 mb-2 glitch" data-text="控制台">控制台</h2>
-            <p class="text-[10px] text-slate-500 font-mono tracking-widest uppercase">Encryption: AES-256 Enabled</p>
+            <!-- 神祕解鎖機關 1: System Status -->
+            <p id="sys-status" class="text-[10px] text-slate-500 font-mono tracking-widest uppercase cursor-pointer select-none hover:text-cyan-400 transition-colors">System Status: Online</p>
         </div>
 
-        <nav class="flex flex-col space-y-6">
-            <a href="#" class="flex items-center space-x-4 group p-2">
-                <div class="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-all duration-300 shadow-lg">
-                    <i class="fa-solid fa-house"></i>
+        <nav class="flex flex-col space-y-4">
+            <!-- 中央大廳 -->
+            <a href="#" class="flex items-center space-x-4 group p-2 rounded-lg hover:bg-white/5 transition-all">
+                <div class="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500 group-hover:text-white transition-all shadow-lg">
+                    <i class="fa-solid fa-house text-sm"></i>
                 </div>
-                <span class="text-slate-300 group-hover:text-white text-lg font-medium transition-colors">中央大廳</span>
+                <span class="text-slate-300 group-hover:text-white font-medium transition-colors">中央大廳</span>
             </a>
 
-            <a href="taiwan-map.html" class="flex items-center space-x-4 group p-2">
-                <div class="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all duration-300 shadow-lg">
-                    <i class="fa-solid fa-map-location-dot"></i>
+            <!-- 實驗室大廳 -->
+            <a href="lab.html" class="flex items-center space-x-4 group p-2 rounded-lg hover:bg-white/5 transition-all">
+                <div class="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-lg">
+                    <i class="fa-solid fa-flask text-sm"></i>
                 </div>
-                <span class="text-slate-300 group-hover:text-white text-lg font-medium transition-colors">臺灣行政區挑戰</span>
+                <span class="text-slate-300 group-hover:text-white font-medium transition-colors">實驗室大廳</span>
             </a>
 
-            <a href="https://your-github-username.github.io/physics-sim" target="_blank" class="flex items-center space-x-4 group p-2">
-                <div class="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-all duration-300 shadow-lg">
-                    <i class="fa-solid fa-atom"></i>
+            <!-- 行政區測驗 -->
+            <a href="taiwan-map.html" class="flex items-center space-x-4 group p-2 rounded-lg hover:bg-white/5 transition-all">
+                <div class="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-lg">
+                    <i class="fa-solid fa-map-location-dot text-sm"></i>
                 </div>
-                <span class="text-slate-300 group-hover:text-white text-lg font-medium transition-colors">物理模擬器</span>
+                <span class="text-slate-300 group-hover:text-white font-medium transition-colors">行政區測驗</span>
+            </a>
+
+            <!-- 祕密筆記 -->
+            <a href="notes.html" class="flex items-center space-x-4 group p-2 rounded-lg hover:bg-white/5 transition-all">
+                <div class="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-purple-400 group-hover:bg-purple-500 group-hover:text-white transition-all shadow-lg">
+                    <i class="fa-solid fa-book-journal-whills text-sm"></i>
+                </div>
+                <span class="text-slate-300 group-hover:text-white font-medium transition-colors">祕密筆記</span>
+            </a>
+
+            <!-- 聯絡通訊 -->
+            <a href="contact.html" class="flex items-center space-x-4 group p-2 rounded-lg hover:bg-white/5 transition-all">
+                <div class="w-8 h-8 rounded-lg bg-slate-800/50 flex items-center justify-center text-orange-400 group-hover:bg-orange-500 group-hover:text-white transition-all shadow-lg">
+                    <i class="fa-solid fa-satellite-dish text-sm"></i>
+                </div>
+                <span class="text-slate-300 group-hover:text-white font-medium transition-colors">通訊陣列</span>
             </a>
         </nav>
 
         <div class="mt-auto mb-10 p-4 rounded-xl bg-white/5 border border-white/5 font-mono text-[10px] text-slate-500">
             <div class="flex justify-between mb-1"><span>COORDS:</span> <span id="coords" class="text-cyan-800">0.0, 0.0</span></div>
-            <div class="flex justify-between"><span>P-MODE:</span> <span class="text-emerald-800">ACTIVE</span></div>
+            <!-- 神祕解鎖機關 2: P-MODE -->
+            <div class="flex justify-between mb-3"><span id="pmode-trigger" class="cursor-pointer hover:text-white transition-colors">P-MODE: <span id="pmode-val" class="text-emerald-800">ACTIVE</span></span></div>
         </div>
     </aside>
 
@@ -276,24 +304,24 @@
                 <p class="text-slate-400 leading-relaxed text-sm">關於學術、關於生活、關於那些在深夜靈光一現的破碎語錄。</p>
             </a>
 
-            <!-- 物理動畫模擬 -->
-            <a href="lab.html" target="_blank" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden">
+            <!-- 物理實驗室 -->
+            <a href="lab.html" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden">
                 <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors"></div>
                 <div class="w-20 h-20 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-[10deg] transition-transform shadow-inner">
-                    <i class="fa-solid fa-atom text-4xl text-emerald-400"></i>
+                    <i class="fa-solid fa-flask text-4xl text-emerald-400"></i>
                 </div>
-                <h3 class="text-2xl font-bold mb-3 text-white">物理模擬器</h3>
-                <p class="text-slate-400 leading-relaxed text-sm">在這裡，你可以做模擬實驗，不用去實驗室！</p>
+                <h3 class="text-2xl font-bold mb-3 text-white">物理實驗室</h3>
+                <p class="text-slate-400 leading-relaxed text-sm">包含拋射、波動、混沌等多種模擬實驗的大廳。</p>
             </a>
 
-            <!-- 聯絡 -->
+            <!-- 聯絡 (導向 contact.html) -->
             <a href="contact.html" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden animate-float-delay">
                 <div class="absolute -right-10 -top-10 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-colors"></div>
                 <div class="w-20 h-20 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-[-10deg] transition-transform shadow-inner">
-                    <i class="fa-solid fa-paper-plane text-4xl text-orange-400"></i>
+                    <i class="fa-solid fa-satellite-dish text-4xl text-orange-400"></i>
                 </div>
-                <h3 class="text-2xl font-bold mb-3 text-white">找瑜瑜？</h3>
-                <p class="text-slate-400 leading-relaxed text-sm">如果你發現了系統漏洞，或是單純想聊聊，點這裡可以找我。</p>
+                <h3 class="text-2xl font-bold mb-3 text-white">通訊陣列</h3>
+                <p class="text-slate-400 leading-relaxed text-sm">建立連線。如果你發現了系統漏洞，或是單純想聊聊。</p>
             </a>
             
         </div>
@@ -310,7 +338,7 @@
     </main>
 
     <footer class="relative z-10 py-12 text-center text-slate-600 text-xs tracking-widest uppercase">
-        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.2-CHAOS_OVERDRIVE</p>
+        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.4-HIDDEN_SECRETS</p>
     </footer>
 
     <script>
@@ -318,12 +346,19 @@
 
         let clickCount = 0;
         let isChaos = false;
+        
+        // --- 隱藏原始碼機關變數 ---
+        let sysStatusClicks = 0;
+        let pModeUnlocked = false;
 
         // 側邊欄與座標
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.getElementById('overlay');
             const btn = document.getElementById('menu-btn');
+            // 檢查是否被混沌模式禁用
+            if (sidebar.classList.contains('vanish')) return;
+
             const isOpen = !sidebar.classList.contains('-translate-x-full');
 
             if (isOpen) {
@@ -346,15 +381,22 @@
 
         // 處理混沌核心點擊
         function handleChaosClick() {
-            // 防止重複觸發
             if (clickCount >= 20) return;
 
             clickCount++;
-            
-            // 更新混沌視覺效果
             updateChaosVisuals();
 
-            // 彩蛋：按 20 次觸發時空裂縫
+            // 5 次點擊：側邊欄消失
+            if (clickCount === 5) {
+                const sidebar = document.getElementById('sidebar');
+                const btn = document.getElementById('menu-btn');
+                sidebar.classList.add('vanish');
+                btn.classList.add('vanish');
+                // 如果側邊欄開著，關閉遮罩
+                document.getElementById('overlay').classList.add('hidden');
+            }
+
+            // 20 次點擊：觸發彩蛋
             if (clickCount === 20) {
                 triggerTimeRift();
             }
@@ -367,159 +409,154 @@
             const btn = document.getElementById('chaos-btn');
             const btnTextSpan = btn.querySelector('span');
             
-            // 強度係數 (0.05 ~ 1.0)
             const intensity = clickCount / 20;
 
             if (clickCount > 0) {
                 body.classList.add('chaos-active');
-                
-                // 背景濾鏡：隨次數加重
-                // saturate: 1 -> 5
-                // hue-rotate: 0 -> 180deg
-                // contrast: 1 -> 2
                 body.style.filter = `saturate(${1 + intensity * 4}) hue-rotate(${intensity * 180}deg) contrast(${1 + intensity})`;
 
-                // 卡片亂數變換
                 cards.forEach(card => {
-                    // 關鍵修正：強制移除 CSS 動畫，讓 JS 的 transform 生效
                     card.style.animation = 'none';
                     card.classList.add('chaos-card-distort');
 
-                    // 隨機參數隨強度增加
-                    // Translate: 範圍加大 (最多 50px * 20 = 1000px 偏移)
-                    // 這裡設個上限比較合理，比如最多偏 200px
                     const maxOffset = 10 + intensity * 200;
                     const tx = (Math.random() - 0.5) * maxOffset;
                     const ty = (Math.random() - 0.5) * maxOffset;
-                    
-                    // Rotate: 角度加大 (最多 180度)
                     const rot = (Math.random() - 0.5) * 180 * intensity;
-                    
-                    // Scale: 縮放更劇烈 (0.5 ~ 1.5)
                     const scale = 1 + (Math.random() - 0.5) * intensity;
 
                     card.style.transform = `translate(${tx}px, ${ty}px) rotate(${rot}deg) scale(${scale})`;
                 });
 
-                // 按鈕本身的反應
                 const btnScale = 1 + intensity * 0.5;
                 const btnRot = (Math.random() - 0.5) * 30 * intensity;
                 btn.style.transform = `scale(${btnScale}) rotate(${btnRot}deg)`;
                 btn.style.boxShadow = `0 0 ${20 + intensity * 50}px rgba(255, 0, 0, ${0.5 + intensity * 0.5})`;
 
-                // 更改文字
                 if(btnTextSpan) {
                     const btnIcon = '<i class="fa-solid fa-radiation animate-spin-slow"></i>';
-                    if (clickCount < 5) btnTextSpan.innerHTML = `${btnIcon} 核心不穩定`;
-                    else if (clickCount < 10) btnTextSpan.innerHTML = `${btnIcon} 警告：現實解離中`;
-                    else if (clickCount < 15) btnTextSpan.innerHTML = `${btnIcon} 錯誤！錯誤！錯誤！ (${clickCount})`;
-                    else btnTextSpan.innerHTML = `${btnIcon} 系統即將崩潰 (${clickCount}/20)`;
+                    
+                    // 1-4次
+                    if (clickCount < 5) {
+                        btnTextSpan.innerHTML = `${btnIcon} 核心不穩定 (${clickCount}/20)`;
+                    } 
+                    // 5-10次 (不顯示計數器)
+                    else if (clickCount <= 10) {
+                        btnTextSpan.innerHTML = `${btnIcon} 警告：現實解離中`;
+                    } 
+                    // 11-14次 (顯示計數器)
+                    else if (clickCount < 15) {
+                        btnTextSpan.innerHTML = `${btnIcon} 錯誤！錯誤！錯誤！ (${clickCount}/20)`;
+                    } 
+                    // 15-19次
+                    else {
+                        btnTextSpan.innerHTML = `${btnIcon} 系統即將崩潰 (${clickCount}/20)`;
+                    }
                 }
             }
         }
 
-        // 取得時空裂縫目的地 (節日彩蛋版)
+        // 取得時空裂縫目的地
         function getRiftConfig() {
             const now = new Date();
-            const month = now.getMonth() + 1; // 1-12
+            const month = now.getMonth() + 1;
             const date = now.getDate();
 
             // 1. 新年期間 (1月21日 - 2月20日)
             if ((month === 1 && date >= 21) || (month === 2 && date <= 20)) {
-                return {
-                    url: "https://youtu.be/b4SRZurGg1c?si=3WmUlu1ynrfyhScb",
-                    msg: "警告：偵測到極高濃度的紅包能量，正在強制連線..."
-                };
+                return { url: "https://youtu.be/b4SRZurGg1c?si=3WmUlu1ynrfyhScb", msg: "警告：偵測到極高濃度的紅包能量，正在強制連線..." };
             }
-
             // 2. 師大生日 (6月5日)
             if (month === 6 && date === 5) {
-                return {
-                    url: "https://youtu.be/rardz_MoF4c?si=Y8nVhc6qxWUu-Z7N",
-                    msg: "警告：偵測到校慶鐘聲訊號，正在強制連線..."
-                };
+                return { url: "https://youtu.be/rardz_MoF4c?si=Y8nVhc6qxWUu-Z7N", msg: "警告：偵測到校慶鐘聲訊號，正在強制連線..." };
             }
-
             // 3. 雙十節 (10月10日)
             if (month === 10 && date === 10) {
-                return {
-                    url: "https://youtu.be/litAUHhL-jU?si=8hKt8yL7cKTCL7jF",
-                    msg: "警告：偵測到壯麗山川，正在強制連線..."
-                };
+                return { url: "https://youtu.be/litAUHhL-jU?si=8hKt8yL7cKTCL7jF", msg: "警告：偵測到雙十慶典能量，正在強制連線..." };
             }
-
             // 4. 聖誕節期間 (12月20日 - 12月31日)
             if (month === 12 && date >= 20) {
-                return {
-                    url: "https://youtu.be/aAkMkVFwAoo?si=WrE4B0jY_3lVjg3I",
-                    msg: "警告：偵測到大量馴鹿與鈴聲訊號，正在強制連線..."
-                };
+                return { url: "https://youtu.be/aAkMkVFwAoo?si=WrE4B0jY_3lVjg3I", msg: "警告：偵測到大量馴鹿與鈴聲訊號，正在強制連線..." };
             }
-
-            // 預設：Rickroll
-            return {
-                url: "https://youtu.be/dQw4w9WgXcQ?si=LWwqxxL5KwV9BaPh",
-                msg: "警告：偵測到不明訊號源，正在強制連線..."
-            };
+            // 預設
+            return { url: "https://youtu.be/dQw4w9WgXcQ?si=LWwqxxL5KwV9BaPh", msg: "警告：偵測到不明訊號源，正在強制連線..." };
         }
 
-        // 時空裂縫觸發
         function triggerTimeRift() {
             const rift = document.getElementById('rift-overlay');
             const body = document.body;
-            
-            // 震動全螢幕
             body.classList.add('shake');
-            
-            // 取得當前時段的配置
             const config = getRiftConfig();
 
             setTimeout(() => {
                 rift.style.display = 'flex';
-                // 顯示文字
-                setTimeout(() => {
-                    document.querySelectorAll('.rift-text').forEach(el => el.style.opacity = '1');
-                }, 1000);
-
-                // 3秒後跳轉
-                setTimeout(() => {
-                    alert(config.msg);
-                    window.location.href = config.url;
-                }, 3000);
+                setTimeout(() => { document.querySelectorAll('.rift-text').forEach(el => el.style.opacity = '1'); }, 1000);
+                setTimeout(() => { alert(config.msg); window.location.href = config.url; }, 3000);
             }, 1000);
         }
 
-        // --- 強制重置現實 (修復上一頁卡住的問題) ---
-        // 監聽 pageshow 事件，這是瀏覽器快取 (BFCache) 的剋星
+        // --- 隱藏原始碼機關邏輯 ---
+        const sysStatus = document.getElementById('sys-status');
+        const pModeTrigger = document.getElementById('pmode-trigger');
+        const pModeVal = document.getElementById('pmode-val');
+
+        // 步驟 1: 點擊 System Status 7 次
+        sysStatus.addEventListener('click', () => {
+            sysStatusClicks++;
+            if (sysStatusClicks === 7) {
+                sysStatus.innerText = "SYSTEM: BREACHED";
+                sysStatus.classList.remove('text-slate-500');
+                sysStatus.classList.add('text-red-500', 'font-bold', 'animate-pulse');
+                
+                // 解鎖 P-MODE
+                pModeUnlocked = true;
+                pModeVal.innerText = "SOURCE: UNLOCKED";
+                pModeVal.classList.remove('text-emerald-800');
+                pModeVal.classList.add('text-red-500', 'font-black');
+                
+                alert("系統安全協定已失效。底部端口已開放。");
+            }
+        });
+
+        // 步驟 2: 點擊 P-MODE (需先解鎖)
+        pModeTrigger.addEventListener('click', () => {
+            if (pModeUnlocked) {
+                if (confirm("警告：即將進入原始碼核心區域。是否繼續？")) {
+                    window.open("https://github.com/syLyu-0434/magic-tools", "_blank");
+                }
+            }
+        });
+
+        // 頁面重置邏輯
         window.addEventListener('pageshow', (event) => {
-            // 如果頁面是從快取中恢復的 (user 按了上一頁)，或者單純重新載入時
-            // 我們都要確保裂縫是關閉的，次數是歸零的
-            
             const rift = document.getElementById('rift-overlay');
             const body = document.body;
             const btn = document.getElementById('chaos-btn');
             const cards = document.querySelectorAll('.glass-card');
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.getElementById('menu-btn');
 
-            // 1. 隱藏裂縫
             if(rift) rift.style.display = 'none';
             
-            // 2. 移除所有 CSS 特效
             body.classList.remove('shake', 'chaos-active');
             body.style.filter = '';
+            
+            // 恢復側邊欄
+            sidebar.classList.remove('vanish');
+            menuBtn.classList.remove('vanish');
+
             cards.forEach(card => {
                 card.style.transform = '';
                 card.classList.remove('chaos-card-distort');
-                card.style.animation = ''; // 恢復原本的 CSS 動畫
+                card.style.animation = '';
             });
 
-            // 3. 重置按鈕文字與樣式
             if(btn) {
                 btn.innerHTML = `<span class="relative z-10 flex items-center gap-2"><i class="fa-solid fa-radiation animate-spin-slow"></i>不要點擊這枚不穩定的核心</span>`;
                 btn.style.transform = '';
                 btn.style.boxShadow = '';
             }
 
-            // 4. 重置變數
             clickCount = 0;
             isChaos = false;
         });
@@ -579,19 +616,17 @@
         }
         animate();
 
-        // 3D Tilt (非混沌模式時有效)
+        // 3D Tilt
         document.querySelectorAll('.glass-card').forEach(card => {
             card.addEventListener('mousemove', e => {
-                // 如果已經進入混沌模式 (clickCount > 5)，就停止互動 Tilt，完全交給 updateChaosVisuals 控制
-                if (clickCount > 5) return;
-                
+                if (isChaos) return;
                 const rect = card.getBoundingClientRect();
                 const x = (e.clientX - rect.left) / rect.width - 0.5;
                 const y = (e.clientY - rect.top) / rect.height - 0.5;
                 card.style.transform = `perspective(1000px) rotateX(${y * -15}deg) rotateY(${x * 15}deg) translateY(-10px)`;
             });
             card.addEventListener('mouseleave', () => {
-                if (clickCount > 0) return;
+                if (isChaos) return;
                 card.style.transform = '';
             });
         });
