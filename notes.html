@@ -73,15 +73,10 @@
             gap: 4px;
         }
         
-        /* 1. 鍛造日誌 (DevLogs) - 藍色 */
         .tag-dev { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3); } 
-        /* 2. 靈光一閃 (Snippets) - 黃色 */
         .tag-snippet { background: rgba(234, 179, 8, 0.2); color: #fde047; border-color: rgba(234, 179, 8, 0.3); }
-        /* 3. 物人子弟 (Education) - 綠色 */
         .tag-edu { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3); }
-        /* 4. 動態頻率 (Music) - 粉紅 */
         .tag-music { background: rgba(236, 72, 153, 0.2); color: #f472b6; border-color: rgba(236, 72, 153, 0.3); }
-        /* 5. 虛空雜談 (Random) - 紫色 */
         .tag-random { background: rgba(139, 92, 246, 0.2); color: #d8b4fe; border-color: rgba(139, 92, 246, 0.3); }
 
         /* 內容顯示區 */
@@ -128,6 +123,25 @@
             transform: translateX(-5px);
         }
 
+        /* 編輯器 Modal */
+        #editor-modal {
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(20px);
+        }
+        .editor-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: white;
+            outline: none;
+            transition: border 0.2s;
+        }
+        .editor-input:focus {
+            border-color: #a78bfa;
+        }
+
         /* 捲軸美化 */
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #020617; }
@@ -145,11 +159,18 @@
             <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
             <span>返回大廳</span>
         </a>
-        <div class="text-right">
-            <h1 class="text-2xl font-black text-purple-400 tracking-tight flex items-center gap-2 justify-end">
-                <i class="fa-solid fa-book-journal-whills"></i> 瑜的祕密筆記
-            </h1>
-            <p class="text-xs text-slate-500 font-mono tracking-widest">GRIMOIRE OF CODE</p>
+        <div class="flex items-center gap-4">
+            <!-- 這裡加上了 hidden 和 id="admin-btn" -->
+            <button id="admin-btn" onclick="openEditor()" class="hidden nav-btn px-4 py-2 rounded-xl text-yellow-300 hover:text-white flex items-center gap-2 group border-yellow-500/30 hover:bg-yellow-500/20 transition-all duration-500">
+                <i class="fa-solid fa-pen-nib"></i>
+                <span>撰寫新篇</span>
+            </button>
+            <div class="text-right">
+                <h1 class="text-2xl font-black text-purple-400 tracking-tight flex items-center gap-2 justify-end select-none cursor-pointer" id="secret-trigger" title="點擊 5 次解鎖編輯器">
+                    <i class="fa-solid fa-book-journal-whills"></i> 瑜的祕密筆記
+                </h1>
+                <p class="text-xs text-slate-500 font-mono tracking-widest">GRIMOIRE OF CODE</p>
+            </div>
         </div>
     </nav>
 
@@ -173,6 +194,60 @@
         </div>
 
     </main>
+
+    <!-- 編輯器 Modal -->
+    <div id="editor-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4">
+        <div class="w-full max-w-4xl h-[90vh] bg-[#0f172a] border border-purple-500/30 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-white/10 flex justify-between items-center bg-purple-900/20">
+                <h3 class="text-white font-bold flex items-center gap-2"><i class="fa-solid fa-feather-pointed"></i> 新增筆記咒語</h3>
+                <button onclick="closeEditor()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            </div>
+            
+            <div class="flex-grow flex flex-col md:flex-row overflow-hidden">
+                <!-- 輸入區 -->
+                <div class="md:w-1/2 p-6 flex flex-col gap-4 overflow-y-auto border-r border-white/5">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">日期</label>
+                            <input type="date" id="edit-date" class="editor-input">
+                        </div>
+                        <div>
+                            <label class="block text-xs text-slate-400 mb-1">分類</label>
+                            <select id="edit-category" class="editor-input">
+                                <option value="dev">🛠️ 鍛造日誌</option>
+                                <option value="snippet">⚡ 靈光一閃</option>
+                                <option value="edu">🍎 物人子弟</option>
+                                <option value="music">🎵 動態頻率</option>
+                                <option value="random">🌌 虛空雜談</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">標題</label>
+                        <input type="text" id="edit-title" class="editor-input" placeholder="輸入標題...">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">簡短描述 (列表顯示)</label>
+                        <input type="text" id="edit-desc" class="editor-input" placeholder="一句話摘要...">
+                    </div>
+                    <div class="flex-grow flex flex-col">
+                        <label class="block text-xs text-slate-400 mb-1">內文 (支援 **粗體**, `代碼`)</label>
+                        <textarea id="edit-content" class="editor-input flex-grow font-mono text-sm leading-relaxed p-4 resize-none" placeholder="在此輸入內容..."></textarea>
+                    </div>
+                </div>
+
+                <!-- 生成區 -->
+                <div class="md:w-1/2 p-6 flex flex-col bg-[#020617]">
+                    <label class="block text-xs text-purple-400 mb-2 font-bold uppercase">GENERATED CODE (複製下方代碼貼入原始碼)</label>
+                    <textarea id="generated-code" class="w-full flex-grow bg-black/50 border border-purple-500/20 rounded-lg p-4 font-mono text-xs text-green-400 resize-none mb-4" readonly></textarea>
+                    <button onclick="generateAndCopy()" class="w-full py-3 bg-purple-600 hover:bg-purple-500 text-white rounded-lg font-bold transition flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-copy"></i> 生成並複製代碼
+                    </button>
+                    <p class="text-[10px] text-slate-500 mt-2 text-center">複製後，請開啟 notes.html 原始碼，貼入 const POSTS = [...] 陣列中。</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
         // --- 🔮 這裡就是你的資料庫！要在這裡寫新文章 ---
@@ -343,6 +418,7 @@
             // 按日期排序 (新的在上面)
             POSTS.sort((a, b) => new Date(b.date) - new Date(a.date));
 
+            listContainer.innerHTML = '';
             POSTS.forEach(post => {
                 const tagInfo = tagStyles[post.category] || { class: 'tag-random', text: post.category };
                 
@@ -410,6 +486,58 @@
             }
         }
 
+        // --- 編輯器邏輯 ---
+        function openEditor() {
+            document.getElementById('editor-modal').classList.remove('hidden');
+            // 設定今天日期
+            document.getElementById('edit-date').valueAsDate = new Date();
+        }
+
+        function closeEditor() {
+            document.getElementById('editor-modal').classList.add('hidden');
+        }
+
+        function generateAndCopy() {
+            const title = document.getElementById('edit-title').value;
+            const date = document.getElementById('edit-date').value;
+            const category = document.getElementById('edit-category').value;
+            const desc = document.getElementById('edit-desc').value;
+            const rawContent = document.getElementById('edit-content').value;
+
+            // 簡單的 ID 生成邏輯：找出目前最大 ID + 1
+            const newId = Math.max(...POSTS.map(p => p.id)) + 1;
+
+            // 處理反引號：這是最重要的，因為 JS 模板字串用反引號包住
+            // 如果文章內容有反引號，必須轉義成 \`
+            const safeContent = rawContent.replace(/`/g, '\\`');
+
+            // 生成程式碼字串
+            const codeBlock = `    {
+        id: ${newId},
+        title: "${title}",
+        date: "${date}",
+        category: "${category}",
+        desc: "${desc}",
+        content: \`
+${safeContent}
+        \`
+    },`;
+
+            // 顯示並複製
+            const codeArea = document.getElementById('generated-code');
+            codeArea.value = codeBlock;
+            codeArea.select();
+            document.execCommand('copy'); // 雖然舊但相容性好
+
+            // 視覺回饋
+            const btn = document.querySelector('#editor-modal button i');
+            const originalClass = btn.className;
+            btn.className = "fa-solid fa-check";
+            setTimeout(() => btn.className = originalClass, 1500);
+            
+            alert('代碼已複製到剪貼簿！請貼到原始碼的 POSTS 陣列中。');
+        }
+
         // 粒子背景 (復用)
         const canvas = document.createElement('canvas');
         document.getElementById('canvas-bg').appendChild(canvas);
@@ -457,6 +585,59 @@
 
         // 啟動
         initList();
+
+        // --- 🔐 神祕機關：解鎖編輯器 ---
+        const adminBtn = document.getElementById('admin-btn');
+        const secretTrigger = document.getElementById('secret-trigger');
+        let secretClicks = 0;
+        let secretTimer = null;
+
+        // 方法 1: 檢查網址參數 (Bookmark 用)
+        // 使用方式: notes.html?magic=true
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('magic') === 'true') {
+            revealAdmin();
+        }
+
+        // 方法 2: 連續點擊標題圖示 5 次
+        secretTrigger.addEventListener('click', () => {
+            secretClicks++;
+            
+            // 加入點擊特效 (輕微晃動)
+            secretTrigger.classList.add('animate-pulse');
+            setTimeout(() => secretTrigger.classList.remove('animate-pulse'), 200);
+
+            if (secretClicks >= 5) {
+                revealAdmin();
+                secretClicks = 0;
+            }
+
+            // 2秒沒繼續點就歸零
+            if (secretTimer) clearTimeout(secretTimer);
+            secretTimer = setTimeout(() => {
+                secretClicks = 0;
+            }, 2000);
+        });
+
+        function revealAdmin() {
+            if (adminBtn.classList.contains('hidden')) {
+                adminBtn.classList.remove('hidden');
+                // 加上一點出場動畫
+                adminBtn.animate([
+                    { transform: 'scale(0.8)', opacity: 0 },
+                    { transform: 'scale(1)', opacity: 1 }
+                ], { duration: 300, easing: 'cubic-bezier(0.34, 1.56, 0.64, 1)' });
+                
+                // 提示訊息
+                const icon = secretTrigger.querySelector('i');
+                icon.classList.remove('fa-book-journal-whills');
+                icon.classList.add('fa-unlock-keyhole', 'text-yellow-400');
+                setTimeout(() => {
+                    icon.classList.add('fa-book-journal-whills');
+                    icon.classList.remove('fa-unlock-keyhole', 'text-yellow-400');
+                }, 1000);
+            }
+        }
 
     </script>
 </body>
