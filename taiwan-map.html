@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -270,9 +271,16 @@
                     if (foundCounties.has(name) || (taiwanData[name] && taiwanData[name].some(n => foundCounties.has(n)))) isFound = true;
                     
                     tooltip.innerText = isFound ? (taiwanData[name] ? taiwanData[name][0] : name) : "❓ 這是哪裡？";
+                    
+                    // 修正座標計算：轉換為相對於 map-container 的局部座標
+                    const container = document.getElementById('map-container');
+                    const rect = container.getBoundingClientRect();
+                    const x = event.clientX - rect.left;
+                    const y = event.clientY - rect.top;
+
                     tooltip.style.opacity = 1;
-                    tooltip.style.left = (event.pageX + 15) + "px";
-                    tooltip.style.top = (event.pageY + 15) + "px";
+                    tooltip.style.left = (x + 20) + "px";
+                    tooltip.style.top = (y + 20) + "px";
                 })
                 .on("mouseout", () => document.getElementById('tooltip').style.opacity = 0)
                 .on("click", function(e, d) {
