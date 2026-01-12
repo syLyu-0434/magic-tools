@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>雙狹縫干涉 | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #020617; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* 背景光暈 */
+        .bg-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* 玻璃面板 */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 1.5rem;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        /* Canvas 容器 */
+        .canvas-container {
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: #020617;
+            border-radius: 1rem;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.5);
+            cursor: crosshair;
+            position: relative;
+        }
+
+        /* 隱藏數字輸入框的上下箭頭 */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+
+        /* 數值輸入框樣式 */
+        .value-input {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            font-family: monospace;
+            font-size: 0.85rem;
+            padding: 2px 6px;
+            border-radius: 6px;
+            width: 70px;
+            text-align: right;
+            transition: all 0.2s;
+        }
+        .value-input:focus {
+            outline: none;
+            border-color: #60a5fa;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        /* 導航按鈕 */
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.5);
+            transform: translateX(-5px);
+        }
+
+        /* 模擬雷射光條紋容器 */
+        #pattern-container {
+            width: 100%;
+            height: 80px;
+            background: black;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: crosshair;
+            position: relative;
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <div class="bg-glow"></div>
+
+    <!-- 頂部導航 -->
+    <nav class="w-full max-w-6xl mb-8 flex justify-between items-center z-10">
+        <a href="physics-hub.html" class="nav-btn px-4 py-2 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+            <span>返回實驗室</span>
+        </a>
+        <div class="text-right">
+            <h1 class="text-2xl font-black text-blue-400 tracking-tight flex items-center gap-2 justify-end">
+                <i class="fa-solid fa-water"></i> 雙狹縫干涉
+            </h1>
+            <p class="text-xs text-slate-500 font-mono tracking-widest">QUANTUM INTERFERENCE SIMULATOR</p>
+        </div>
+    </nav>
+
+    <!-- 主要內容區 -->
+    <main class="w-full max-w-6xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 左側：控制面板 -->
+        <div class="glass-panel p-6 lg:col-span-1 h-fit">
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-blue-400"></i> 實驗參數
+            </h2>
+            
+            <div class="space-y-6">
+                <!-- 波長控制 -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-blue-300">雷射波長 λ (nm)</label>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="lambda-num" value="600" min="100" max="1000" class="value-input">
+                            <span class="text-xs text-slate-500">nm</span>
+                        </div>
+                    </div>
+                    <input type="range" id="lambda" min="100" max="1000" value="600" class="w-full accent-blue-500">
+                    <div class="w-full h-1 mt-1 rounded-full" style="background: linear-gradient(to right, #444 0%, #444 28%, #8B00FF 38%, #0000FF 45%, #00FF00 52%, #FFFF00 55%, #FF8000 60%, #FF0000 75%, #444 85%, #444 100%);"></div>
+                </div>
+
+                <!-- 狹縫寬度 -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-slate-400">狹縫寬度 a (μm)</label>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="a-num" value="50" min="10" max="200" class="value-input">
+                            <span class="text-xs text-slate-500">μm</span>
+                        </div>
+                    </div>
+                    <input type="range" id="a" min="10" max="200" value="50" step="1" class="w-full accent-slate-500">
+                </div>
+
+                <!-- 狹縫間距 -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-slate-400">狹縫間距 d (μm)</label>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="d-num" value="200" min="50" max="500" class="value-input">
+                            <span class="text-xs text-slate-500">μm</span>
+                        </div>
+                    </div>
+                    <input type="range" id="d" min="50" max="500" value="200" step="1" class="w-full accent-slate-500">
+                </div>
+
+                <!-- 螢幕距離 -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-slate-400">螢幕距離 L (cm)</label>
+                        <div class="flex items-center gap-1">
+                            <input type="number" id="L-num" value="100" min="10" max="500" class="value-input">
+                            <span class="text-xs text-slate-500">cm</span>
+                        </div>
+                    </div>
+                    <input type="range" id="L" min="10" max="500" value="100" step="1" class="w-full accent-slate-500">
+                </div>
+
+                <!-- 資訊說明 -->
+                <div class="bg-blue-900/20 border border-blue-500/20 p-4 rounded-xl text-xs text-blue-200 leading-relaxed">
+                    <p class="mb-2"><i class="fa-solid fa-circle-info"></i> <strong>物理筆記：</strong></p>
+                    <ul class="list-disc pl-4 space-y-1">
+                        <li><strong>可見光範圍</strong>：約 380nm - 750nm。超出此範圍將顯示為灰色。</li>
+                        <li><strong>SCREEN VIEW</strong>：模擬真實雷射光打在牆上的樣子。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：模擬視圖 -->
+        <div class="glass-panel p-6 lg:col-span-2 flex flex-col">
+            
+            <!-- 真實干涉條紋預覽 -->
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs text-slate-400 font-mono">SCREEN VIEW (VISUAL)</span>
+            </div>
+            <div id="pattern-container">
+                <canvas id="interference-pattern" class="w-full h-full block"></canvas>
+            </div>
+
+            <!-- 強度波形圖 -->
+            <div class="flex justify-between items-center mb-2 mt-4">
+                <span class="text-xs text-slate-400 font-mono">INTENSITY PROFILE (GRAPH)</span>
+                <span id="coord-box" class="badge text-xs font-mono text-blue-300">x = - mm, I = -</span>
+            </div>
+            <div class="canvas-container w-full aspect-[2/1] relative rounded-xl overflow-hidden">
+                <canvas id="canvas" class="w-full h-full block"></canvas>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // DOM 元素
+        const canvas = document.getElementById("canvas");
+        const ctx = canvas.getContext("2d");
+        const patternCanvas = document.getElementById("interference-pattern");
+        const ctxPattern = patternCanvas.getContext("2d");
+        const coordBox = document.getElementById("coord-box");
+
+        // 定義參數
+        const params = ['lambda', 'a', 'd', 'L'];
+        const controls = {};
+
+        // 初始化
+        params.forEach(key => {
+            const slider = document.getElementById(key);
+            const number = document.getElementById(key + '-num');
+            controls[key] = { slider, number };
+            slider.addEventListener('input', (e) => { number.value = e.target.value; draw(); });
+            number.addEventListener('input', (e) => { slider.value = Number(e.target.value); draw(); });
+        });
+
+        // 游標狀態
+        let cursorRatio = null; 
+        let intensityData = []; 
+
+        // 綁定事件
+        canvas.addEventListener("mousemove", (e) => {
+            if(canvas.width > 0) { cursorRatio = e.offsetX / canvas.width; draw(); }
+        });
+        canvas.addEventListener("mouseleave", () => { cursorRatio = null; coordBox.innerText = "x = - mm, I = -"; draw(); });
+
+        patternCanvas.addEventListener("mousemove", (e) => {
+            if(patternCanvas.width > 0) { cursorRatio = e.offsetX / patternCanvas.width; draw(); }
+        });
+        patternCanvas.addEventListener("mouseleave", () => { cursorRatio = null; coordBox.innerText = "x = - mm, I = -"; draw(); });
+
+        window.addEventListener('resize', () => { resizeCanvases(); draw(); });
+
+        function resizeCanvases() {
+            const container = canvas.parentElement;
+            if (container && container.clientWidth > 0) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+            }
+            const pContainer = document.getElementById('pattern-container');
+            if (pContainer && pContainer.clientWidth > 0) {
+                patternCanvas.width = pContainer.clientWidth;
+                patternCanvas.height = pContainer.clientHeight;
+            }
+        }
+
+        function wavelengthToColor(wavelength) {
+            if (wavelength < 380 || wavelength > 750) return `rgb(100, 100, 100)`;
+            let r, g, b;
+            if (wavelength >= 380 && wavelength < 440) { r = -(wavelength - 440) / (440 - 380); g = 0; b = 1; }
+            else if (wavelength >= 440 && wavelength < 490) { r = 0; g = (wavelength - 440) / (490 - 440); b = 1; }
+            else if (wavelength >= 490 && wavelength < 510) { r = 0; g = 1; b = -(wavelength - 510) / (510 - 490); }
+            else if (wavelength >= 510 && wavelength < 580) { r = (wavelength - 510) / (580 - 510); g = 1; b = 0; }
+            else if (wavelength >= 580 && wavelength < 645) { r = 1; g = -(wavelength - 645) / (645 - 580); b = 0; }
+            else if (wavelength >= 645 && wavelength <= 750) { r = 1; g = 0; b = 0; }
+            else { r = 0; g = 0; b = 0; }
+
+            let factor;
+            if (wavelength >= 380 && wavelength < 420) factor = 0.3 + 0.7 * (wavelength - 380) / (420 - 380);
+            else if (wavelength >= 420 && wavelength < 700) factor = 1.0;
+            else if (wavelength >= 700 && wavelength <= 750) factor = 0.3 + 0.7 * (750 - wavelength) / (750 - 700);
+            else factor = 0;
+
+            const R = Math.floor(r * factor * 255);
+            const G = Math.floor(g * factor * 255);
+            const B = Math.floor(b * factor * 255);
+            return `rgb(${R},${G},${B})`;
+        }
+
+        function draw() {
+            const w = canvas.width;
+            const h = canvas.height;
+            const wP = patternCanvas.width;
+            const hP = patternCanvas.height;
+
+            if (w === 0 || h === 0 || wP === 0 || hP === 0) return;
+
+            ctx.clearRect(0, 0, w, h);
+            ctxPattern.clearRect(0, 0, wP, hP);
+
+            const λ_nm = Number(controls.lambda.number.value);
+            const λ = λ_nm * 1e-9;
+            const a = Number(controls.a.number.value) * 1e-6;
+            const d = Number(controls.d.number.value) * 1e-6;
+            const L = Number(controls.L.number.value) * 1e-2;
+            const color = wavelengthToColor(λ_nm);
+            
+            const range = 0.005; // ±5mm
+            const centerY = h * 0.8;
+            const maxIntensityHeight = h * 0.6;
+
+            // --- 1. 繪製下方波形圖 (基於 w 計算) ---
+            intensityData = [];
+            
+            ctx.strokeStyle = "#334155";
+            ctx.lineWidth = 1;
+            ctx.beginPath(); ctx.moveTo(0, centerY); ctx.lineTo(w, centerY); ctx.stroke();
+
+            ctx.fillStyle = "#94a3b8";
+            ctx.font = "10px monospace";
+            ctx.textAlign = "center";
+            for (let mm = -5; mm <= 5; mm++) {
+                const x = ((mm + 5) / 10) * w;
+                ctx.beginPath(); ctx.moveTo(x, centerY - 5); ctx.lineTo(x, centerY + 5); ctx.stroke();
+                if (mm !== 0) ctx.fillText(mm, x, centerY + 18);
+            }
+
+            ctx.beginPath();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+
+            for (let i = 0; i < w; i++) {
+                const x_pos = -range + (i / w) * (2 * range);
+                const theta = Math.atan(x_pos / L);
+                const beta = Math.PI * a * Math.sin(theta) / λ;
+                const gamma = Math.PI * d * Math.sin(theta) / λ;
+                const envelope = (beta === 0) ? 1 : Math.pow(Math.sin(beta) / beta, 2);
+                const interference = Math.pow(Math.cos(gamma), 2);
+                const intensity = envelope * interference;
+                
+                intensityData.push({ x: x_pos, intensity });
+
+                const y = centerY - intensity * maxIntensityHeight;
+                if (i === 0) ctx.moveTo(i, y); else ctx.lineTo(i, y);
+            }
+            ctx.stroke();
+            ctx.lineTo(w, centerY); ctx.lineTo(0, centerY);
+            ctx.fillStyle = color.replace('rgb', 'rgba').replace(')', ', 0.1)');
+            ctx.fill();
+
+            // --- 2. 繪製上方條紋圖 (基於 wP 獨立計算，消除間隙) ---
+            const imgData = ctxPattern.createImageData(wP, hP);
+            const data = imgData.data;
+            const rgbMatch = color.match(/\d+/g);
+            const R = parseInt(rgbMatch[0]), G = parseInt(rgbMatch[1]), B = parseInt(rgbMatch[2]);
+
+            // 這裡不使用 steps 映射，而是直接遍歷 patternCanvas 的每一個像素列 (pX)
+            for (let pX = 0; pX < wP; pX++) {
+                const x_pos = -range + (pX / wP) * (2 * range);
+                const theta = Math.atan(x_pos / L);
+                const beta = Math.PI * a * Math.sin(theta) / λ;
+                const gamma = Math.PI * d * Math.sin(theta) / λ;
+                const envelope = (beta === 0) ? 1 : Math.pow(Math.sin(beta) / beta, 2);
+                const interference = Math.pow(Math.cos(gamma), 2);
+                const intensity = envelope * interference;
+
+                for (let pY = 0; pY < hP; pY++) {
+                    const idx = (pY * wP + pX) * 4;
+                    const fade = 1 - Math.abs(pY - hP/2) / (hP*0.8); 
+                    data[idx] = R;
+                    data[idx+1] = G;
+                    data[idx+2] = B;
+                    data[idx+3] = intensity * 255 * (fade > 0 ? fade : 0);
+                }
+            }
+            ctxPattern.putImageData(imgData, 0, 0);
+
+            // --- 繪製上方條紋圖的刻度 ---
+            ctxPattern.fillStyle = "rgba(255,255,255,0.7)";
+            ctxPattern.font = "10px monospace";
+            ctxPattern.textAlign = "center";
+            ctxPattern.textBaseline = "bottom";
+            for (let mm = -5; mm <= 5; mm++) {
+                const x = ((mm + 5) / 10) * wP;
+                ctxPattern.beginPath();
+                ctxPattern.moveTo(x, hP);
+                ctxPattern.lineTo(x, hP - 5);
+                ctxPattern.strokeStyle = "rgba(255,255,255,0.5)";
+                ctxPattern.stroke();
+                if (mm % 2 !== 0 && mm !== 0) continue; 
+                ctxPattern.fillText(mm, x, hP - 6);
+            }
+
+            // --- 同步游標 ---
+            if (cursorRatio !== null) {
+                const pX = cursorRatio * wP;
+                ctxPattern.beginPath();
+                ctxPattern.strokeStyle = "rgba(255, 255, 255, 0.8)";
+                ctxPattern.setLineDash([4, 4]);
+                ctxPattern.moveTo(pX, 0); ctxPattern.lineTo(pX, hP); ctxPattern.stroke();
+
+                const cX = cursorRatio * w;
+                ctx.beginPath();
+                ctx.strokeStyle = "rgba(255, 255, 255, 0.5)";
+                ctx.setLineDash([4, 4]);
+                ctx.moveTo(cX, 0); ctx.lineTo(cX, canvas.height); ctx.stroke();
+                ctx.setLineDash([]);
+
+                const idx = Math.floor(cursorRatio * intensityData.length);
+                if (intensityData[idx]) {
+                    const point = intensityData[idx];
+                    const y = centerY - point.intensity * maxIntensityHeight;
+                    ctx.beginPath(); ctx.arc(cX, y, 4, 0, Math.PI * 2); ctx.fillStyle = "#fff"; ctx.fill();
+                    coordBox.innerText = `x = ${(point.x * 1000).toFixed(2)} mm, I = ${point.intensity.toFixed(3)}`;
+                }
+            }
+        }
+
+        resizeCanvases();
+        draw();
+    </script>
+</body>
+</html>
