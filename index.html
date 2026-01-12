@@ -270,7 +270,8 @@
         <div class="mb-10 relative group cursor-pointer animate-float">
             <div class="absolute -inset-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000"></div>
             <div class="relative w-40 h-40 rounded-full bg-slate-900 ring-1 ring-white/20 flex items-center justify-center overflow-hidden shadow-2xl">
-                <span class="text-7xl group-hover:scale-110 transition-transform duration-500">🔮</span>
+                <!-- 🔮 水晶球彩蛋觸發點 -->
+                <span class="text-7xl group-hover:scale-110 transition-transform duration-500" id="crystal-ball">🔮</span>
             </div>
         </div>
 
@@ -338,11 +339,12 @@
     </main>
 
     <footer class="relative z-10 py-12 text-center text-slate-600 text-xs tracking-widest uppercase">
-        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.4-HIDDEN_SECRETS</p>
+        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.5-EASTER_EGGS</p>
     </footer>
 
     <script>
-        document.getElementById('year').innerText = new Date().getFullYear();
+        const yearSpan = document.getElementById('year');
+        yearSpan.innerText = new Date().getFullYear();
 
         let clickCount = 0;
         let isChaos = false;
@@ -456,10 +458,10 @@
             }
         }
 
-        // 取得時空裂縫目的地
+        // 取得時空裂縫目的地 (節日彩蛋版)
         function getRiftConfig() {
             const now = new Date();
-            const month = now.getMonth() + 1;
+            const month = now.getMonth() + 1; // 1-12
             const date = now.getDate();
 
             // 1. 新年期間 (1月21日 - 2月20日)
@@ -468,11 +470,11 @@
             }
             // 2. 師大生日 (6月5日)
             if (month === 6 && date === 5) {
-                return { url: "https://youtu.be/rardz_MoF4c?si=Y8nVhc6qxWUu-Z7N", msg: "警告：偵測到校慶鐘聲訊號，正在強制連線..." };
+                return { url: "https://youtu.be/rardz_MoF4c?si=Y8nVhc6qxWUu-Z7N", msg: "警告：偵測到誠正勤樸訊號，正在強制連線..." };
             }
             // 3. 雙十節 (10月10日)
             if (month === 10 && date === 10) {
-                return { url: "https://youtu.be/litAUHhL-jU?si=8hKt8yL7cKTCL7jF", msg: "警告：偵測到雙十慶典能量，正在強制連線..." };
+                return { url: "https://youtu.be/litAUHhL-jU?si=8hKt8yL7cKTCL7jF", msg: "警告：偵測到壯麗山川，正在強制連線..." };
             }
             // 4. 聖誕節期間 (12月20日 - 12月31日)
             if (month === 12 && date >= 20) {
@@ -527,6 +529,125 @@
             }
         });
 
+        // --- 🔮 1. 水晶球占卜彩蛋 ---
+        const crystalBall = document.querySelector('#crystal-ball');
+        let pressTimer;
+
+        const fortunes = [
+            "大吉：今天的實驗數據誤差在 0.1% 以內。",
+            "中吉：你的波函數看起來塌縮得很完美。",
+            "小吉：雖然有摩擦力，但可以忽略不計。",
+            "凶：實驗室冷氣壞了。",
+            "大凶：你的論文被指導教授拿去墊便當了。",
+            "建議：去睡覺，夢裡什麼都有。",
+            "警告：不要試圖用手接住掉落的烙鐵。",
+            "預言：你明天會忘記帶實驗室鑰匙。",
+            "物理系日常：又要寫預報了，崩潰。",
+            "提醒：你的肝指數正在發生紅移。",
+            "觀測結果：薛丁格的貓好像餓了。",
+            "系統提示：請檢查你的單位有沒有換算錯。"
+        ];
+
+        if (crystalBall) {
+            crystalBall.addEventListener('mousedown', () => {
+                crystalBall.style.transform = 'scale(1.5) rotate(360deg)';
+                crystalBall.style.transition = 'transform 3s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+                
+                pressTimer = setTimeout(() => {
+                    const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+                    alert(`🔮 物理系水晶球顯示：\n\n${randomFortune}`);
+                    crystalBall.style.transform = ''; 
+                }, 3000); 
+            });
+
+            const cancelPress = () => {
+                clearTimeout(pressTimer);
+                crystalBall.style.transform = ''; 
+                crystalBall.style.transition = 'transform 0.5s ease'; 
+            };
+            
+            crystalBall.addEventListener('mouseup', cancelPress);
+            crystalBall.addEventListener('mouseleave', cancelPress);
+        }
+
+        // --- ⌨️ 2. Konami Code (駭客矩陣) ---
+        const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
+        let konamiIndex = 0;
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === konamiCode[konamiIndex] || e.key === konamiCode[konamiIndex].toUpperCase()) {
+                konamiIndex++;
+                if (konamiIndex === konamiCode.length) {
+                    activateMatrixMode();
+                    konamiIndex = 0; 
+                }
+            } else {
+                konamiIndex = 0; 
+            }
+        });
+
+        function activateMatrixMode() {
+            alert("System Hacked... Access Granted. Welcome to the Matrix.");
+            
+            const style = document.createElement('style');
+            style.innerHTML = `
+                * {
+                    color: #00ff00 !important;
+                    font-family: 'Courier New', monospace !important;
+                    text-shadow: 0 0 5px #00ff00 !important;
+                    border-color: #00ff00 !important;
+                }
+                .glass-card, .sidebar-glass {
+                    background: rgba(0, 20, 0, 0.9) !important;
+                    border: 1px solid #00ff00 !important;
+                    box-shadow: 0 0 20px #00ff00 !important;
+                }
+                body {
+                    background: black !important;
+                }
+                #canvas-bg { opacity: 0.2; }
+                h1, h2, h3, p, span, i { color: #00ff00 !important; }
+                button { background: black !important; border: 1px solid #00ff00 !important; }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // --- ⏳ 3. 頁尾時光機彩蛋 ---
+        let yearClicks = 0;
+        if (yearSpan) {
+            yearSpan.addEventListener('click', () => {
+                yearClicks++;
+                yearSpan.style.display = 'inline-block';
+                yearSpan.style.transform = `rotate(${Math.random()*20-10}deg)`;
+
+                if (yearClicks === 10) {
+                    startYearRoulette();
+                    yearClicks = 0;
+                }
+            });
+        }
+
+        function startYearRoulette() {
+            let speed = 50;
+            const maxYear = 9999;
+            const interval = setInterval(() => {
+                yearSpan.innerText = Math.floor(Math.random() * (maxYear - 2000) + 2000);
+            }, speed);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                const futureYear = 3077; 
+                yearSpan.innerText = futureYear;
+                yearSpan.style.transform = 'scale(1.5)';
+                yearSpan.style.color = '#facc15'; 
+                
+                document.querySelector('h1').innerText = "瑜的賽博生化改造屋";
+                document.querySelector('h1').classList.add('glitch');
+                
+                alert(`系統時間已跳轉至 ${futureYear} 年。歡迎來到未來。`);
+            }, 2000);
+        }
+
         // 頁面重置邏輯
         window.addEventListener('pageshow', (event) => {
             const rift = document.getElementById('rift-overlay');
@@ -544,6 +665,7 @@
             // 恢復側邊欄
             sidebar.classList.remove('vanish');
             menuBtn.classList.remove('vanish');
+            document.getElementById('overlay').classList.add('hidden'); // 確保遮罩關閉
 
             cards.forEach(card => {
                 card.style.transform = '';
