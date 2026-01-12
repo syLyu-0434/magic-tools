@@ -346,11 +346,14 @@
 
         // 處理混沌核心點擊
         function handleChaosClick() {
+            // 防止重複觸發：如果已經達到 20 次，就不再執行後續動作
+            if (clickCount >= 20) return;
+
             clickCount++;
             toggleChaos();
 
             // 彩蛋：按 20 次觸發時空裂縫
-            if (clickCount >= 20) {
+            if (clickCount === 20) {
                 triggerTimeRift();
             }
         }
