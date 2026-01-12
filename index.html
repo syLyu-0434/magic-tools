@@ -521,11 +521,14 @@
         });
 
         // 步驟 2: 點擊 P-MODE (需先解鎖)
+        // 修改：這裡不再開啟原始碼，而是新的趣味彩蛋
         pModeTrigger.addEventListener('click', () => {
             if (pModeUnlocked) {
-                if (confirm("警告：即將進入原始碼核心區域。是否繼續？")) {
-                    window.open("https://github.com/syLyu-0434/magic-tools", "_blank");
-                }
+                alert("權限拒絕：開發者正在補眠。\n\n提示：真正的後門是用鍵盤打出來的。\n(試試看輸入 'GITSAUCE'？)");
+                
+                // 新彩蛋特效：側邊欄旋轉
+                document.getElementById('sidebar').style.transition = 'transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
+                document.getElementById('sidebar').style.transform = 'rotate(5deg) translateX(0)';
             }
         });
 
@@ -570,12 +573,32 @@
             crystalBall.addEventListener('mouseleave', cancelPress);
         }
 
-        // --- ⌨️ 2. Konami Code (駭客矩陣) ---
+        // --- ⌨️ 2. Konami Code (駭客矩陣) & GITSAUCE (原始碼) ---
         const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
         let konamiIndex = 0;
 
+        const gitSauceCode = ['g', 'i', 't', 's', 'a', 'u', 'c', 'e'];
+        let gitSauceIndex = 0;
+
         document.addEventListener('keydown', (e) => {
-            if (e.key === konamiCode[konamiIndex] || e.key === konamiCode[konamiIndex].toUpperCase()) {
+            const key = e.key.toLowerCase();
+            const konamiKey = e.key; 
+
+            // GITSAUCE 檢測
+            if (key === gitSauceCode[gitSauceIndex]) {
+                gitSauceIndex++;
+                if (gitSauceIndex === gitSauceCode.length) {
+                    openSourceCode();
+                    gitSauceIndex = 0;
+                }
+            } else {
+                gitSauceIndex = 0;
+                // 重試：如果按下的鍵是 'g'，這可能是新的開始
+                if (key === 'g') gitSauceIndex = 1;
+            }
+
+            // Konami Code 檢測
+            if (konamiKey === konamiCode[konamiIndex] || konamiKey === konamiCode[konamiIndex].toUpperCase()) {
                 konamiIndex++;
                 if (konamiIndex === konamiCode.length) {
                     activateMatrixMode();
@@ -585,6 +608,13 @@
                 konamiIndex = 0; 
             }
         });
+
+        // 真正的原始碼開啟函式
+        function openSourceCode() {
+             if (confirm("✨ 隱藏代碼觸發！\n即將開啟 Github 原始碼倉庫。")) {
+                window.open("https://github.com/syLyu-0434/magic-tools", "_blank");
+            }
+        }
 
         function activateMatrixMode() {
             alert("System Hacked... Access Granted. Welcome to the Matrix.");
