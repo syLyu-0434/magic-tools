@@ -1,4 +1,4 @@
-        <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
@@ -65,7 +65,7 @@
             font-size: 0.7rem;
             padding: 2px 8px;
             border-radius: 4px;
-            font-family: 'Zen Maru Gothic', sans-serif; /* 改用圓體比較親切 */
+            font-family: 'Zen Maru Gothic', sans-serif;
             font-weight: bold;
             border: 1px solid transparent;
             display: inline-flex;
@@ -84,6 +84,7 @@
             font-family: 'Zen Maru Gothic', sans-serif;
             line-height: 1.8;
             color: #cbd5e1;
+            white-space: pre-line; /* 保留換行 */
         }
         .content-area p { margin-bottom: 1.2em; }
         .content-area code {
@@ -108,6 +109,9 @@
             margin: 1.5rem 0;
             color: #94a3b8;
             font-style: italic;
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 0 8px 8px 0;
         }
 
         /* 導航按鈕 */
@@ -160,7 +164,6 @@
             <span>返回大廳</span>
         </a>
         <div class="flex items-center gap-4">
-            <!-- 這裡加上了 hidden 和 id="admin-btn" -->
             <button id="admin-btn" onclick="openEditor()" class="hidden nav-btn px-4 py-2 rounded-xl text-yellow-300 hover:text-white flex items-center gap-2 group border-yellow-500/30 hover:bg-yellow-500/20 transition-all duration-500">
                 <i class="fa-solid fa-pen-nib"></i>
                 <span>撰寫新篇</span>
@@ -252,42 +255,52 @@
     <script>
         // --- 🔮 這裡就是你的資料庫！要在這裡寫新文章 ---
         const POSTS = [
-
-
             {
-            id: 6,
-            title: "彈性聘任",
-            date: "2025-10-14",
-            category: "edu",
-            desc: "懸崖勒馬...",
-            content: `
-            最近看到許多關於「彈性聘任」的貼文，我感到深切的遺憾。
-            目前「代理教師三招」制度已經提供了讓大學相關科系畢業生應徵的管道，那麼「彈性聘任」存在的必要性究竟是什麼？
-            如果我想當老師，那我是不是應該乾脆退掉教育學程，鬼轉去科技業累積經驗，等時機成熟再鬼轉學校教師？還能領轉任獎金。
-            我必須強調，我的立場並不是否定科技業人才，也不是說科技業出身的人就不會教。實務經驗當然珍貴，但如果缺乏教學知識（Pedagogical Knowledge, PK），更遑論教學內容知識（Pedagogical Content Knowledge, PCK）。
-            如果被彈性聘任進來的自然科老師，對科學認知層次（記憶、理解、應用、分析、評鑑、創造）沒有概念，也不了解科學本質，那請問他要怎麼教？是照著課本念、照著備課用書抄嗎？
-            你可能會問：「這些東西真的那麼重要嗎？」
-            都寫在《十二年國民基本教育課程綱要 自然科學領域》裡面了，你說重要嗎？
-            教育部終究沒有聽見老師的聲音，也沒有聽到我在教育部前面憤怒的聲音，真的不認為此政策會有用，科技業待好好的，誰要當老師啊？莫名其妙就會被1999，錢比起來也沒比較多。還不如被領高薪被主管電。
-            根本問題就是教師誘因，不是我說的，很多人都這樣說。若薪資不夠，外面的人不想進去，裡面的人想逃出來。
-            ---
-            雖然還有很多想講的，可是我最近狀況極差，除了每週都有兩三個報告外，回到宿舍也不得安寧。最近也有放棄把資優教育修完的念頭，頂多有興趣的修一修，其他就算了吧。
-            另外我也擔心如果將來真的上（下）岸（海）當老師了，我會不會怕惹到人，我就閉嘴了？
-               `
+                id: 6,
+                title: "彈性聘任：教育的未來？",
+                date: "2025-10-14",
+                category: "edu",
+                desc: "關於「彈性聘任」與師培制度的深刻反思。",
+                content: `
+                    最近看到許多關於「彈性聘任」的貼文，我感到深切的遺憾。
+                    
+                    目前「代理教師三招」制度已經提供了讓大學相關科系畢業生應徵的管道，那麼「彈性聘任」存在的必要性究竟是什麼？
+                    
+                    如果我想當老師，那我是不是應該乾脆退掉教育學程，鬼轉去科技業累積經驗，等時機成熟再鬼轉學校教師？還能領轉任獎金。
+                    
+                    我必須強調，我的立場並不是否定科技業人才，也不是說科技業出身的人就不會教。實務經驗當然珍貴，但如果缺乏教學知識（Pedagogical Knowledge, PK），更遑論教學內容知識（Pedagogical Content Knowledge, PCK）。
+                    
+                    如果被彈性聘任進來的自然科老師，對科學認知層次（記憶、理解、應用、分析、評鑑、創造）沒有概念，也不了解科學本質，那請問他要怎麼教？是照著課本念、照著備課用書抄嗎？
+                    
+                    你可能會問：「這些東西真的那麼重要嗎？」
+                    都寫在《十二年國民基本教育課程綱要 自然科學領域》裡面了，你說重要嗎？
+                    
+                    教育部終究沒有聽見老師的聲音，也沒有聽到我在教育部前面憤怒的聲音，真的不認為此政策會有用，科技業待好好的，誰要當老師啊？莫名其妙就會被1999，錢比起來也沒比較多。還不如被領高薪被主管電。
+                    
+                    根本問題就是教師誘因，不是我說的，很多人都這樣說。若薪資不夠，外面的人不想進去，裡面的人想逃出來。
+                    
+                    ---
+                    
+                    雖然還有很多想講的，可是我最近狀況極差，除了每週都有兩三個報告外，回到宿舍也不得安寧。最近也有放棄把資優教育修完的念頭，頂多有興趣的修一修，其他就算了吧。
+                    
+                    另外我也擔心如果將來真的上（下）岸（海）當老師了，我會不會怕惹到人，我就閉嘴了？
+                `
             },
             {
-            id: 5,
-            title: "直笛新指法！",
-            date: "2025-09-17",
-            category: "music",
-            desc: "吹了快十年才知道...",
-            content: `
-            找到了這個酷網站：https://www.wfg.woodwind.org/fing.html
+                id: 5,
+                title: "直笛新指法！",
+                date: "2025-09-17",
+                category: "music",
+                desc: "吹了快十年才知道...",
+                content: `
+                    找到了這個酷網站：
+                    https://www.wfg.woodwind.org/fing.html
 
-            直到今天才知道高音直笛可以吹超過兩點 D，在這之前完全被指法表給騙啦！
-            兩點降 E：Ø13
-            兩點 E：Ø2
-             `
+                    直到今天才知道高音直笛可以吹超過兩點 D，在這之前完全被指法表給騙啦！
+                    
+                    兩點降 E：Ø13
+                    兩點 E：Ø2
+                `
             },
             {
                 id: 4,
@@ -309,7 +322,7 @@
 
                     這篇文中，annuuslin 老師（推測為在職教師）統計了各個科目的「學科老師首登專長該年新增人數比較表」的歷年數量變化（統計至 111 年），並使用 linear fitting 的結果預測「化學科將在 114 年歸零、物理科將在 116 年歸零、生物科將在 117 年歸零 」。
                     
-                    後來，annuuslin 老師添加了 112 年的資料，並將 fitting 方式改成 exponential decay 發現情況也不那麼樂觀。 ($N(t) = N_0 e^{- \lambda t}$)
+                    後來，annuuslin 老師添加了 112 年的資料，並將 fitting 方式改成 exponential decay 發現情況也不那麼樂觀。 ($N(t) = N_0 e^{-\\lambda t}$)
 
                     我不認為情況會誇張到 117 年後就不會有自然老師，但也很難說未來師資培育的狀況會有多樂觀，我認為國家如果不重視這個問題，到時候真的沒有人要當老師了。
 
