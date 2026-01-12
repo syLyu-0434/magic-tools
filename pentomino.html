@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>五連塊問題(Pentomino Problem) | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --cell-size: 30px;
+            --board-rows: 6;
+            --board-cols: 10;
+        }
+
+        body { 
+            background-color: #020617; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: #e2e8f0;
+            overflow: hidden;
+            touch-action: none; /* 防止手機滑動頁面 */
+        }
+
+        /* 背景特效 */
+        .bg-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.15) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* 玻璃面板 */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(168, 85, 247, 0.2);
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* 棋盤格子 (修正對齊問題) */
+        #board-grid {
+            display: grid;
+            grid-template-columns: repeat(var(--board-cols), var(--cell-size));
+            grid-template-rows: repeat(var(--board-rows), var(--cell-size));
+            /* 移除 gap 以確保數學計算與視覺完全吻合 */
+            gap: 0; 
+            background-color: rgba(15, 23, 42, 0.5);
+            border: 2px solid rgba(168, 85, 247, 0.5);
+            padding: 0; /* 移除 padding 確保絕對定位座標準確 */
+            border-radius: 4px;
+            position: relative;
+            margin: 0 auto;
+            transition: all 0.3s;
+            box-sizing: content-box; /* 確保邊框不吃掉內部空間 */
+        }
+
+        .grid-cell {
+            width: var(--cell-size);
+            height: var(--cell-size);
+            background-color: transparent;
+            /* 改用邊框來畫線，並使用 border-box 確保大小不變 */
+            border: 1px solid rgba(168, 85, 247, 0.15); 
+            box-sizing: border-box;
+        }
+        
+        .grid-cell.invalid-shape {
+            visibility: hidden; /* 用於非矩形的關卡 */
+        }
+
+        /* 棋子樣式 */
+        .piece {
+            position: absolute;
+            cursor: grab;
+            transition: transform 0.1s, filter 0.1s;
+            touch-action: none;
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        
+        .piece.dragging {
+            cursor: grabbing;
+            z-index: 100;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.6));
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .piece-block {
+            position: absolute;
+            width: var(--cell-size);
+            height: var(--cell-size);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 3px;
+            box-sizing: border-box; /* 確保邊框算在尺寸內 */
+        }
+
+        /* 托盤 */
+        #tray {
+            min-height: 120px;
+            max-height: 25vh;
+            overflow-y: auto;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 10px;
+            padding: 10px;
+            position: relative;
+        }
+
+        .tray-slot {
+            position: relative;
+            /* 寬高會由 JS 動態計算，確保能裝下棋子 */
+        }
+
+        /* 魔法按鈕 */
+        .magic-btn {
+            background: rgba(168, 85, 247, 0.2);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            color: #d8b4fe;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .magic-btn:hover {
+            background: rgba(168, 85, 247, 0.4);
+            color: white;
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+        }
+        .magic-btn.active {
+            background: rgba(168, 85, 247, 0.8);
+            color: white;
+        }
+
+        /* 自定義選單 */
+        select {
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            padding: 5px;
+            border-radius: 5px;
+            outline: none;
+        }
+
+        /* 勝利特效 */
+        @keyframes win-glow {
+            0% { box-shadow: 0 0 10px #a855f7; border-color: #a855f7; }
+            50% { box-shadow: 0 0 40px #d8b4fe, inset 0 0 20px #a855f7; border-color: #fff; }
+            100% { box-shadow: 0 0 10px #a855f7; border-color: #a855f7; }
+        }
+        .solved {
+            animation: win-glow 2s infinite;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col items-center">
+
+    <div class="bg-glow"></div>
+
+    <!-- 頂部導航 -->
+    <nav class="w-full max-w-7xl px-4 py-4 flex justify-between items-center z-10 shrink-0">
+        <a href="lab.html" class="magic-btn flex items-center gap-2 group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+            <span>返回實驗室</span>
+        </a>
+        <div class="text-right">
+            <!-- 修正標題 -->
+            <h1 class="text-2xl font-black text-purple-400 tracking-tight flex items-center gap-2 justify-end">
+                <i class="fa-solid fa-puzzle-piece"></i> 五連塊問題
+            </h1>
+            <p class="text-[10px] text-slate-500 font-mono tracking-widest">PENTOMINO PROBLEM</p>
+        </div>
+    </nav>
+
+    <!-- 遊戲主區 -->
+    <main class="flex-grow w-full max-w-5xl flex flex-col items-center justify-center p-2 gap-4 relative">
+        
+        <!-- 控制列 -->
+        <div class="glass-panel p-3 flex flex-wrap justify-center gap-4 items-center w-full max-w-3xl z-20">
+            <div class="flex items-center gap-2">
+                <label class="text-xs text-purple-300 font-bold uppercase">關卡模式</label>
+                <select id="level-select">
+                    <option value="6x10">矩形 6 x 10</option>
+                    <option value="5x12">矩形 5 x 12</option>
+                    <option value="4x15">矩形 4 x 15</option>
+                    <option value="3x20">矩形 3 x 20</option>
+                    <option disabled>──────────</option>
+                    <option value="scale_F">巨型 F (3倍放大)</option>
+                    <option value="scale_I">巨型 I (3倍放大)</option>
+                    <option value="scale_L">巨型 L (3倍放大)</option>
+                    <option value="scale_P">巨型 P (3倍放大)</option>
+                    <option value="scale_N">巨型 N (3倍放大)</option>
+                    <option value="scale_T">巨型 T (3倍放大)</option>
+                    <option value="scale_U">巨型 U (3倍放大)</option>
+                    <option value="scale_V">巨型 V (3倍放大)</option>
+                    <option value="scale_W">巨型 W (3倍放大)</option>
+                    <option value="scale_X">巨型 X (3倍放大)</option>
+                    <option value="scale_Y">巨型 Y (3倍放大)</option>
+                    <option value="scale_Z">巨型 Z (3倍放大)</option>
+                </select>
+            </div>
+
+            <div class="flex gap-2">
+                <button id="btn-rotate" class="magic-btn" title="旋轉 (R)"><i class="fa-solid fa-rotate-right"></i></button>
+                <button id="btn-flip" class="magic-btn" title="翻轉 (F)"><i class="fa-solid fa-arrows-left-right"></i></button>
+                <button id="btn-reset" class="magic-btn border-red-500/50 text-red-300 hover:bg-red-500/20" title="重置"><i class="fa-solid fa-rotate-left"></i></button>
+            </div>
+            
+            <div class="text-xs text-slate-400 hidden md:block">
+                拖曳移動 • <kbd class="bg-slate-700 px-1 rounded">R</kbd> 旋轉 • <kbd class="bg-slate-700 px-1 rounded">F</kbd> 翻轉
+            </div>
+        </div>
+
+        <!-- 棋盤區 (Drop Zone) -->
+        <div class="relative flex-grow flex items-center justify-center w-full overflow-hidden" id="board-container">
+            <div id="board-grid"></div>
+        </div>
+
+        <!-- 托盤區 (Source) -->
+        <div id="tray" class="glass-panel w-full max-w-4xl shrink-0 z-20">
+            <!-- 棋子會在這裡生成 -->
+        </div>
+
+    </main>
+
+    <!-- 勝利提示 -->
+    <div id="win-modal" class="fixed inset-0 bg-black/80 z-50 hidden flex flex-col items-center justify-center backdrop-blur-sm">
+        <h2 class="text-6xl font-black text-purple-400 mb-4 animate-bounce">完美解開！</h2>
+        <p class="text-white text-xl mb-8">空間邏輯運算完成</p>
+        <button onclick="document.getElementById('win-modal').classList.add('hidden')" class="magic-btn text-xl px-8 py-3">繼續探索</button>
+    </div>
+
+    <script>
+        /**
+         * 系統核心：五連塊定義
+         * 使用座標陣列 [x, y] 表示，以左上角為參考
+         */
+        const PENTOMINOES = {
+            'F': { color: '#ef4444', coords: [[1,0], [2,0], [0,1], [1,1], [1,2]] }, // Red
+            'I': { color: '#f97316', coords: [[0,0], [0,1], [0,2], [0,3], [0,4]] }, // Orange
+            'L': { color: '#facc15', coords: [[0,0], [0,1], [0,2], [0,3], [1,3]] }, // Yellow
+            'P': { color: '#84cc16', coords: [[0,0], [1,0], [0,1], [1,1], [0,2]] }, // Lime
+            'N': { color: '#10b981', coords: [[1,0], [1,1], [0,2], [1,2], [0,3]] }, // Emerald
+            'T': { color: '#06b6d4', coords: [[0,0], [1,0], [2,0], [1,1], [1,2]] }, // Cyan
+            'U': { color: '#3b82f6', coords: [[0,0], [2,0], [0,1], [1,1], [2,1]] }, // Blue
+            'V': { color: '#6366f1', coords: [[0,0], [0,1], [0,2], [1,2], [2,2]] }, // Indigo
+            'W': { color: '#8b5cf6', coords: [[0,0], [0,1], [1,1], [1,2], [2,2]] }, // Violet
+            'X': { color: '#d946ef', coords: [[1,0], [0,1], [1,1], [2,1], [1,2]] }, // Fuchsia
+            'Y': { color: '#f43f5e', coords: [[1,0], [0,1], [1,1], [1,2], [1,3]] }, // Rose
+            'Z': { color: '#ec4899', coords: [[0,0], [1,0], [1,1], [1,2], [2,2]] }  // Pink
+        };
+
+        // 遊戲狀態
+        let state = {
+            currentLevel: '6x10',
+            grid: [], // 2D array: 0=empty, 1=filled, -1=invalid
+            pieces: [], // Array of piece objects
+            selectedPieceId: null,
+            rows: 6,
+            cols: 10,
+            cellSize: 30
+        };
+
+        const boardEl = document.getElementById('board-grid');
+        const trayEl = document.getElementById('tray');
+        const winModal = document.getElementById('win-modal');
+
+        // 初始化
+        function init() {
+            // 監聽事件
+            document.getElementById('level-select').addEventListener('change', (e) => loadLevel(e.target.value));
+            document.getElementById('btn-reset').addEventListener('click', () => loadLevel(state.currentLevel));
+            document.getElementById('btn-rotate').addEventListener('click', () => transformPiece('rotate'));
+            document.getElementById('btn-flip').addEventListener('click', () => transformPiece('flip'));
+            
+            window.addEventListener('keydown', (e) => {
+                if (e.key.toLowerCase() === 'r') transformPiece('rotate');
+                if (e.key.toLowerCase() === 'f') transformPiece('flip');
+            });
+
+            window.addEventListener('resize', handleResize);
+
+            // 點擊背景取消選取
+            document.body.addEventListener('pointerdown', (e) => {
+                if (!e.target.closest('.piece') && !e.target.closest('button') && !e.target.closest('select')) {
+                    selectPiece(null);
+                }
+            });
+
+            loadLevel('6x10');
+        }
+
+        // 載入關卡
+        function loadLevel(levelKey) {
+            state.currentLevel = levelKey;
+            state.pieces = [];
+            trayEl.innerHTML = '';
+            boardEl.innerHTML = '';
+            boardEl.classList.remove('solved');
+            selectPiece(null);
+
+            // 設定網格尺寸與形狀
+            if (levelKey.startsWith('scale_')) {
+                // 巨型模式 (9個五連塊拼成一個大的)
+                const shapeKey = levelKey.split('_')[1];
+                const baseShape = PENTOMINOES[shapeKey].coords;
+                setupScaledLevel(baseShape);
+            } else {
+                // 矩形模式
+                const [r, c] = levelKey.split('x').map(Number);
+                setupRectLevel(r, c);
+            }
+
+            // 建立棋盤 DOM
+            renderBoard();
+            
+            // 建立棋子 DOM
+            Object.keys(PENTOMINOES).forEach(key => {
+                createPieceElement(key);
+            });
+
+            handleResize(); // 計算正確的格子大小
+        }
+
+        function setupRectLevel(rows, cols) {
+            state.rows = rows;
+            state.cols = cols;
+            state.grid = Array(rows).fill().map(() => Array(cols).fill(0));
+        }
+
+        function setupScaledLevel(baseCoords) {
+            // 找出基礎形狀的邊界
+            let maxX = 0, maxY = 0;
+            baseCoords.forEach(([x, y]) => {
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            });
+
+            // 放大 3 倍
+            // 基礎形狀寬 w = maxX+1, 高 h = maxY+1
+            // 總網格寬 (maxX+1)*3, 高 (maxY+1)*3
+            state.cols = (maxX + 1) * 3;
+            state.rows = (maxY + 1) * 3;
+            
+            // 初始化網格為 -1 (無效區域)
+            state.grid = Array(state.rows).fill().map(() => Array(state.cols).fill(-1));
+
+            // 標記有效區域 (0)
+            baseCoords.forEach(([bx, by]) => {
+                // 每個基礎方塊對應一個 3x3 的大區域
+                const startX = bx * 3;
+                const startY = by * 3;
+                for(let y=0; y<3; y++) {
+                    for(let x=0; x<3; x++) {
+                        state.grid[startY + y][startX + x] = 0;
+                    }
+                }
+            });
+        }
+
+        function renderBoard() {
+            boardEl.style.setProperty('--board-rows', state.rows);
+            boardEl.style.setProperty('--board-cols', state.cols);
+            
+            state.grid.forEach((row, r) => {
+                row.forEach((cell, c) => {
+                    const div = document.createElement('div');
+                    div.className = 'grid-cell';
+                    if (cell === -1) div.classList.add('invalid-shape');
+                    div.dataset.r = r;
+                    div.dataset.c = c;
+                    boardEl.appendChild(div);
+                });
+            });
+        }
+
+        // 動態計算格子大小以適應螢幕
+        function handleResize() {
+            const container = document.getElementById('board-container');
+            const trayH = trayEl.offsetHeight;
+            const navH = 160; // 估計上方面板高度
+            
+            const availableW = container.clientWidth - 20;
+            const availableH = window.innerHeight - trayH - navH - 20;
+
+            const sizeW = Math.floor(availableW / state.cols);
+            const sizeH = Math.floor(availableH / state.rows);
+            
+            // 限制最大最小值
+            let newSize = Math.min(sizeW, sizeH);
+            newSize = Math.min(Math.max(newSize, 15), 50); // 15px ~ 50px
+
+            state.cellSize = newSize;
+            document.documentElement.style.setProperty('--cell-size', `${newSize}px`);
+            
+            // 重新定位已在棋盤上的棋子
+            state.pieces.forEach(p => {
+                if (p.onBoard) snapToGrid(p);
+            });
+        }
+
+        // 建立棋子物件與 DOM
+        function createPieceElement(key) {
+            const def = PENTOMINOES[key];
+            const id = 'piece-' + key;
+            
+            const el = document.createElement('div');
+            el.className = 'piece';
+            el.id = id;
+            
+            // 繪製內部方塊
+            // 先計算邊界以設定容器大小
+            let w = 0, h = 0;
+            def.coords.forEach(([x, y]) => {
+                if (x > w) w = x;
+                if (y > h) h = y;
+            });
+            el.style.width = `calc(var(--cell-size) * ${w + 1})`;
+            el.style.height = `calc(var(--cell-size) * ${h + 1})`;
+
+            def.coords.forEach(([x, y]) => {
+                const block = document.createElement('div');
+                block.className = 'piece-block';
+                block.style.backgroundColor = def.color;
+                block.style.left = `calc(var(--cell-size) * ${x})`;
+                block.style.top = `calc(var(--cell-size) * ${y})`;
+                block.dataset.lx = x; // 局部座標
+                block.dataset.ly = y;
+                el.appendChild(block);
+            });
+
+            // 狀態物件
+            const pieceObj = {
+                id: id,
+                key: key,
+                el: el,
+                coords: JSON.parse(JSON.stringify(def.coords)), // Deep copy
+                x: 0, y: 0, // 棋盤格座標
+                rotation: 0,
+                flipped: false,
+                onBoard: false,
+                trayIndex: state.pieces.length
+            };
+            state.pieces.push(pieceObj);
+
+            // 加入托盤
+            const slot = document.createElement('div');
+            slot.className = 'tray-slot';
+            slot.style.width = `calc(var(--cell-size) * ${w + 1} * 0.7)`; // 托盤縮小顯示
+            slot.style.height = `calc(var(--cell-size) * ${h + 1} * 0.7)`;
+            trayEl.appendChild(slot);
+            slot.appendChild(el);
+            
+            // 初始化 CSS 變換
+            el.style.transformOrigin = '0 0';
+            el.style.position = 'relative'; // 在托盤中相對定位
+            el.style.transform = 'scale(0.7)'; // 托盤中縮小
+
+            // 綁定互動
+            setupInteraction(pieceObj);
+        }
+
+        // 互動邏輯 (Drag & Drop)
+        function setupInteraction(piece) {
+            const el = piece.el;
+
+            el.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                e.stopPropagation(); // 防止觸發背景點擊
+                
+                selectPiece(piece.id);
+                el.setPointerCapture(e.pointerId);
+                el.classList.add('dragging');
+
+                // 紀錄拖曳起始狀態
+                const rect = el.getBoundingClientRect();
+                const startX = e.clientX;
+                const startY = e.clientY;
+                const offsetX = startX - rect.left;
+                const offsetY = startY - rect.top;
+
+                // 如果在托盤中，先移到 body 以便自由拖曳
+                if (!piece.onBoard) {
+                    const absX = rect.left;
+                    const absY = rect.top;
+                    document.body.appendChild(el);
+                    el.style.position = 'absolute';
+                    el.style.left = absX + 'px';
+                    el.style.top = absY + 'px';
+                    el.style.transform = 'scale(1)'; // 恢復原大
+                }
+
+                const onPointerMove = (moveEvent) => {
+                    const x = moveEvent.clientX - offsetX;
+                    const y = moveEvent.clientY - offsetY;
+                    el.style.left = x + 'px';
+                    el.style.top = y + 'px';
+                };
+
+                const onPointerUp = () => {
+                    el.classList.remove('dragging');
+                    el.releasePointerCapture(e.pointerId);
+                    document.removeEventListener('pointermove', onPointerMove);
+                    document.removeEventListener('pointerup', onPointerUp);
+                    
+                    // 嘗試放置
+                    attemptPlace(piece);
+                };
+
+                document.addEventListener('pointermove', onPointerMove);
+                document.addEventListener('pointerup', onPointerUp);
+            });
+        }
+
+        // 嘗試將棋子吸附到網格
+        function attemptPlace(piece) {
+            const boardRect = boardEl.getBoundingClientRect();
+            const pieceRect = piece.el.getBoundingClientRect();
+
+            // 檢查是否在棋盤範圍內 (寬鬆判定)
+            if (pieceRect.right < boardRect.left || pieceRect.left > boardRect.right || 
+                pieceRect.bottom < boardRect.top || pieceRect.top > boardRect.bottom) {
+                returnToTray(piece);
+                return;
+            }
+
+            // 計算最近的格子 (相對棋子左上角 block[0,0] 的位置)
+            const relX = pieceRect.left - boardRect.left;
+            const relY = pieceRect.top - boardRect.top;
+            
+            const gridX = Math.round(relX / state.cellSize);
+            const gridY = Math.round(relY / state.cellSize);
+
+            if (isValidPosition(piece, gridX, gridY)) {
+                piece.x = gridX;
+                piece.y = gridY;
+                piece.onBoard = true;
+                
+                // 移入棋盤 DOM 結構
+                snapToGrid(piece);
+                updateGridState();
+                checkWin();
+            } else {
+                // 如果位置無效
+                returnToTray(piece);
+            }
+        }
+
+        // 驗證位置是否合法
+        function isValidPosition(piece, gx, gy) {
+            // 取得目前盤面狀態 (不含自己)
+            const currentBoardStatus = getBoardStatusWithout(piece.id);
+
+            for (let [lx, ly] of piece.coords) {
+                const tx = gx + lx;
+                const ty = gy + ly;
+
+                // 邊界檢查
+                if (tx < 0 || tx >= state.cols || ty < 0 || ty >= state.rows) return false;
+                
+                // 佔用檢查
+                if (currentBoardStatus[ty][tx] !== 0) return false; 
+            }
+            return true;
+        }
+
+        // 取得不包含某棋子的盤面狀態
+        function getBoardStatusWithout(ignoreId) {
+            // 複製空盤 (含 -1 區域)
+            let status = state.grid.map(row => row.map(cell => cell === -1 ? -1 : 0));
+            
+            state.pieces.forEach(p => {
+                if (p.onBoard && p.id !== ignoreId) {
+                    p.coords.forEach(([lx, ly]) => {
+                        const tx = p.x + lx;
+                        const ty = p.y + ly;
+                        if (ty >= 0 && ty < state.rows && tx >= 0 && tx < state.cols) {
+                            status[ty][tx] = 1;
+                        }
+                    });
+                }
+            });
+            return status;
+        }
+
+        // 更新視覺與位置
+        function snapToGrid(piece) {
+            if (piece.el.parentElement !== boardEl) {
+                boardEl.appendChild(piece.el);
+            }
+            
+            piece.el.style.position = 'absolute';
+            piece.el.style.left = (piece.x * state.cellSize) + 'px';
+            piece.el.style.top = (piece.y * state.cellSize) + 'px';
+            piece.el.style.transform = 'scale(1)';
+        }
+
+        function returnToTray(piece) {
+            piece.onBoard = false;
+            // 復原旋轉與翻轉
+            piece.rotation = 0;
+            piece.flipped = false;
+            piece.coords = JSON.parse(JSON.stringify(PENTOMINOES[piece.key].coords));
+            
+            // 重繪方塊位置
+            redrawPieceBlocks(piece);
+
+            // 放回托盤
+            const slot = trayEl.children[piece.trayIndex];
+            slot.appendChild(piece.el);
+            piece.el.style.position = 'relative';
+            piece.el.style.left = '0';
+            piece.el.style.top = '0';
+            piece.el.style.transform = 'scale(0.7)';
+            
+            updateGridState();
+        }
+
+        function selectPiece(id) {
+            state.selectedPieceId = id;
+            // 移除其他選取效果
+            document.querySelectorAll('.piece').forEach(el => {
+                el.style.zIndex = el.id === id ? 50 : (state.pieces.find(p=>p.id===el.id).onBoard ? 10 : 1);
+                el.style.filter = el.id === id ? 'brightness(1.2) drop-shadow(0 0 5px white)' : '';
+            });
+        }
+
+        // 變換棋子 (旋轉/翻轉)
+        function transformPiece(action) {
+            if (!state.selectedPieceId) return;
+            const piece = state.pieces.find(p => p.id === state.selectedPieceId);
+            
+            // 計算新座標
+            const newCoords = piece.coords.map(([x, y]) => {
+                if (action === 'rotate') return [-y, x]; // 90度旋轉
+                if (action === 'flip') return [-x, y];   // 水平翻轉
+                return [x, y];
+            });
+
+            // 正規化座標 (移回正數區間，左上對齊 0,0)
+            let minX = Infinity, minY = Infinity;
+            newCoords.forEach(([x, y]) => {
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+            });
+            const normalizedCoords = newCoords.map(([x, y]) => [x - minX, y - minY]);
+
+            // 如果在棋盤上，檢查變換後是否合法
+            if (piece.onBoard) {
+                // 暫存舊座標以防失敗
+                const oldCoords = piece.coords;
+                piece.coords = normalizedCoords; // 暫時套用
+                
+                // 嘗試原位放置，若不行則嘗試稍微偏移 (這能大幅提升 UX)
+                let success = false;
+                const offsets = [[0,0], [1,0], [-1,0], [0,1], [0,-1]]; // 嘗試周圍
+                
+                for(let [ox, oy] of offsets) {
+                    if (isValidPosition(piece, piece.x + ox, piece.y + oy)) {
+                        piece.x += ox;
+                        piece.y += oy;
+                        success = true;
+                        break;
+                    }
+                }
+
+                if (success) {
+                    redrawPieceBlocks(piece);
+                    snapToGrid(piece);
+                    updateGridState();
+                    checkWin();
+                } else {
+                    // 還原
+                    piece.coords = oldCoords;
+                    // 加上搖晃動畫表示失敗
+                    piece.el.animate([
+                        { transform: 'translateX(0)' },
+                        { transform: 'translateX(-5px)' },
+                        { transform: 'translateX(5px)' },
+                        { transform: 'translateX(0)' }
+                    ], { duration: 200 });
+                }
+            } else {
+                // 在托盤中隨便轉
+                piece.coords = normalizedCoords;
+                redrawPieceBlocks(piece);
+            }
+        }
+
+        function redrawPieceBlocks(piece) {
+            // 清空舊 block
+            piece.el.innerHTML = '';
+            
+            // 重新計算邊界
+            let w = 0, h = 0;
+            piece.coords.forEach(([x, y]) => {
+                if (x > w) w = x;
+                if (y > h) h = y;
+            });
+            piece.el.style.width = `calc(var(--cell-size) * ${w + 1})`;
+            piece.el.style.height = `calc(var(--cell-size) * ${h + 1})`;
+
+            // 繪製新 block
+            const color = PENTOMINOES[piece.key].color;
+            piece.coords.forEach(([x, y]) => {
+                const block = document.createElement('div');
+                block.className = 'piece-block';
+                block.style.backgroundColor = color;
+                block.style.left = `calc(var(--cell-size) * ${x})`;
+                block.style.top = `calc(var(--cell-size) * ${y})`;
+                piece.el.appendChild(block);
+            });
+        }
+
+        function updateGridState() {
+            // 重置盤面狀態（保留 -1 無效區）
+            state.grid = state.grid.map(row => row.map(c => c === -1 ? -1 : 0));
+            
+            // 填入所有在板上的棋子
+            state.pieces.forEach(p => {
+                if (p.onBoard) {
+                    p.coords.forEach(([lx, ly]) => {
+                        const tx = p.x + lx;
+                        const ty = p.y + ly;
+                        if (state.grid[ty] && state.grid[ty][tx] !== undefined) {
+                            state.grid[ty][tx] = 1;
+                        }
+                    });
+                }
+            });
+        }
+
+        function checkWin() {
+            // 勝利條件：所有有效格子 (0) 都被填滿 (1)
+            let hasEmpty = false;
+            for(let r=0; r<state.rows; r++) {
+                for(let c=0; c<state.cols; c++) {
+                    if (state.grid[r][c] === 0) { // 0 代表有效但未填
+                        hasEmpty = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!hasEmpty) {
+                boardEl.classList.add('solved');
+                winModal.classList.remove('hidden');
+            } else {
+                boardEl.classList.remove('solved');
+            }
+        }
+
+        // 啟動
+        init();
+
+    </script>
+</body>
+</html>
