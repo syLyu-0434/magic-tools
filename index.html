@@ -277,7 +277,7 @@
             </a>
 
             <!-- 物理動畫模擬 -->
-            <a href="https://your-github-username.github.io/physics-sim" target="_blank" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden">
+            <a href="lab.html" target="_blank" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden">
                 <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors"></div>
                 <div class="w-20 h-20 bg-emerald-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-[10deg] transition-transform shadow-inner">
                     <i class="fa-solid fa-atom text-4xl text-emerald-400"></i>
@@ -287,7 +287,7 @@
             </a>
 
             <!-- 聯絡 -->
-            <a href="mailto:your-email@example.com" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden animate-float-delay">
+            <a href="contact.html" class="glass-card p-8 rounded-3xl flex flex-col items-center text-center group relative overflow-hidden animate-float-delay">
                 <div class="absolute -right-10 -top-10 w-32 h-32 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/20 transition-colors"></div>
                 <div class="w-20 h-20 bg-orange-500/10 rounded-2xl flex items-center justify-center mb-6 group-hover:rotate-[-10deg] transition-transform shadow-inner">
                     <i class="fa-solid fa-paper-plane text-4xl text-orange-400"></i>
@@ -410,8 +410,8 @@
                 // 更改文字
                 if(btnTextSpan) {
                     const btnIcon = '<i class="fa-solid fa-radiation animate-spin-slow"></i>';
-                    if (clickCount < 5) btnTextSpan.innerHTML = `${btnIcon} 核心不穩定 (${clickCount})`;
-                    else if (clickCount < 10) btnTextSpan.innerHTML = `${btnIcon} 警告：現實解離中 (${clickCount})`;
+                    if (clickCount < 5) btnTextSpan.innerHTML = `${btnIcon} 核心不穩定`;
+                    else if (clickCount < 10) btnTextSpan.innerHTML = `${btnIcon} 警告：現實解離中`;
                     else if (clickCount < 15) btnTextSpan.innerHTML = `${btnIcon} 錯誤！錯誤！錯誤！ (${clickCount})`;
                     else btnTextSpan.innerHTML = `${btnIcon} 系統即將崩潰 (${clickCount}/20)`;
                 }
@@ -444,7 +444,7 @@
             if (month === 10 && date === 10) {
                 return {
                     url: "https://youtu.be/litAUHhL-jU?si=8hKt8yL7cKTCL7jF",
-                    msg: "警告：偵測到雙十慶典能量，正在強制連線..."
+                    msg: "警告：偵測到壯麗山川，正在強制連線..."
                 };
             }
 
@@ -582,8 +582,8 @@
         // 3D Tilt (非混沌模式時有效)
         document.querySelectorAll('.glass-card').forEach(card => {
             card.addEventListener('mousemove', e => {
-                // 如果已經進入混沌模式 (clickCount > 0)，就停止互動 Tilt，完全交給 updateChaosVisuals 控制
-                if (clickCount > 0) return;
+                // 如果已經進入混沌模式 (clickCount > 5)，就停止互動 Tilt，完全交給 updateChaosVisuals 控制
+                if (clickCount > 5) return;
                 
                 const rect = card.getBoundingClientRect();
                 const x = (e.clientX - rect.left) / rect.width - 0.5;
