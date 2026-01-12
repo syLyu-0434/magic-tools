@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>召喚瑜瑜 | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #020617; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* 背景：暖橘色系星雲 (代表交流) */
+        #canvas-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at bottom left, #431407 0%, #020617 70%);
+        }
+
+        /* 玻璃面板 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(251, 146, 60, 0.2); 
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            height: 320px;
+        }
+
+        .glass-card:hover {
+            background: rgba(251, 146, 60, 0.1);
+            border-color: rgba(251, 146, 60, 0.5);
+            transform: translateY(-10px);
+            box-shadow: 0 0 40px rgba(251, 146, 60, 0.2);
+        }
+
+        /* 導航按鈕 */
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: rgba(251, 146, 60, 0.2);
+            border-color: rgba(251, 146, 60, 0.5);
+            transform: translateX(-5px);
+        }
+
+        /* 圖示光暈動畫 */
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); }
+            50% { filter: drop-shadow(0 0 20px rgba(251, 146, 60, 0.6)); }
+        }
+        .icon-glow {
+            animation: pulse-glow 3s infinite;
+        }
+
+        /* 複製成功提示 */
+        #toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 999px;
+            font-weight: bold;
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            z-index: 50;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+
+    <!-- 修正：將 div 改為 canvas，以便 JS 獲取 context -->
+    <canvas id="canvas-bg"></canvas>
+
+    <!-- 頂部導航 -->
+    <nav class="w-full max-w-6xl px-6 py-8 flex justify-between items-center z-10">
+        <a href="index.html" class="nav-btn px-4 py-2 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+            <span>返回大廳</span>
+        </a>
+        <div class="text-right">
+            <h1 class="text-2xl font-black text-orange-400 tracking-tight flex items-center gap-2 justify-end">
+                <i class="fa-solid fa-satellite-dish"></i> 通訊陣列
+            </h1>
+            <p class="text-xs text-slate-500 font-mono tracking-widest">ESTABLISHING CONNECTION...</p>
+        </div>
+    </nav>
+
+    <!-- 主要內容 -->
+    <main class="container mx-auto px-4 py-12 flex flex-col items-center z-10 w-full max-w-6xl flex-grow justify-center">
+        
+        <h2 class="text-3xl md:text-5xl font-black text-white mb-12 text-center relative">
+            <span class="relative z-10">選擇你的召喚方式</span>
+            <div class="absolute inset-0 blur-2xl bg-orange-500/20 rounded-full z-0 transform scale-150 opacity-50"></div>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+            
+            <!-- 1. Email (複製) -->
+            <button onclick="copyEmail()" class="glass-card group text-left w-full" data-email="sylue200493@gmail.com">
+                <div class="absolute top-0 right-0 p-6 opacity-30 group-hover:opacity-100 transition-opacity">
+                    <i class="fa-regular fa-copy text-2xl"></i>
+                </div>
+                <div class="w-24 h-24 rounded-full bg-orange-500/20 flex items-center justify-center mb-6 icon-glow group-hover:scale-110 transition-transform">
+                    <i class="fa-solid fa-envelope text-5xl text-orange-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-2">電子郵件</h3>
+                <p class="text-slate-400 text-sm px-6 mb-4">最傳統也最可靠的魔法信使。<br>點擊複製地址。</p>
+                <div class="px-4 py-2 bg-white/5 rounded-lg border border-white/10 text-xs font-mono text-orange-300 group-hover:bg-white/10 transition-colors">
+                    sylue200493@gmail.com
+                </div>
+            </button>
+
+            <!-- 2. LinkedIn -->
+            <a href="https://www.linkedin.com/in/sylyu0434" target="_blank" class="glass-card group">
+                <div class="absolute top-0 right-0 p-6 opacity-30 group-hover:opacity-100 transition-opacity">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-2xl"></i>
+                </div>
+                <div class="w-24 h-24 rounded-full bg-blue-600/20 flex items-center justify-center mb-6 icon-glow group-hover:scale-110 transition-transform">
+                    <i class="fa-brands fa-linkedin-in text-5xl text-blue-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-2">LinkedIn</h3>
+                <p class="text-slate-400 text-sm px-6">查看我的技能樹與冒險經歷。<br>歡迎建立連結。</p>
+                <div class="mt-4 text-xs font-bold text-blue-400 border-b border-transparent group-hover:border-blue-400 transition-all">
+                    VIEW PROFILE
+                </div>
+            </a>
+
+            <!-- 3. Calendly -->
+            <a href="https://calendly.com/sylue200493/30min" target="_blank" class="glass-card group">
+                <div class="absolute top-0 right-0 p-6 opacity-30 group-hover:opacity-100 transition-opacity">
+                    <i class="fa-solid fa-arrow-up-right-from-square text-2xl"></i>
+                </div>
+                <div class="w-24 h-24 rounded-full bg-emerald-500/20 flex items-center justify-center mb-6 icon-glow group-hover:scale-110 transition-transform">
+                    <i class="fa-regular fa-calendar-check text-5xl text-emerald-400"></i>
+                </div>
+                <h3 class="text-2xl font-bold text-white mb-2">預約時間</h3>
+                <p class="text-slate-400 text-sm px-6">直接在我的時間軸上預訂一個時段。<br>我們線上見。</p>
+                <div class="mt-4 text-xs font-bold text-emerald-400 border-b border-transparent group-hover:border-emerald-400 transition-all">
+                    BOOK A MEETING
+                </div>
+            </a>
+
+        </div>
+
+    </main>
+
+    <!-- Toast 提示 -->
+    <div id="toast">
+        <i class="fa-solid fa-check mr-2"></i> Email 已複製到剪貼簿！
+    </div>
+
+    <script>
+        // 複製 Email 功能
+        function copyEmail() {
+            // 獲取按鈕上的 email
+            const btn = document.querySelector('button[data-email]');
+            const email = btn.getAttribute('data-email');
+            
+            // 執行複製
+            navigator.clipboard.writeText(email).then(() => {
+                showToast();
+            }).catch(err => {
+                console.error('複製失敗:', err);
+                // 備用方案: 提示使用者手動複製
+                prompt("請手動複製 Email:", email);
+            });
+        }
+
+        function showToast() {
+            const toast = document.getElementById('toast');
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // 粒子背景
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() { this.init(); }
+            init() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = (Math.random() - 0.5) * 0.2;
+                this.size = Math.random() * 2;
+                this.life = Math.random();
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+            }
+            draw() {
+                // 橘色系粒子 rgb(251, 146, 60)
+                ctx.fillStyle = `rgba(251, 146, 60, ${this.life * 0.3})`; 
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        for(let i=0; i<60; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            
+            // 連線效果
+            ctx.strokeStyle = 'rgba(251, 146, 60, 0.05)';
+            ctx.lineWidth = 0.5;
+            for(let i=0; i<particles.length; i++) {
+                for(let j=i+1; j<particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx*dx + dy*dy);
+                    if(dist < 100) {
+                        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        animate();
+    </script>
+</body>
+</html>
