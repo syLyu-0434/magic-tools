@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彈簧阻尼振盪 | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #020617; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        .bg-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(236, 72, 153, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(236, 72, 153, 0.2);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .magic-input {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #fff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .magic-input:focus {
+            outline: none;
+            border-color: #ec4899;
+            box-shadow: 0 0 15px rgba(236, 72, 153, 0.3);
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: rgba(236, 72, 153, 0.2);
+            border-color: rgba(236, 72, 153, 0.5);
+            transform: translateX(-5px);
+        }
+
+        .magic-btn {
+            background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .magic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(236, 72, 153, 0.6);
+            filter: brightness(1.1);
+        }
+
+        /* 能量條樣式 */
+        .energy-bar-bg {
+            background: rgba(255,255,255,0.1);
+            border-radius: 999px;
+            overflow: hidden;
+            height: 8px;
+            position: relative;
+        }
+        .energy-fill {
+            height: 100%;
+            transition: width 0.1s linear;
+        }
+        .energy-k { background: #60a5fa; } /* 動能 Blue */
+        .energy-u { background: #f472b6; } /* 位能 Pink */
+        .energy-loss { background: #94a3b8; } /* 耗散 Gray */
+
+        /* 小按鈕 */
+        .icon-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #ccc;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover {
+            background: rgba(236, 72, 153, 0.3);
+            color: white;
+            border-color: #ec4899;
+        }
+
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <div class="bg-glow"></div>
+
+    <!-- 頂部導航 -->
+    <nav class="w-full max-w-7xl mb-8 flex justify-between items-center z-10">
+        <a href="physics-hub.html" class="nav-btn px-4 py-2 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+            <span>返回實驗室</span>
+        </a>
+        <div class="text-right">
+            <h1 class="text-2xl font-black text-pink-400 tracking-tight flex items-center gap-2 justify-end">
+                <i class="fa-solid fa-arrow-down-up"></i> 彈簧阻尼振盪
+            </h1>
+            <p class="text-xs text-slate-500 font-mono tracking-widest">DAMPED HARMONIC OSCILLATOR</p>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 左側：控制面板 -->
+        <div class="glass-panel p-6 lg:col-span-1 h-fit">
+            <h2 class="text-lg font-bold text-white mb-4 border-b border-white/10 pb-2 flex items-center gap-2">
+                <i class="fa-solid fa-sliders text-pink-400"></i> 物理參數
+            </h2>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">質量 m (kg)</label>
+                        <input type="number" id="m" value="1.0" step="0.1" min="0.1" class="magic-input">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">彈性 k (N/m)</label>
+                        <input type="number" id="k" value="25" step="1" min="1" class="magic-input">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">阻力 b (N·s/m)</label>
+                        <input type="number" id="b" value="0.5" step="0.1" min="0" class="magic-input">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">初位移 x₀ (m)</label>
+                        <input type="number" id="x0" value="0.5" step="0.05" class="magic-input">
+                    </div>
+                    <div>
+                        <label class="text-xs text-slate-400 block mb-1">初速度 v₀ (m/s)</label>
+                        <input type="number" id="v0" value="0.0" step="0.1" class="magic-input">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="text-xs text-slate-400">顯示比例 px/m</label>
+                            <button id="btn-autoscale" class="icon-btn" title="自動計算適合的縮放比例">
+                                <i class="fa-solid fa-expand"></i> 自動
+                            </button>
+                        </div>
+                        <input type="number" id="ppm" value="200" step="10" class="magic-input">
+                    </div>
+                </div>
+
+                <!-- 阻尼狀態指示器 -->
+                <div class="bg-pink-900/20 border border-pink-500/30 rounded-xl p-3 text-center">
+                    <div class="text-[10px] text-pink-300 uppercase tracking-widest mb-1">SYSTEM STATE</div>
+                    <div id="damping-state" class="text-xl font-bold text-white">Underdamped</div>
+                    <div class="text-xs text-slate-400 mt-1">
+                        ζ = <span id="damping-ratio">0.05</span>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 mt-2">
+                    <button id="playBtn" class="magic-btn flex-1 flex justify-center items-center gap-2">
+                        <i id="playIcon" class="fa-solid fa-pause"></i> <span id="playText">暫停</span>
+                    </button>
+                    <button id="resetBtn" class="nav-btn flex-1 flex justify-center items-center gap-2 rounded-xl text-slate-300">
+                        <i class="fa-solid fa-rotate-left"></i> 重設
+                    </button>
+                </div>
+
+                <!-- 能量條 -->
+                <div class="mt-4 pt-4 border-t border-white/10">
+                    <div class="flex justify-between text-xs text-slate-400 mb-1">
+                        <span>ENERGY</span>
+                        <span id="energy-val">100%</span>
+                    </div>
+                    <div class="energy-bar-bg flex">
+                        <div id="bar-k" class="energy-fill energy-k" style="width: 0%"></div>
+                        <div id="bar-u" class="energy-fill energy-u" style="width: 50%"></div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-500 mt-1 px-1">
+                        <span class="text-blue-400">● 動能 K</span>
+                        <span class="text-pink-400">● 位能 U</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：視覺化區域 -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+            
+            <!-- 主要動畫 Canvas -->
+            <div class="glass-panel p-4 relative">
+                <div class="absolute top-4 left-4 text-xs font-mono text-slate-400 z-10 pointer-events-none">
+                    <div>x = <span id="hud-x" class="text-white">0.00</span> m</div>
+                    <div>v = <span id="hud-v" class="text-white">0.00</span> m/s</div>
+                    <div>t = <span id="hud-t" class="text-white">0.00</span> s</div>
+                </div>
+                <canvas id="canvas" class="w-full h-[300px] block rounded-xl bg-[#020617] border border-white/10"></canvas>
+            </div>
+
+            <!-- 圖表區域 (Plotly) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- x-t 圖 -->
+                <div class="glass-panel p-2 h-[250px]">
+                    <div id="plot-xt" class="w-full h-full"></div>
+                </div>
+                <!-- 相圖 (Phase Space) -->
+                <div class="glass-panel p-2 h-[250px]">
+                    <div id="plot-phase" class="w-full h-full"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // DOM
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // 物理狀態
+        let params = { m: 1, k: 25, b: 0.5, x0: 0.5, v0: 0 };
+        let state = { x: 0, v: 0, t: 0 };
+        let running = true;
+        let scale = 200; // px/m
+        let lastTime = 0;
+        let history = { t: [], x: [], v: [] }; // 用於繪圖
+        const MAX_HISTORY = 1000; 
+
+        // 參數同步
+        function syncParams() {
+            params.m = parseFloat(document.getElementById('m').value) || 1;
+            params.k = parseFloat(document.getElementById('k').value) || 25;
+            params.b = parseFloat(document.getElementById('b').value) || 0; 
+            params.x0 = parseFloat(document.getElementById('x0').value) || 0;
+            params.v0 = parseFloat(document.getElementById('v0').value) || 0;
+            scale = parseFloat(document.getElementById('ppm').value) || 200;
+            
+            updateDampingState();
+        }
+
+        // 自動計算適合的比例 (修正版)
+        function autoScale() {
+            syncParams();
+            // 估算最大振幅
+            const E0 = 0.5 * params.k * params.x0 * params.x0 + 0.5 * params.m * params.v0 * params.v0;
+            let amplitude = Math.sqrt(2 * E0 / params.k);
+            if (amplitude === 0) amplitude = 1; 
+
+            // 計算可用寬度 (從中心到牆壁的安全距離)
+            // 平衡點現在設定在 Math.max(200, w/2)
+            // 假設最小寬度情況下平衡點在 200px，牆壁在 50px
+            // 距離 = 150px
+            // 扣除木塊半寬(20)和緩衝(20) = 110px
+            // 為了更通用的計算，我們直接讀取當前的 Canvas 寬度
+            const w = canvas.clientWidth;
+            const eqX = Math.max(200, w / 2);
+            const wallX = 50;
+            const safeDistance = eqX - wallX - 40; // 40 = blockHalfWidth + padding
+            
+            // 計算 scale
+            let idealScale = safeDistance / amplitude;
+            
+            // 限制合理範圍
+            idealScale = Math.max(10, Math.min(idealScale, 1000));
+            
+            // 更新介面
+            scale = Math.floor(idealScale);
+            document.getElementById('ppm').value = scale;
+            render();
+        }
+
+        function updateDampingState() {
+            const criticalB = 2 * Math.sqrt(params.m * params.k);
+            let zeta = params.b / criticalB;
+            if (params.b === 0) zeta = 0;
+
+            const elState = document.getElementById('damping-state');
+            const elRatio = document.getElementById('damping-ratio');
+            
+            elRatio.innerText = zeta.toFixed(3);
+            
+            if (zeta === 0) {
+                elState.innerText = "Undamped (無阻尼)";
+                elState.className = "text-xl font-bold text-cyan-400"; 
+            } else if (zeta < 1) {
+                elState.innerText = "Underdamped (欠阻尼)";
+                elState.className = "text-xl font-bold text-pink-400";
+            } else if (Math.abs(zeta - 1) < 0.01) {
+                elState.innerText = "Critically Damped (臨界)";
+                elState.className = "text-xl font-bold text-yellow-400";
+            } else {
+                elState.innerText = "Overdamped (過阻尼)";
+                elState.className = "text-xl font-bold text-blue-400";
+            }
+        }
+
+        // 初始化/重設
+        function reset() {
+            syncParams();
+            state = { x: params.x0, v: params.v0, t: 0 };
+            history = { t: [], x: [], v: [] };
+            running = false;
+            updatePlayButton();
+            render(0); 
+            updatePlots(); 
+        }
+
+        // 物理步進
+        function physicsStep(dt) {
+            const subSteps = 20; 
+            const subDt = dt / subSteps;
+
+            for(let i=0; i<subSteps; i++) {
+                const a = -(params.k * state.x + params.b * state.v) / params.m;
+                state.v += a * subDt;
+                state.x += state.v * subDt;
+                state.t += subDt;
+            }
+        }
+
+        // 繪圖迴圈
+        function loop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = (timestamp - lastTime) / 1000;
+            lastTime = timestamp;
+
+            if (running) {
+                physicsStep(Math.min(dt, 0.1));
+                
+                history.t.push(state.t);
+                history.x.push(state.x);
+                history.v.push(state.v);
+                if (history.t.length > MAX_HISTORY) {
+                    history.t.shift(); history.x.shift(); history.v.shift();
+                }
+                
+                updatePlots();
+            }
+
+            render();
+            requestAnimationFrame(loop);
+        }
+
+        // Canvas 繪製
+        function render() {
+            if (canvas.width !== canvas.clientWidth * window.devicePixelRatio) {
+                canvas.width = canvas.clientWidth * window.devicePixelRatio;
+                canvas.height = canvas.clientHeight * window.devicePixelRatio;
+                ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            }
+            
+            const w = canvas.clientWidth;
+            const h = canvas.clientHeight;
+            const originX = 50; // 牆壁位置
+            const originY = h / 2;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // 繪製座標軸 (平衡位置)
+            // 修正重點：確保平衡點在中央，給左側足夠空間
+            const eqX = Math.max(200, w / 2); 
+            const massX = eqX + state.x * scale;
+
+            // 參考線 (平衡點)
+            ctx.strokeStyle = '#334155';
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(eqX, 0); ctx.lineTo(eqX, h);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // 牆壁
+            ctx.fillStyle = '#334155';
+            ctx.fillRect(originX - 10, originY - 60, 10, 120);
+
+            // 彈簧
+            ctx.strokeStyle = '#ec4899'; // Pink
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(originX, originY);
+            
+            const springLen = massX - originX;
+            // 簡單防止彈簧反向繪製的視覺錯誤
+            const safeSpringLen = Math.max(springLen, 0); 
+            
+            const turns = 12;
+            for(let i=0; i<=turns; i++) {
+                const x = originX + (safeSpringLen * i / turns);
+                const y = originY + ((i%2===0 ? 0 : (i%4===1 ? -10 : 10)));
+                if (i===0 || i===turns) ctx.lineTo(x, originY);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            // 質量塊
+            const size = 40;
+            ctx.fillStyle = '#be185d'; // Dark Pink
+            ctx.shadowColor = 'rgba(236, 72, 153, 0.5)';
+            ctx.shadowBlur = 15;
+            ctx.fillRect(massX - size/2, originY - size/2, size, size);
+            ctx.shadowBlur = 0;
+
+            // 文字標記
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px monospace';
+            ctx.fillText('m', massX - 5, originY + 4);
+
+            // 更新 HUD
+            document.getElementById('hud-x').innerText = state.x.toFixed(3);
+            document.getElementById('hud-v').innerText = state.v.toFixed(3);
+            document.getElementById('hud-t').innerText = state.t.toFixed(2);
+
+            updateEnergy();
+        }
+
+        function updateEnergy() {
+            const K = 0.5 * params.m * state.v * state.v;
+            const U = 0.5 * params.k * state.x * state.x;
+            const E = K + U;
+            
+            const E0 = 0.5 * params.k * params.x0 * params.x0 + 0.5 * params.m * params.v0 * params.v0;
+            const maxE = Math.max(E0, E, 1e-6); 
+            
+            const kPct = (K / maxE) * 100;
+            const uPct = (U / maxE) * 100;
+            const totalPct = ((K + U) / maxE) * 100;
+            
+            document.getElementById('bar-k').style.width = `${kPct}%`;
+            document.getElementById('bar-u').style.width = `${uPct}%`;
+            document.getElementById('energy-val').innerText = `${totalPct.toFixed(1)}%`;
+        }
+
+        const plotConfig = { displayModeBar: false, responsive: true };
+        const commonLayout = {
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#94a3b8' },
+            margin: { t: 30, r: 10, b: 30, l: 40 },
+            xaxis: { gridcolor: '#334155' },
+            yaxis: { gridcolor: '#334155' }
+        };
+
+        function initPlots() {
+            Plotly.newPlot('plot-xt', [{
+                x: [], y: [], type: 'scatter', mode: 'lines', line: { color: '#f472b6', width: 2 }
+            }], { ...commonLayout, title: '位置-時間圖 (x-t)', xaxis: { title: 't (s)' }, yaxis: { title: 'x (m)' } }, plotConfig);
+
+            Plotly.newPlot('plot-phase', [
+                {
+                    x: [], y: [], type: 'scatter', mode: 'lines', 
+                    line: { color: '#60a5fa', width: 2 },
+                    name: '軌跡'
+                },
+                {
+                    x: [], y: [], type: 'scatter', mode: 'markers',
+                    marker: { color: '#ffffff', size: 8, line: {color: '#60a5fa', width: 2} },
+                    name: '當前狀態'
+                }
+            ], { ...commonLayout, title: '相圖 (v-x)', xaxis: { title: 'x (m)' }, yaxis: { title: 'v (m/s)' }, showlegend: false }, plotConfig);
+        }
+
+        function updatePlots() {
+            Plotly.update('plot-xt', {
+                x: [history.t],
+                y: [history.x]
+            });
+            
+            Plotly.update('plot-phase', {
+                x: [history.x, [state.x]], 
+                y: [history.v, [state.v]]
+            });
+        }
+
+        function updatePlayButton() {
+            const btn = document.getElementById('playBtn');
+            const icon = document.getElementById('playIcon');
+            const text = document.getElementById('playText');
+            if (running) {
+                icon.className = 'fa-solid fa-pause';
+                text.innerText = '暫停';
+                btn.classList.add('opacity-80');
+            } else {
+                icon.className = 'fa-solid fa-play';
+                text.innerText = '播放';
+                btn.classList.remove('opacity-80');
+            }
+        }
+
+        document.getElementById('playBtn').onclick = () => {
+            running = !running;
+            if(running) lastTime = performance.now();
+            updatePlayButton();
+        };
+        document.getElementById('resetBtn').onclick = reset;
+        document.getElementById('btn-autoscale').onclick = autoScale;
+        
+        ['m', 'k', 'b', 'x0', 'v0', 'ppm'].forEach(id => {
+            document.getElementById(id).addEventListener('change', () => {
+                syncParams();
+                updateDampingState();
+            });
+        });
+
+        initPlots();
+        reset(); 
+        running = true; 
+        updatePlayButton();
+        requestAnimationFrame(loop);
+
+    </script>
+</body>
+</html>
