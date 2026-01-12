@@ -2,8 +2,8 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>臺灣行政區挑戰 | 瑜的神祕妙妙工具屋</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>臺灣行政區縣市挑戰 | 瑜的神祕妙妙工具屋</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
@@ -15,8 +15,9 @@
             overflow: hidden; 
             font-family: 'Zen Maru Gothic', sans-serif; 
             color: white;
+            /* 支援行動裝置動態高度 */
+            height: 100dvh; 
             transition: background-color 1s ease;
-            user-select: none;
         }
         
         /* 背景裝飾 */
@@ -40,15 +41,19 @@
 
         #map-container {
             width: 100%;
-            height: calc(100vh - 160px);
-            background: rgba(15, 23, 42, 0.5); 
+            /* 扣除 header 高度與 padding，使用 dvh 避免手機網址列遮擋 */
+            height: calc(100dvh - 140px);
+            background: rgba(15, 23, 42, 0.5); /* 深色海洋 */
             backdrop-filter: blur(10px);
             border-radius: 2rem;
             cursor: grab;
             position: relative;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            transition: all 0.5s ease;
+            /* 關鍵：防止手機拖曳地圖時觸發頁面捲動 */
+            touch-action: none; 
+            -webkit-tap-highlight-color: transparent;
+            transition: border-color 0.5s ease;
         }
         
         body.hard-mode #map-container {
@@ -61,13 +66,13 @@
 
         /* 地圖樣式 */
         .county {
-            fill: rgba(30, 41, 59, 0.8);
+            fill: rgba(30, 41, 59, 0.8); /* 陸地預設深色 */
             stroke: rgba(56, 189, 248, 0.4); 
             stroke-width: 0.5;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            vector-effect: non-scaling-stroke; 
+            vector-effect: non-scaling-stroke; /* 保持線條粗細 */
         }
-        
+
         /* 煉獄模式線條設定 */
         body.hard-mode .county {
             stroke: rgba(239, 68, 68, 0.5); 
@@ -78,19 +83,19 @@
         .county-boundary {
             fill: none;
             stroke: #fbbf24; /* Amber-400 */
-            stroke-width: 0.8; /* 變細：原 1.5 -> 0.8 */
-            /* stroke-dasharray: 4 4;  移除虛線，改為實線 */
+            stroke-width: 0.8; 
             pointer-events: none; /* 讓滑鼠事件穿透 */
             opacity: 0.8;
             filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+            vector-effect: non-scaling-stroke;
         }
 
         .county:hover { 
             fill: rgba(56, 189, 248, 0.3); 
             cursor: pointer;
-            stroke: #38bdf8;
             stroke-width: 1.5;
-            filter: drop-shadow(0 0 10px rgba(56, 189, 248, 0.5));
+            stroke: #38bdf8;
+            filter: drop-shadow(0 0 15px rgba(56, 189, 248, 0.5));
         }
 
         body.hard-mode .county:hover {
@@ -103,7 +108,7 @@
         /* 狀態顏色 */
         .county.found { fill: rgba(34, 197, 94, 0.4) !important; stroke: #22c55e !important; }
         .county.revealed { fill: rgba(168, 85, 247, 0.4) !important; stroke: #a855f7 !important; }
-        .county.selected { fill: rgba(245, 158, 11, 0.5) !important; stroke: #f59e0b !important; stroke-width: 2 !important; }
+        .county.selected { fill: rgba(245, 158, 11, 0.4) !important; stroke: #f59e0b !important; stroke-width: 2; }
 
         /* 玻璃擬態彈窗 */
         .glass-modal {
@@ -118,10 +123,10 @@
         #tooltip {
             position: absolute;
             pointer-events: none;
-            background: rgba(15, 23, 42, 0.9);
+            background: rgba(15, 23, 42, 0.95);
             color: white;
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 6px 10px;
+            border-radius: 6px;
             font-size: 14px;
             border: 1px solid rgba(56, 189, 248, 0.3);
             opacity: 0;
@@ -131,13 +136,43 @@
             white-space: nowrap;
         }
 
-        /* 動畫 */
+        /* 縮放控制器 */
+        .zoom-controls {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 40;
+        }
+        .zoom-btn {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        .zoom-btn:active {
+            transform: scale(0.95);
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.5);
+        }
+
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
-            20%, 40%, 60%, 80% { transform: translateX(4px); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
-        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        .shake { animation: shake 0.3s ease-in-out; }
 
         @keyframes unlock-pulse {
             0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
@@ -149,6 +184,19 @@
         /* 隱藏元素 */
         .hidden-mode { display: none !important; }
 
+        /* 返回按鈕樣式 */
+        .back-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .back-btn:hover {
+            background: rgba(56, 189, 248, 0.2);
+            border-color: rgba(56, 189, 248, 0.5);
+            transform: translateX(-5px);
+        }
+        
         /* 標題與計分板點擊區 */
         #title-container { user-select: none; }
         #score-board { cursor: pointer; user-select: none; transition: transform 0.1s; }
@@ -188,90 +236,108 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        /* 手機版 RWD 調整 */
+        @media (max-width: 640px) {
+            #game-title { font-size: 1.5rem; }
+            #found-count { font-size: 1.5rem; }
+            .glass-modal { padding: 1rem; }
+            #modal-box { width: 90%; max-width: 320px; border-radius: 1.5rem; }
+        }
     </style>
 </head>
-<body class="p-4 md:p-8 h-screen flex flex-col max-w-7xl mx-auto">
+<body class="p-4 md:p-8 h-[100dvh] flex flex-col max-w-7xl mx-auto">
 
     <div class="bg-glow"></div>
 
     <!-- 頂部導航與標題 -->
-    <header class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
-        <div class="flex items-center gap-4">
-            <a href="index.html" class="back-btn p-3 rounded-xl text-slate-400 hover:text-cyan-400 border border-transparent hover:border-cyan-500/30 transition-all">
+    <header class="flex flex-row justify-between items-center mb-4 gap-2">
+        <div class="flex items-center gap-3">
+            <a href="index.html" class="back-btn p-3 rounded-xl text-slate-400 hover:text-cyan-400 shrink-0">
                 <i class="fa-solid fa-arrow-left"></i>
             </a>
-            <div id="title-container">
-                <h1 class="text-3xl font-black text-white tracking-tight flex items-center gap-2" id="game-title">
-                    <span class="text-cyan-400 transition-colors duration-500" id="title-icon">📍</span> 
-                    <span id="title-text">臺灣行政區挑戰</span>
+            <div class="overflow-hidden" id="title-container">
+                <h1 class="text-xl md:text-3xl font-black text-white tracking-tight flex items-center gap-2 whitespace-nowrap" id="game-title">
+                    <span class="text-cyan-400" id="title-icon">📍</span> <span id="title-text">臺灣行政區挑戰</span>
                 </h1>
-                <p class="text-slate-500 font-medium text-sm mt-1" id="game-desc">在神祕的地圖中，尋找被遺忘的縣市全名</p>
+                <p class="text-slate-500 font-medium text-xs md:text-base truncate" id="game-desc">尋找被遺忘的縣市全名</p>
             </div>
         </div>
         
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2">
             <!-- 模式切換按鈕區 (預設隱藏，解鎖後顯示) -->
-            <div id="mode-controls" class="flex bg-slate-800/50 p-1 rounded-xl backdrop-blur-sm border border-white/5 hidden-mode transition-all">
-                <button onclick="switchMode(false)" id="btn-normal" class="mode-btn normal active">縣市</button>
-                <button onclick="switchMode(true)" id="btn-hard" class="mode-btn hard">368 煉獄</button>
+            <div id="mode-controls" class="flex bg-slate-800/50 p-1 rounded-xl backdrop-blur-sm border border-white/5 hidden-mode transition-all shrink-0">
+                <button onclick="switchMode(false)" id="btn-normal" class="mode-btn normal active text-xs md:text-sm">縣市</button>
+                <button onclick="switchMode(true)" id="btn-hard" class="mode-btn hard text-xs md:text-sm">368 煉獄</button>
             </div>
 
             <!-- 計分板 (彩蛋觸發點) -->
-            <div id="score-board" class="glass-modal rounded-2xl px-6 py-2 text-center min-w-[140px] border-t-2 border-cyan-500 transition-all select-none">
-                <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1" id="score-label">解鎖進度</span>
+            <div id="score-board" class="glass-modal rounded-xl px-4 py-2 md:px-8 md:py-3 text-center border-t-2 border-cyan-500 shrink-0" title="點擊這裡 7 次開啟隱藏模式...">
+                <span class="block text-[8px] md:text-[10px] text-slate-500 font-bold uppercase tracking-widest mb-1" id="score-label">解鎖進度</span>
                 <div class="flex items-baseline justify-center gap-1">
-                    <span id="found-count" class="text-3xl font-black text-cyan-400">0</span>
-                    <span class="text-slate-600 font-bold text-lg" id="total-count">/ 22</span>
+                    <span id="found-count" class="text-2xl md:text-3xl font-black text-cyan-400">0</span>
+                    <span class="text-slate-600 font-bold text-sm md:text-lg" id="total-count">/ 22</span>
                 </div>
             </div>
         </div>
     </header>
 
     <!-- 地圖顯示區域 -->
-    <main class="relative flex-grow">
+    <main class="relative flex-grow overflow-hidden">
         <div id="map-container">
             <div id="loading" class="absolute inset-0 flex items-center justify-center z-10 bg-[#020617]/90 rounded-2xl">
-                <div class="text-center p-6 max-w-sm">
+                <div class="text-center">
                     <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-cyan-500 mb-4 mx-auto" id="loading-spinner"></div>
-                    <p class="text-cyan-500 font-bold animate-pulse text-lg" id="loading-text">正在讀取地圖數據...</p>
+                    <p class="text-cyan-500 font-bold animate-pulse" id="loading-text">正在讀取地圖數據...</p>
                     <p class="text-slate-500 text-sm mt-2 hidden" id="loading-subtext">嘗試切換線路中，請稍候...</p>
                     <button id="retry-btn" class="hidden" onclick="location.reload()">重新載入</button>
                 </div>
             </div>
-            <div id="tooltip">❓ 這是哪裡？</div>
+            <div id="tooltip">❓</div>
+            
+            <!-- 手機版縮放控制 -->
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in" aria-label="Zoom In">
+                    <i class="fa-solid fa-plus text-lg"></i>
+                </button>
+                <button class="zoom-btn" id="zoom-out" aria-label="Zoom Out">
+                    <i class="fa-solid fa-minus text-lg"></i>
+                </button>
+            </div>
         </div>
 
         <!-- 猜測視窗 -->
-        <div id="guess-modal" class="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md hidden pointer-events-none z-50">
-            <div class="glass-modal p-8 md:p-10 rounded-[2.5rem] w-full max-w-md pointer-events-auto transform transition-all duration-300 scale-95 opacity-0" id="modal-box">
-                <div class="mb-6 text-center">
-                    <div class="w-20 h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/30 transition-colors duration-300" id="modal-icon-bg">
-                        <i class="fa-solid fa-location-crosshairs text-3xl text-cyan-400" id="modal-icon"></i>
+        <div id="guess-modal" class="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-md hidden pointer-events-none z-50 p-4">
+            <div class="glass-modal p-6 md:p-10 rounded-[2rem] w-full max-w-md pointer-events-auto transform transition-all duration-300 scale-95 opacity-0" id="modal-box">
+                <div class="mb-6 md:mb-8 text-center">
+                    <div class="w-16 h-16 md:w-20 md:h-20 bg-cyan-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-cyan-500/30 transition-colors" id="modal-icon-bg">
+                        <i class="fa-solid fa-location-crosshairs text-2xl md:text-3xl text-cyan-400" id="modal-icon"></i>
                     </div>
-                    <h3 class="text-2xl font-black text-white mb-2" id="modal-title">座標確認</h3>
-                    <p class="text-slate-400 text-sm" id="modal-hint">請輸入完整全名 (含縣/市/鄉/鎮/區)</p>
+                    <h3 class="text-xl md:text-2xl font-black text-white mb-2" id="modal-title">座標確認</h3>
+                    <p class="text-slate-400 text-xs md:text-sm" id="modal-hint">請輸入完整全名 (含縣/市/鄉/鎮/區)</p>
                 </div>
 
-                <input type="text" id="county-input" autocomplete="off"
-                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 mb-6 focus:border-cyan-500 focus:bg-white/10 focus:outline-none text-2xl font-bold text-center text-white placeholder-slate-600 transition-all shadow-inner"
-                    placeholder="例如：臺北市">
+                <!-- 手機優化：enterkeyhint="go" 讓鍵盤顯示前往按鈕 -->
+                <input type="text" id="county-input" autocomplete="off" enterkeyhint="go"
+                    class="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 mb-6 md:mb-8 focus:border-cyan-500 focus:bg-white/10 focus:outline-none text-xl md:text-2xl font-bold text-center text-white placeholder-slate-600 transition-all"
+                    placeholder="輸入名稱...">
                 
-                <div class="grid grid-cols-1 gap-3">
-                    <button id="submit-guess" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-cyan-500/40 transform active:scale-95">送出咒語</button>
+                <div class="grid grid-cols-1 gap-3 md:gap-4">
+                    <button id="submit-guess" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-bold py-3 md:py-4 rounded-xl transition shadow-[0_0_20px_rgba(8,145,178,0.3)] hover:shadow-cyan-500/40 active:scale-95">送出咒語</button>
                     <div class="flex gap-3">
-                        <button id="show-answer" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-3 rounded-xl transition text-sm">不知道 (魔法破解)</button>
-                        <button id="cancel-guess" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-500 font-bold py-3 rounded-xl transition text-sm">關閉</button>
+                        <button id="show-answer" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-400 font-bold py-3 rounded-xl transition text-sm active:bg-white/10">不知道</button>
+                        <button id="cancel-guess" class="flex-grow bg-white/5 hover:bg-white/10 text-slate-500 font-bold py-3 rounded-xl transition text-sm active:bg-white/10">關閉</button>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <!-- 勝利視窗 (Normal Mode) -->
-        <div id="victory-modal" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md hidden pointer-events-none z-[55]">
+        <div id="victory-modal" class="absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md hidden pointer-events-none z-[55] p-4">
             <div class="glass-modal p-8 md:p-12 rounded-[2.5rem] w-full max-w-lg pointer-events-auto text-center border-2 border-yellow-500/30 shadow-[0_0_50px_rgba(234,179,8,0.2)]">
-                <i class="fa-solid fa-trophy text-6xl text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"></i>
-                <h2 class="text-4xl font-black text-white mb-2 victory-text">恭喜通關！</h2>
-                <p class="text-slate-300 text-lg mb-8">你已經找出了全臺 22 個縣市！</p>
+                <i class="fa-solid fa-trophy text-5xl md:text-6xl text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.5)]"></i>
+                <h2 class="text-3xl md:text-4xl font-black text-white mb-2 victory-text">恭喜通關！</h2>
+                <p class="text-slate-300 text-base md:text-lg mb-8">你已經找出了全臺 22 個縣市！</p>
                 
                 <div class="bg-white/5 rounded-xl p-4 mb-8 border border-white/10">
                     <p class="text-[10px] text-slate-600 font-mono tracking-widest">
@@ -286,7 +352,7 @@
         </div>
 
         <!-- Toast -->
-        <div id="toast" class="fixed bottom-12 left-1/2 -translate-x-1/2 px-8 py-3 rounded-2xl text-white font-bold opacity-0 transition-all pointer-events-none z-[60] shadow-2xl backdrop-blur-xl border border-white/10 flex items-center gap-3 text-center whitespace-nowrap">
+        <div id="toast" class="fixed bottom-12 left-1/2 -translate-x-1/2 px-6 py-3 md:px-10 md:py-4 rounded-full text-white font-bold opacity-0 transition-all pointer-events-none z-[60] shadow-2xl backdrop-blur-xl border border-white/10 flex items-center gap-3 whitespace-nowrap text-sm md:text-base">
         </div>
     </main>
 
@@ -346,6 +412,16 @@
             .scaleExtent([1, 60])
             .on("zoom", (e) => g.attr("transform", e.transform));
         svg.call(zoom);
+
+        // 縮放按鈕功能
+        d3.select("#zoom-in").on("click", (e) => {
+            e.stopPropagation(); // 防止冒泡
+            svg.transition().duration(300).call(zoom.scaleBy, 1.5);
+        });
+        d3.select("#zoom-out").on("click", (e) => {
+            e.stopPropagation();
+            svg.transition().duration(300).call(zoom.scaleBy, 0.6);
+        });
 
         // 備援 Fetch 函數
         async function fetchWithFallback(urls) {
@@ -428,7 +504,7 @@
                 document.getElementById('loading').style.display = 'none';
 
                 svg.call(zoom.transform, d3.zoomIdentity);
-                projection.fitExtent([[20, 20], [width - 20, height - 20]], {type: "FeatureCollection", features: features});
+                projection.fitExtent([[50, 50], [width - 50, height - 50]], {type: "FeatureCollection", features: features});
                 
                 features.sort((a, b) => d3.geoArea(b) - d3.geoArea(a));
 
@@ -445,7 +521,7 @@
             }
         }
 
-        // 彩蛋邏輯：改為點擊計分板
+        // 彩蛋邏輯：點擊計分板
         document.getElementById('score-board').addEventListener('click', function() {
             if (isUnlocked && !document.getElementById('mode-controls').classList.contains('hidden-mode')) return;
 
@@ -560,6 +636,9 @@
                     return cls;
                 })
                 .on("mousemove", function(event, d) {
+                    // 手機版不顯示 tooltip
+                    if (window.matchMedia("(hover: none)").matches) return;
+
                     const tooltip = document.getElementById('tooltip');
                     const name = getRegionName(d);
                     const uniqueId = getUniqueId(d);
@@ -591,6 +670,9 @@
                 })
                 .on("mouseout", () => document.getElementById('tooltip').style.opacity = 0)
                 .on("click", function(e, d) {
+                    // 檢查拖曳事件
+                    if (d3.event && d3.event.defaultPrevented) return;
+
                     const uniqueId = getUniqueId(d);
                     if (foundItems.has(uniqueId)) {
                         showToast("✨ 此區域已被解鎖", isHardMode ? "bg-red-500/20" : "bg-cyan-500/20");
@@ -773,7 +855,7 @@
             svg.attr("viewBox", `0 0 ${width} ${height}`);
             if (currentFeatures) {
                 svg.call(zoom.transform, d3.zoomIdentity);
-                projection.fitExtent([[20, 20], [width - 20, height - 20]], {type: "FeatureCollection", features: currentFeatures});
+                projection.fitExtent([[50, 50], [width - 50, height - 50]], {type: "FeatureCollection", features: currentFeatures});
                 g.selectAll("path.county").attr("d", path);
                 g.selectAll("path.county-boundary").attr("d", path);
             }
