@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>泛音合成器 | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #020617; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: #e2e8f0;
+            overflow-x: hidden;
+            touch-action: none; /* 防止滑動影響操作 */
+        }
+
+        /* 背景特效 */
+        .bg-glow {
+            position: fixed;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px; height: 800px;
+            background: radial-gradient(circle, rgba(234, 179, 8, 0.1) 0%, rgba(0, 0, 0, 0) 70%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* 玻璃面板 */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(234, 179, 8, 0.2);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        /* 輸入框 */
+        .magic-input {
+            background: rgba(2, 6, 23, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            color: #fff;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        .magic-input:focus {
+            outline: none;
+            border-color: #eab308;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.3);
+        }
+
+        /* 按鈕 */
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: rgba(234, 179, 8, 0.2);
+            border-color: rgba(234, 179, 8, 0.5);
+            transform: translateX(-5px);
+        }
+
+        .magic-btn {
+            background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(234, 179, 8, 0.4);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .magic-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(234, 179, 8, 0.6);
+            filter: brightness(1.1);
+        }
+        .magic-btn.active {
+            filter: brightness(1.2);
+            box-shadow: 0 0 20px rgba(234, 179, 8, 0.8);
+        }
+
+        /* 預設按鈕 */
+        .preset-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            padding: 0.4rem 0.8rem;
+            border-radius: 0.5rem;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .preset-btn:hover {
+            background: rgba(234, 179, 8, 0.2);
+            color: #fde047;
+            border-color: #eab308;
+        }
+
+        /* 頻譜柱狀圖 */
+        .bar-container {
+            position: relative;
+            height: 200px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding: 0 10px;
+            gap: 4px;
+        }
+        .harmonic-bar-wrapper {
+            flex: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+        }
+        .harmonic-bar-wrapper:hover .harmonic-bar {
+            filter: brightness(1.2);
+        }
+        .harmonic-bar {
+            width: 100%;
+            background: linear-gradient(to top, #ca8a04, #facc15);
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            transition: height 0.1s ease-out;
+            position: relative;
+            box-shadow: 0 0 10px rgba(234, 179, 8, 0.3);
+        }
+        .harmonic-label {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-top: 6px;
+            font-family: monospace;
+        }
+        .harmonic-value {
+            position: absolute;
+            top: -20px;
+            font-size: 0.7rem;
+            color: #fde047;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-weight: bold;
+        }
+        .harmonic-bar-wrapper:hover .harmonic-value {
+            opacity: 1;
+        }
+
+        /* 示波器 */
+        #oscilloscope {
+            width: 100%;
+            height: 120px;
+            background: #000;
+            border-radius: 0.75rem;
+            border: 1px solid #333;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex flex-col items-center">
+
+    <div class="bg-glow"></div>
+
+    <!-- 頂部導航 -->
+    <nav class="w-full max-w-5xl mb-8 flex justify-between items-center z-10">
+        <a href="../lab.html" class="nav-btn px-4 py-2 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+            <span>返回實驗室</span>
+        </a>
+        <div class="text-right">
+            <h1 class="text-2xl font-black text-yellow-400 tracking-tight flex items-center gap-2 justify-end">
+                <i class="fa-solid fa-music"></i> 泛音合成器
+            </h1>
+            <p class="text-xs text-slate-500 font-mono tracking-widest">HARMONIC SYNTHESIZER</p>
+        </div>
+    </nav>
+
+    <main class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        <!-- 左側：控制面板 -->
+        <div class="glass-panel p-6 lg:col-span-1 h-fit">
+            <div class="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-sliders text-yellow-400"></i> 音源控制
+                </h2>
+                <div id="status-indicator" class="w-3 h-3 rounded-full bg-slate-700 shadow-inner transition-colors"></div>
+            </div>
+            
+            <div class="space-y-6">
+                
+                <!-- 主開關 -->
+                <button id="toggleBtn" class="magic-btn w-full flex justify-center items-center gap-3 py-4 text-lg shadow-lg">
+                    <i class="fa-solid fa-power-off"></i> <span id="btnText">啟動引擎</span>
+                </button>
+
+                <!-- 頻率控制 -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-slate-400">基頻 (Hz)</label>
+                        <span id="freqVal" class="text-xs font-mono text-yellow-300">220 Hz</span>
+                    </div>
+                    <input type="range" id="baseFreq" min="50" max="880" value="220" class="w-full accent-yellow-500 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- 音量控制 -->
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-slate-400">總音量</label>
+                        <span id="volVal" class="text-xs font-mono text-yellow-300">50%</span>
+                    </div>
+                    <input type="range" id="masterVol" min="0" max="100" value="50" class="w-full accent-yellow-500 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+                </div>
+
+                <!-- 預設音色 -->
+                <div>
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-2">TIMBRE PRESETS</label>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button class="preset-btn" onclick="loadPreset('sine')">Sine(正弦)</button>
+                        <button class="preset-btn" onclick="loadPreset('square')">Square(方波)</button>
+                        <button class="preset-btn" onclick="loadPreset('saw')">Saw(鋸齒波)</button>
+                        <button class="preset-btn" onclick="loadPreset('organ')">Organ(管風琴)</button>
+                        <!-- 移除了 Triangle(三角波) -->
+                        <button class="preset-btn text-red-300 border-red-900/50 hover:bg-red-900/20 hover:text-red-200 col-span-2" onclick="resetHarmonics()">Reset</button>
+                    </div>
+                </div>
+
+                <div class="text-[10px] text-slate-600 leading-relaxed mt-4 border-t border-white/5 pt-4">
+                    <i class="fa-solid fa-circle-info"></i> <strong>物理筆記：</strong>
+                    泛音列決定了聲音的「音色」。即使基頻相同，不同的泛音比例會讓我們聽出是小提琴還是長笛。
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：頻譜與波形 -->
+        <div class="lg:col-span-2 flex flex-col gap-6">
+            
+            <!-- 示波器 -->
+            <div class="glass-panel p-4 flex flex-col h-[200px]">
+                <div class="flex justify-between items-center mb-2 px-1">
+                    <span class="text-xs text-slate-400 font-mono">OSCILLOSCOPE (TIME DOMAIN)</span>
+                    <span class="text-[10px] text-yellow-600 animate-pulse">LIVE SIGNAL</span>
+                </div>
+                <canvas id="oscilloscope" class="w-full flex-grow rounded-lg"></canvas>
+            </div>
+
+            <!-- 頻譜混合器 -->
+            <div class="glass-panel p-6 flex-grow flex flex-col">
+                <div class="flex justify-between items-center mb-6">
+                    <span class="text-xs text-slate-400 font-mono font-bold">HARMONIC MIXER (SPECTRAL DOMAIN)</span>
+                    <div class="text-[10px] text-slate-500">拖曳柱狀圖調整比例</div>
+                </div>
+                
+                <div id="harmonics-container" class="bar-container flex-grow">
+                    <!-- JS 生成柱狀圖 -->
+                </div>
+                
+                <!-- 底部標註 -->
+                <div class="flex justify-between text-[10px] text-slate-600 mt-2 font-mono px-2">
+                    <span>f1 (Fund.)</span>
+                    <span>f12</span>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- 設定 ---
+        const TOTAL_HARMONICS = 12;
+        let harmonicValues = new Array(TOTAL_HARMONICS).fill(0);
+        harmonicValues[0] = 1; // 預設只有基音
+
+        // --- Web Audio API ---
+        let audioCtx;
+        let masterGain;
+        let analyser;
+        let oscillators = [];
+        let isPlaying = false;
+
+        // --- DOM ---
+        const container = document.getElementById('harmonics-container');
+        const canvas = document.getElementById('oscilloscope');
+        const ctx = canvas.getContext('2d');
+        const btnToggle = document.getElementById('toggleBtn');
+        const btnText = document.getElementById('btnText');
+        const statusInd = document.getElementById('status-indicator');
+        
+        // --- 初始化 UI ---
+        function initUI() {
+            container.innerHTML = '';
+            for (let i = 0; i < TOTAL_HARMONICS; i++) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'harmonic-bar-wrapper';
+                
+                // 數值顯示
+                const valDisplay = document.createElement('div');
+                valDisplay.className = 'harmonic-value';
+                valDisplay.id = `val-${i}`;
+                valDisplay.innerText = '0%';
+                
+                // 柱子
+                const bar = document.createElement('div');
+                bar.className = 'harmonic-bar';
+                bar.id = `bar-${i}`;
+                bar.style.height = '0%';
+                
+                // 標籤
+                const label = document.createElement('div');
+                label.className = 'harmonic-label';
+                label.innerText = i === 0 ? '1x' : `${i + 1}x`;
+
+                wrapper.appendChild(valDisplay);
+                wrapper.appendChild(bar);
+                wrapper.appendChild(label);
+                container.appendChild(wrapper);
+
+                // 綁定拖曳互動
+                setupBarInteraction(wrapper, i);
+            }
+            updateUI();
+            resizeCanvas();
+        }
+
+        // --- 柱狀圖互動邏輯 ---
+        function setupBarInteraction(el, index) {
+            let isDragging = false;
+
+            const updateValue = (clientY) => {
+                const rect = container.getBoundingClientRect();
+                // 計算滑鼠在容器內的相對高度 (0.0 - 1.0)
+                let val = (rect.bottom - clientY) / rect.height;
+                val = Math.max(0, Math.min(1, val)); // Clamp 0-1
+                
+                // 自動平衡邏輯
+                harmonicValues[index] = val;
+                normalizeHarmonics(index);
+                
+                updateUI();
+                updateAudio();
+            };
+
+            const startDrag = (e) => {
+                isDragging = true;
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                updateValue(clientY);
+                document.body.style.cursor = 'ns-resize';
+            };
+
+            const onDrag = (e) => {
+                if (!isDragging) return;
+                e.preventDefault(); // 防止手機滾動
+                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                updateValue(clientY);
+            };
+
+            const endDrag = () => {
+                isDragging = false;
+                document.body.style.cursor = 'default';
+            };
+
+            el.addEventListener('mousedown', startDrag);
+            el.addEventListener('touchstart', startDrag);
+            
+            document.addEventListener('mousemove', onDrag);
+            document.addEventListener('touchmove', onDrag, { passive: false });
+            
+            document.addEventListener('mouseup', endDrag);
+            document.addEventListener('touchend', endDrag);
+        }
+
+        // 自動平衡
+        function normalizeHarmonics(changedIndex) {
+            const currentVal = harmonicValues[changedIndex];
+            
+            // 計算其他所有值的總和
+            let otherSum = 0;
+            for (let i = 0; i < TOTAL_HARMONICS; i++) {
+                if (i !== changedIndex) otherSum += harmonicValues[i];
+            }
+
+            // 目標剩餘空間
+            const targetRemainder = 1 - currentVal;
+
+            if (otherSum === 0) {
+                // 如果其他都是 0，不強迫總和為1
+            } else {
+                // 按比例壓縮其他值
+                const ratio = targetRemainder / otherSum;
+                for (let i = 0; i < TOTAL_HARMONICS; i++) {
+                    if (i !== changedIndex) {
+                        harmonicValues[i] *= ratio;
+                        if (harmonicValues[i] < 0.001) harmonicValues[i] = 0;
+                    }
+                }
+            }
+        }
+
+        function updateUI() {
+            for (let i = 0; i < TOTAL_HARMONICS; i++) {
+                const h = harmonicValues[i] * 100;
+                const bar = document.getElementById(`bar-${i}`);
+                const val = document.getElementById(`val-${i}`);
+                
+                bar.style.height = `${h}%`;
+                val.innerText = `${Math.round(h)}%`;
+                
+                // 視覺回饋
+                if (h > 50) bar.style.background = 'linear-gradient(to top, #ca8a04, #fef08a)';
+                else bar.style.background = 'linear-gradient(to top, #ca8a04, #facc15)';
+            }
+        }
+
+        // --- Audio System ---
+        function initAudio() {
+            if (audioCtx) return;
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            
+            masterGain = audioCtx.createGain();
+            masterGain.gain.value = 0.2; 
+
+            analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 8192; // 提升採樣點數以獲得更高精度
+
+            masterGain.connect(analyser);
+            analyser.connect(audioCtx.destination);
+        }
+
+        function toggleAudio() {
+            if (!audioCtx) initAudio();
+            
+            if (isPlaying) {
+                stopOscillators();
+                btnText.innerText = "啟動引擎";
+                btnToggle.classList.remove('active');
+                statusInd.classList.remove('bg-green-400', 'shadow-[0_0_10px_#4ade80]');
+                statusInd.classList.add('bg-slate-700');
+                isPlaying = false;
+            } else {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                startOscillators();
+                btnText.innerText = "停止引擎";
+                btnToggle.classList.add('active');
+                statusInd.classList.remove('bg-slate-700');
+                statusInd.classList.add('bg-green-400', 'shadow-[0_0_10px_#4ade80]');
+                isPlaying = true;
+                drawOscilloscope();
+            }
+        }
+
+        function startOscillators() {
+            const baseFreq = parseFloat(document.getElementById('baseFreq').value);
+            oscillators = [];
+            
+            for (let i = 0; i < TOTAL_HARMONICS; i++) {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.value = baseFreq * (i + 1);
+                gain.gain.value = harmonicValues[i];
+                
+                osc.connect(gain);
+                gain.connect(masterGain);
+                osc.start();
+                
+                oscillators.push({ osc, gain, harmonicIndex: i + 1 });
+            }
+        }
+
+        function stopOscillators() {
+            oscillators.forEach(o => {
+                const now = audioCtx.currentTime;
+                o.gain.gain.linearRampToValueAtTime(0, now + 0.1); 
+                o.osc.stop(now + 0.1);
+            });
+            oscillators = [];
+        }
+
+        function updateAudio() {
+            if (!isPlaying) return;
+            const now = audioCtx.currentTime;
+            oscillators.forEach((o, i) => {
+                o.gain.gain.setTargetAtTime(harmonicValues[i], now, 0.05);
+            });
+        }
+
+        // 參數監聽
+        document.getElementById('baseFreq').addEventListener('input', (e) => {
+            document.getElementById('freqVal').innerText = e.target.value + ' Hz';
+            if (isPlaying) {
+                const val = parseFloat(e.target.value);
+                const now = audioCtx.currentTime;
+                oscillators.forEach(o => {
+                    o.osc.frequency.setTargetAtTime(val * o.harmonicIndex, now, 0.05);
+                });
+            }
+        });
+
+        document.getElementById('masterVol').addEventListener('input', (e) => {
+            const val = e.target.value;
+            document.getElementById('volVal').innerText = val + '%';
+            if (masterGain) {
+                masterGain.gain.setTargetAtTime(val / 100 * 0.5, audioCtx.currentTime, 0.05);
+            }
+        });
+
+        btnToggle.addEventListener('click', toggleAudio);
+
+        // --- 預設 ---
+        function loadPreset(type) {
+            harmonicValues.fill(0);
+            
+            if (type === 'sine') harmonicValues[0] = 1;
+            else if (type === 'square') { 
+                for (let i = 0; i < TOTAL_HARMONICS; i += 2) harmonicValues[i] = 1 / (i + 1);
+            }
+            else if (type === 'saw') { 
+                for (let i = 0; i < TOTAL_HARMONICS; i++) harmonicValues[i] = 1 / (i + 1);
+            }
+            else if (type === 'organ') {
+                harmonicValues = [1, 0.5, 0.2, 0.1, 0, 0.1, 0, 0.05, 0, 0, 0, 0];
+            }
+
+            // 正規化
+            const sum = harmonicValues.reduce((a,b)=>a+b, 0);
+            if(sum > 0) harmonicValues = harmonicValues.map(v => v/sum);
+
+            updateUI();
+            updateAudio();
+        }
+
+        function resetHarmonics() {
+            harmonicValues.fill(0);
+            harmonicValues[0] = 1;
+            updateUI();
+            updateAudio();
+        }
+
+        // --- 示波器視覺化 (High Precision) ---
+        function resizeCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const rect = canvas.getBoundingClientRect();
+            
+            // 設定實際像素大小 (Retina 支援)
+            canvas.width = rect.width * dpr;
+            canvas.height = rect.height * dpr;
+            
+            // 縮放繪圖上下文，讓我們可以使用 CSS 像素座標繪圖
+            ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resizeCanvas);
+
+        function drawOscilloscope() {
+            if (!isPlaying) return;
+            requestAnimationFrame(drawOscilloscope);
+
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteTimeDomainData(dataArray);
+
+            // 取得 CSS 邏輯寬高
+            const width = canvas.width / (window.devicePixelRatio || 1);
+            const height = canvas.height / (window.devicePixelRatio || 1);
+
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, width, height);
+
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#facc15'; 
+            ctx.beginPath();
+
+            const sliceWidth = width * 1.0 / bufferLength;
+            let x = 0;
+
+            // Trigger logic (穩定波形)
+            let triggerIndex = 0;
+            for (let i = 0; i < bufferLength - 1; i++) {
+                if (dataArray[i] < 128 && dataArray[i+1] >= 128) {
+                    triggerIndex = i;
+                    break;
+                }
+            }
+
+            for (let i = 0; i < bufferLength; i++) {
+                const idx = (triggerIndex + i) % bufferLength;
+                const v = dataArray[idx] / 128.0;
+                const y = v * height / 2;
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+
+                x += sliceWidth;
+                if (x > width) break;
+            }
+
+            ctx.lineTo(width, height / 2);
+            ctx.stroke();
+        }
+
+        // 啟動
+        initUI();
+
+    </script>
+</body>
+</html>
