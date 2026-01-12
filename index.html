@@ -410,9 +410,9 @@
                 // 更改文字
                 if(btnTextSpan) {
                     const btnIcon = '<i class="fa-solid fa-radiation animate-spin-slow"></i>';
-                    if (clickCount < 5) btnTextSpan.innerHTML = `${btnIcon} 核心不穩定 (${clickCount}/20)`;
-                    else if (clickCount < 10) btnTextSpan.innerHTML = `${btnIcon} 警告：現實解離中 (${clickCount}/20)`;
-                    else if (clickCount < 15) btnTextSpan.innerHTML = `${btnIcon} 錯誤！錯誤！錯誤！ (${clickCount}/20)`;
+                    if (clickCount < 5) btnTextSpan.innerHTML = `${btnIcon} 核心不穩定 (${clickCount})`;
+                    else if (clickCount < 10) btnTextSpan.innerHTML = `${btnIcon} 警告：現實解離中 (${clickCount})`;
+                    else if (clickCount < 15) btnTextSpan.innerHTML = `${btnIcon} 錯誤！錯誤！錯誤！ (${clickCount})`;
                     else btnTextSpan.innerHTML = `${btnIcon} 系統即將崩潰 (${clickCount}/20)`;
                 }
             }
