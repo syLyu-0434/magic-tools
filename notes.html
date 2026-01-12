@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>瑜的祕密筆記 | 瑜的神祕妙妙工具屋</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- MathJax 支援 LaTeX -->
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <link href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@400;700;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { 
+            background-color: #020617; 
+            font-family: 'Zen Maru Gothic', sans-serif; 
+            color: #e2e8f0;
+            overflow-x: hidden;
+        }
+
+        /* 背景：紫色系星雲 */
+        #canvas-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at top right, #2e1065 0%, #020617 70%);
+        }
+
+        /* 玻璃面板 */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(139, 92, 246, 0.2); 
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        /* 文章卡片 */
+        .post-card {
+            border-left: 4px solid rgba(139, 92, 246, 0.5);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .post-card:hover {
+            background: rgba(139, 92, 246, 0.1);
+            border-left-color: #a78bfa;
+            transform: translateX(5px);
+        }
+        .post-card.active {
+            background: rgba(139, 92, 246, 0.15);
+            border-left-color: #c4b5fd;
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.2);
+        }
+
+        /* 標籤樣式 */
+        .tag {
+            font-size: 0.7rem;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Zen Maru Gothic', sans-serif; /* 改用圓體比較親切 */
+            font-weight: bold;
+            border: 1px solid transparent;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* 1. 鍛造日誌 (DevLogs) - 藍色 */
+        .tag-dev { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border-color: rgba(59, 130, 246, 0.3); } 
+        /* 2. 靈光一閃 (Snippets) - 黃色 */
+        .tag-snippet { background: rgba(234, 179, 8, 0.2); color: #fde047; border-color: rgba(234, 179, 8, 0.3); }
+        /* 3. 物人子弟 (Education) - 綠色 */
+        .tag-edu { background: rgba(16, 185, 129, 0.2); color: #6ee7b7; border-color: rgba(16, 185, 129, 0.3); }
+        /* 4. 動態頻率 (Music) - 粉紅 */
+        .tag-music { background: rgba(236, 72, 153, 0.2); color: #f472b6; border-color: rgba(236, 72, 153, 0.3); }
+        /* 5. 虛空雜談 (Random) - 紫色 */
+        .tag-random { background: rgba(139, 92, 246, 0.2); color: #d8b4fe; border-color: rgba(139, 92, 246, 0.3); }
+
+        /* 內容顯示區 */
+        .content-area {
+            font-family: 'Zen Maru Gothic', sans-serif;
+            line-height: 1.8;
+            color: #cbd5e1;
+        }
+        .content-area p { margin-bottom: 1.2em; }
+        .content-area code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            color: #fcd34d; 
+            font-size: 0.9em;
+        }
+        .content-area a {
+            color: #a78bfa;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: color 0.2s;
+        }
+        .content-area a:hover { color: #c4b5fd; }
+        .content-area strong { color: #e9d5ff; font-weight: 900; }
+        .content-area blockquote {
+            border-left: 3px solid #6366f1;
+            padding-left: 1rem;
+            margin: 1.5rem 0;
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        /* 導航按鈕 */
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s;
+        }
+        .nav-btn:hover {
+            background: rgba(139, 92, 246, 0.2);
+            border-color: rgba(139, 92, 246, 0.5);
+            transform: translateX(-5px);
+        }
+
+        /* 捲軸美化 */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #020617; }
+        ::-webkit-scrollbar-thumb { background: #4c1d95; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #6d28d9; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center">
+
+    <div id="canvas-bg"></div>
+
+    <!-- 頂部導航 -->
+    <nav class="w-full max-w-6xl px-6 py-8 flex justify-between items-center z-10">
+        <a href="index.html" class="nav-btn px-4 py-2 rounded-xl text-slate-300 hover:text-white flex items-center gap-2 group">
+            <i class="fa-solid fa-arrow-left group-hover:-translate-x-1 transition-transform"></i>
+            <span>返回大廳</span>
+        </a>
+        <div class="text-right">
+            <h1 class="text-2xl font-black text-purple-400 tracking-tight flex items-center gap-2 justify-end">
+                <i class="fa-solid fa-book-journal-whills"></i> 瑜的祕密筆記
+            </h1>
+            <p class="text-xs text-slate-500 font-mono tracking-widest">GRIMOIRE OF CODE</p>
+        </div>
+    </nav>
+
+    <!-- 主要內容區 -->
+    <main class="w-full max-w-6xl flex flex-col md:flex-row gap-6 px-4 pb-20 z-10 flex-grow h-[calc(100vh-140px)]">
+        
+        <!-- 左側：文章列表 -->
+        <div class="md:w-1/3 flex flex-col gap-4 overflow-y-auto pr-2" id="post-list">
+            <!-- JS 動態生成文章列表 -->
+        </div>
+
+        <!-- 右側：文章閱讀器 -->
+        <div class="md:w-2/3 glass-panel p-8 overflow-y-auto relative flex flex-col">
+            <div id="post-content" class="flex-grow">
+                <!-- 預設畫面 -->
+                <div class="h-full flex flex-col items-center justify-center text-slate-500 opacity-50">
+                    <i class="fa-solid fa-terminal text-6xl mb-4"></i>
+                    <p class="font-mono text-sm">SELECT A FILE TO DECRYPT...</p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- 🔮 這裡就是你的資料庫！要在這裡寫新文章 ---
+        const POSTS = [
+            {
+                id: 4,
+                title: "我是物理師培生，但在霧裡失陪",
+                date: "2025-06-24",
+                category: "edu",
+                desc: "關於師資培育現況的深刻反思，教育乃國家大事。",
+                content: `
+                    如果是常關注教育新聞的人應該知道這篇教育部的新聞稿：
+                    https://www.edu.tw/News_Content.aspx
+                    
+                    如果沒有看過，你可能看過這個標題的新聞：
+                    「7 成師培生「跳船」自然科新血估2028年恐歸零」
+                    https://news.ttv.com.tw/news/11406090013300N
+
+                    首先，2028 年歸零說法是哪來的？新聞好像都沒有交代其依據，根據我先前的印象與查找，這個說法的來源應該是來自這兩篇 PTT 的文章：
+                    https://pttweb.cc/s/Teacher/1cvKvfA0
+                    https://pttweb.cc/s/Teacher/1dXw-kBf
+
+                    這篇文中，annuuslin 老師（推測為在職教師）統計了各個科目的「學科老師首登專長該年新增人數比較表」的歷年數量變化（統計至 111 年），並使用 linear fitting 的結果預測「化學科將在 114 年歸零、物理科將在 116 年歸零、生物科將在 117 年歸零 」。
+                    
+                    後來，annuuslin 老師添加了 112 年的資料，並將 fitting 方式改成 exponential decay 發現情況也不那麼樂觀。 ($N(t) = N_0 e^{-\lambda t}$)
+
+                    我不認為情況會誇張到 117 年後就不會有自然老師，但也很難說未來師資培育的狀況會有多樂觀，我認為國家如果不重視這個問題，到時候真的沒有人要當老師了。
+
+                    光是一篇 PTT 的投稿，被報成新聞後，就成為了教育部新聞稿的澄清重點。
+                    我和 ChatGPT 4o 討論過後，他丟出了一句話：
+                    > 「如果制度對網路言論這麼敏感，卻對真正還在體制裡努力的人那麼冷淡，那我們到底算什麼？」
+
+                    看到這句話，我突然有一些話想說，不會期望所有人看到，更不會奢望行政機關讀完就有所改變。我只是一位普通大學的師培生，修過兩年教育學程，能力尚淺，見聞有限。教育乃國家大事，其範疇大如可觀測宇宙，我之所言，不過寄浮游於天地。 但也因此，我希望能留下這篇拙作，讓願意聽的人，聽見這個正在沉下去的聲音。 （咕嚕）
+
+                    ———
+
+                    如果將來的某一天，我的學生問我：「老師，你為什麼想當老師？」我不會說走投無路，也不會說誤入歧途，甚至我想不起來是那個瞬間，讓我非常想當老師。從小到大，我也對自己的職涯有著很多的想像，不過教師這個選項，從來沒有消失過。
+
+                    原因好像也不是很老套的在求學期間遇到了非常好的老師，因為每位教師都有對我產生影響，像是有老師會用水果輔助教學、播洗腦影片讓我們記住三角形全等、也有老師會拿著管子甩出聲音。這些都非常有記憶點，但這些也不是我想成為老師的理由。
+
+                    既然不是，那會是什麼？老實說，我現在還沒有一個答案，不過我可以明確的回答大家，我一直都很想當老師，比你想像中還要更想。原因...等我想到了再告訴你 ：）
+
+                    為了當一位老師，我除了修習系上的課程（學科內容知識 CK），申請了教育學程後可以修相關課程（教學知識 PK），到最後修習物理教材教法、教學實習（學科內容教學知識 PCK）。這 26 學分是必須要修的。
+
+                    但只有這樣嗎？除了一般的教育專業課程科目，我還額外修習了雙語教育學程、資優教育學程、IB 國際教育，我相信這些都不是多餘的，除了發展自身將來的可能性之外，也希望我能增進我在 PK 相關的知能，即使將來不走這條路，我也期望有一天可以用到這些知識。
+
+                    ——— 
+
+                    師長們知道我想當老師之後，可說反應兩極：
+                    「你想要當老師啊！如果需要幫助可以找我～」
+                    「你的特質非常適合當老師！」
+                    「老師喔……不錯啊！有寒暑假」
+                    「鐵飯碗不錯啊！」
+                    「不如去業界吧……賺比較多」
+                    「不要當啦！你知道老師多難考嗎？」
+                    「你要確定欸……現在學生越來越難教喔」
+                    「你真的要當老師嗎……？」
+
+                    很感謝支持我並且願意鼓勵我的人，也能夠理解那些人的疑慮，因為他們的疑慮也是真的。的確，上岸靠運氣、錢不如園區工程師多、學生問題、路程顛頗都是真的，我想他們也是擔心我撐不下去，才會這樣說的。
+
+                    我大概根據身邊資訊以及新聞也得知了幾個極端案例，在這邊給一道簡單的題目：
+                    請問下列事項，可以成為投訴教師的理由？（應選五項）
+                    (A) 自然老師無法幫倉鼠看病，專業知能堪憂
+                    (B) 老師沒有提醒學生上廁所要帶衛生紙
+                    (C) 老師帶早餐到教室吃
+                    (D) 考題出太難，打擊學生自信心
+                    (E) 老師單身沒有生小孩，不適合帶小朋友
+
+                    我想這些老師從來就不會想到自己會因為以上原因被投訴吧？這些理由荒謬到好笑，不過我怎麼笑不出來？如果濫訴持續發生，會不會有一天就會輪到我？如果確實如此我為何要冒這個險去當老師？這個制度應該處理這些問題嗎？
+
+                    不知道「行政減量」這個名詞聽過幾年了，但是行政真的減量了嗎？我自己沒有經驗我也不知道答案，不過為什麼這四個字還是在新聞版面層出不窮呢？行政加給少於10,000、導師加給 3,000 到底要做多少事？
+                    即使我走教師之路到現在，現今的制度似乎讓我無法安心把路走完。
+
+                    ——— 
+
+                    根據教育部的新聞稿：
+                    「(三) 增加彈性聘用管道：因應半導體、AI等業界吸引力強，致學校不易招聘STEM或自然領域教師，規劃引導相關系所畢業且具業界資歷或曾任大專校院相關科系之講師及教授者，於強化必要之教學知能後(免修職前學分、免考試、免實習)，得進入教學現場擔任專業及技術教師或教學支援老師，並預計於115年起聘任。 」
+                    「(六) 中等類科STEM相關領域累計至117年可進入職場人數預估：以113年發證數量估算未來4年(114至117年)合計發證量，輔以114年針對STEM領域開設學士後教育學分班(含偏鄉班)核定人數，預估累計至117年STEM領域新取證者及學士後班合計將有1,450人可進入職場。 」
+
+                    內文寫得清清楚楚，不用修學分、不用考試、不用實習，只需要「強化必要之教學知能」就可以進入教學現場，並且在三、四年後就會有 1,450 人進入教學現場了。我絕對沒有懷疑業界、講師、教授們的能力的意思，但是「強化必要之教學知能」 到底是什麼？一個禮拜的工作坊？十二小時的線上課程？有沒有相關的篩選機制？如何確保教學支援人員品質？若要實行勢必要有完整的配套。
+
+                    另外，我們已經有 1,450 位支援人員了，要我們這群師資培育生做什麼？不能否定他們可能比我們更有業界實務經驗、更有歷練，但我們呢？我們是政策之下的替代品嗎？我們通過兩輪篩選、修課、教檢、實習，做準備的師資生們，才是備案？那麼成為備案得我們，又能走到哪裡去？如果你與我在同一條路上，你們是怎麼想的？
+
+                    那……我們要的是什麼？已經越來越多人放棄教師之路了，他們已經有除了老師外更好的目標了，那還在路上的我們是不是也該早點找另條路走了？環境再這樣下去，有一天我們都累了，再也沒有人想走了，我想誰都不會樂見此景。因此，教師需要更好的待遇、更多的誘因、更棒的環境。這才是長久之計，補破網網遲早會破更大洞。
+
+                    ——— 
+
+                    我身為師大物理系的師培生，我希望我的學生將來學會的不只是物理本身，更是問題解決、探究實作、批判思考的能力，他們將來遇到的情境無論多複雜，都能夠運用自己的工具箱找出解方。
+
+                    所以，我為什麼想當老師？ 我還是答不出令我自己滿意的理由，也不知道要怎麼收尾，於是我請 ChatGPT 幫我收尾，他寫得真好：
+                    > 「我不知道將來我會不會當上老師，但我知道，有些人走在這條路上不是為了光鮮亮麗的未來，而是因為我們曾相信，教育會改變一些什麼。如果這樣的信念無法被制度承接，那我也只能把這些話寫下，當作對未來的自己，以及所有正在撐著的人，留下一封慢慢沉下去的一段文字。（咕嚕）」
+
+                    我是一名師培生，我還在這條路上走著，但我不知道我還能走多遠。
+
+                    （此文大部分為本人撰寫，少量語句使用 ChatGPT 生成與潤飾）
+                `
+            },
+            {
+                id: 1,
+                title: "為什麼我的彈簧會爆炸？",
+                date: "2024-05-20",
+                category: "dev", 
+                desc: "數值積分法的血淚史，論 dt 太大會發生什麼事。",
+                content: `
+                    這是一個關於物理引擎的悲慘故事。
+                    
+                    原本我以為只要寫下 **F = ma**，世界就會乖乖運作。
+                    於是我用了最簡單的 **Euler積分法**：
+                    \`x += v * dt\`
+                    \`v += a * dt\`
+
+                    結果當我把彈簧係數 **k** 調大時，木塊竟然直接飛出螢幕邊界，能量還變成無限大！
+                    
+                    後來我才知道，這叫做 **數值發散**。為了解決這個問題，我後來改用了 **Semi-implicit Euler**，雖然還是不完美，但至少彈簧不會再試圖毀滅宇宙了。
+                `
+            },
+            {
+                id: 2,
+                title: "五連塊的分形演算法",
+                date: "2024-06-05",
+                category: "snippet",
+                desc: "如何不用手畫 12 張地圖，就做出巨型關卡？",
+                content: `
+                    我想要在五連塊遊戲裡加入一個「巨型模式」，也就是用 9 個小五連塊拼成一個大五連塊的形狀。
+                    
+                    手動刻 12 張地圖太累了，身為工程師，當然要寫程式產生程式。
+                    
+                    我的作法是：
+                    1. 定義每個五連塊的 **5個座標點**。
+                    2. 將這些座標點 **放大 3 倍**。
+                    3. 在網格上把這些放大後的區域標記為 **有效 (0)**，其他地方標記為 **無效 (-1)**。
+                    
+                    這樣一來，無論是 F 型還是 X 型，程式都能自動生成對應的巨型關卡地圖。這就是程式碼的魔法！
+                `
+            },
+            {
+                id: 3,
+                title: "時空裂縫的真正去向",
+                date: "2026-01-12",
+                category: "random",
+                desc: "關於首頁那顆按鈕的彩蛋設計。",
+                content: `
+                    如果你在首頁不聽勸告，瘋狂點擊那顆紅色的核心按鈕 **20次**...
+                    會發生意想不到的事欸！（建議你不要輕易嘗試）
+                    你會發現畫面開始劇烈震動，然後被傳送到一個神祕的網址，裡面有關與這個宇宙的深處秘密。
+
+                    瑜在此建議不要在 **12/20-12/31**、**01/12-02/20**、**06/05**、**10/10** 這些時段進入裂縫，絕對不會有什麼差別！哼！
+                `
+            }
+        ];
+
+        // --- 程式邏輯 ---
+
+        const listContainer = document.getElementById('post-list');
+        const contentContainer = document.getElementById('post-content');
+
+        // 標籤設定 (對應新分類)
+        const tagStyles = {
+            'dev': { class: 'tag-dev', text: '🛠️ 鍛造日誌' },
+            'snippet': { class: 'tag-snippet', text: '⚡ 靈光一閃' },
+            'edu': { class: 'tag-edu', text: '🍎 物人子弟' },
+            'music': { class: 'tag-music', text: '🎵 動態頻率' },
+            'random': { class: 'tag-random', text: '🌌 虛空雜談' }
+        };
+
+        // 初始化列表
+        function initList() {
+            // 按日期排序 (新的在上面)
+            POSTS.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            POSTS.forEach(post => {
+                const tagInfo = tagStyles[post.category] || { class: 'tag-random', text: post.category };
+                
+                const card = document.createElement('div');
+                card.className = `glass-panel p-4 post-card`;
+                card.onclick = () => loadPost(post, card);
+                
+                card.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="tag ${tagInfo.class}">${tagInfo.text}</span>
+                        <span class="text-xs text-slate-500 font-mono">${post.date}</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-1 leading-tight">${post.title}</h3>
+                    <p class="text-xs text-slate-400 line-clamp-2">${post.desc}</p>
+                `;
+                
+                listContainer.appendChild(card);
+            });
+        }
+
+        // 載入文章 (Markdown + AutoLink)
+        function loadPost(post, cardElement) {
+            // 更新列表狀態
+            document.querySelectorAll('.post-card').forEach(c => c.classList.remove('active'));
+            cardElement.classList.add('active');
+
+            // 簡易 Markdown 解析
+            let formattedContent = post.content
+                // 先處理網址 (Auto-link)
+                .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>')
+                // 處理換行 (雙換行轉 P，單換行轉 br)
+                .split('\n').map(line => line.trim()).join('\n')
+                .replace(/\n\n/g, '</p><p>')
+                .replace(/\n/g, '<br>')
+                // 粗體與程式碼
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                // 引用
+                .replace(/^> (.*)/gm, '<blockquote>$1</blockquote>');
+
+            // 包裹在 P 標籤
+            formattedContent = `<p>${formattedContent}</p>`;
+
+            const tagInfo = tagStyles[post.category] || { class: 'tag-random', text: post.category };
+
+            // 渲染內容
+            contentContainer.innerHTML = `
+                <div class="animate-[fadeIn_0.5s_ease-out]">
+                    <div class="mb-6 border-b border-white/10 pb-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="tag ${tagInfo.class} text-sm px-3 py-1">${tagInfo.text}</span>
+                            <span class="text-slate-500 font-mono text-sm">${post.date}</span>
+                        </div>
+                        <h1 class="text-3xl md:text-4xl font-black text-white mb-2 leading-tight">${post.title}</h1>
+                    </div>
+                    <div class="content-area text-slate-300 text-lg">
+                        ${formattedContent}
+                    </div>
+                </div>
+            `;
+
+            // 觸發 MathJax 渲染
+            if (window.MathJax) {
+                window.MathJax.typesetPromise();
+            }
+        }
+
+        // 粒子背景 (復用)
+        const canvas = document.createElement('canvas');
+        document.getElementById('canvas-bg').appendChild(canvas);
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() { this.init(); }
+            init() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.2;
+                this.vy = (Math.random() - 0.5) * 0.2;
+                this.size = Math.random() * 2;
+                this.life = Math.random();
+            }
+            update() {
+                this.x += this.vx; this.y += this.vy;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+            }
+            draw() {
+                ctx.fillStyle = `rgba(167, 139, 250, ${this.life * 0.2})`; 
+                ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+            }
+        }
+
+        for(let i=0; i<50; i++) particles.push(new Particle());
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach(p => { p.update(); p.draw(); });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 啟動
+        initList();
+
+    </script>
+</body>
+</html>
