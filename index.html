@@ -266,20 +266,43 @@
     <!-- 主要內容 -->
     <main class="relative z-10 container mx-auto px-6 min-h-screen flex flex-col items-center justify-center py-20" id="main-content">
         
-        <!-- Logo -->
-        <div class="mb-10 relative group cursor-pointer animate-float">
+        <!-- Logo (點擊 3 次觸發算命) -->
+        <div class="mb-10 relative group cursor-pointer animate-float" id="logo-container">
             <div class="absolute -inset-4 bg-gradient-to-r from-cyan-500 to-purple-600 rounded-full blur-2xl opacity-30 group-hover:opacity-60 transition duration-1000"></div>
-            <div class="relative w-40 h-40 rounded-full bg-slate-900 ring-1 ring-white/20 flex items-center justify-center overflow-hidden shadow-2xl">
+            <div class="relative w-40 h-40 rounded-full bg-slate-900 ring-1 ring-white/20 flex items-center justify-center overflow-hidden shadow-2xl logo-circle">
                 <!-- 🔮 水晶球彩蛋觸發點 -->
                 <span class="text-7xl group-hover:scale-110 transition-transform duration-500" id="crystal-ball">🔮</span>
             </div>
         </div>
 
         <!-- 標題 -->
-        <div class="text-center mb-16">
+        <div class="text-center mb-10">
             <h1 class="text-5xl md:text-7xl font-bold mb-6 glitch tracking-tighter" data-text="瑜的神祕妙妙工具屋">瑜的神祕妙妙工具屋</h1>
             <div class="h-1 w-24 bg-gradient-to-r from-transparent via-cyan-500 to-transparent mx-auto mb-6"></div>
-            <p class="text-slate-400 text-lg md:text-xl font-light tracking-[0.3em] uppercase">Beyond Ordinary, Into Magic</p>
+            <p class="text-slate-400 text-lg md:text-xl font-light tracking-[0.3em] uppercase">Yu's Magic Tool House</p>
+        </div>
+
+        <!-- 最新消息 -->
+        <div class="w-full max-w-2xl mb-12 animate-float-delay">
+            <div class="glass-card p-6 rounded-2xl relative overflow-hidden group">
+                <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <i class="fa-solid fa-bullhorn text-cyan-400 group-hover:text-purple-400 transition-colors"></i> 最新消息
+                </h3>
+                <ul class="space-y-3 text-sm text-slate-300">
+                    <li class="flex flex-col sm:flex-row gap-1 sm:gap-3 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                        <span class="text-cyan-500 font-mono shrink-0">2026.01.14</span>
+                        <span>🚀 更新至 Beta 2.5，新增「最新消息」欄位。</span>
+                    </li>
+                    <li class="flex flex-col sm:flex-row gap-1 sm:gap-3 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                        <span class="text-purple-500 font-mono shrink-0">2026.01.12</span>
+                        <span>🧪 實驗室大廳開放，新增「簡諧彈簧」與「泛音產生器」模擬。</span>
+                    </li>
+                    <li class="flex flex-col sm:flex-row gap-1 sm:gap-3 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                        <span class="text-emerald-500 font-mono shrink-0">2026.01.12</span>
+                        <span>🥳 <span class="text-blue-400 font-bold">瑜的神祕妙妙工具屋</span> 正式實裝！</span>
+                    </li>
+                </ul>
+            </div>
         </div>
 
         <!-- 工具傳送門 -->
@@ -339,7 +362,7 @@
     </main>
 
     <footer class="relative z-10 py-12 text-center text-slate-600 text-xs tracking-widest uppercase">
-        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | v2.5-EASTER_EGGS</p>
+        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | Beta 2.5</p>
     </footer>
 
     <script>
@@ -524,7 +547,7 @@
         // 修改：這裡不再開啟原始碼，而是新的趣味彩蛋
         pModeTrigger.addEventListener('click', () => {
             if (pModeUnlocked) {
-                alert("權限拒絕：開發者正在補眠。\n\n其實原本 Source 是在這裡開的\n(但我改掉了ww)");
+                alert("權限拒絕：開發者正在補眠。\n\n提示：真正的後門是用鍵盤打出來的。\n(試試看輸入 'GITSAUCE'？)");
                 
                 // 新彩蛋特效：側邊欄旋轉
                 document.getElementById('sidebar').style.transition = 'transform 1s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
@@ -534,43 +557,72 @@
 
         // --- 🔮 1. 水晶球占卜彩蛋 ---
         const crystalBall = document.querySelector('#crystal-ball');
-        let pressTimer;
+        // 水晶球容器點擊變數
+        let ballClicks = 0;
+        let ballTimer;
 
         const fortunes = [
             "大吉：今天的實驗數據誤差在 0.1% 以內。",
+            "大吉：教得都有考，而且你會寫！",
+            "大吉？：你中發票了！從此不用幹科學這行了。",
             "中吉：你的波函數看起來塌縮得很完美。",
+            "中吉：你考試的東西你昨天看過，而且還記得一些。",
             "小吉：雖然有摩擦力，但可以忽略不計。",
+            "末吉：你壓線繳交你的報告，終於可以做下一份報告了。",
+            "凶：你報告的繳交期限已經過了。",
             "凶：實驗室冷氣壞了。",
+            "凶：你算出了3倍光速。",
             "大凶：你的論文被指導教授拿去墊便當了。",
+            "大凶：你這輩子也就這樣了。",
             "建議：去睡覺，夢裡什麼都有。",
-            "警告：不要試圖用手接住掉落的烙鐵。",
+            "建議：大一微積分要學好，以免你看到積分式積不出來。",
+            "建議：物理系的數學方法有二：泰勒展開式、分部積分。",
+            "建議：如果你這輩子讀物理，下輩子讀點別的吧...",
+            "警告：不要試圖打破物理定律。",
             "預言：你明天會忘記帶實驗室鑰匙。",
             "物理系日常：又要寫預報了，崩潰。",
+            "物理系日常：實驗沒做完，崩潰。",
+            "物理系日常：習題不會做，問AI還是不知道這題在衝三小，崩潰。",
             "提醒：你的肝指數正在發生紅移。",
+            "提醒：熵(Entropy)不是亂度。",
+            "小知識：大家好像都覺得牛頓超聰明，但他30歲才會微積分。",
             "觀測結果：薛丁格的貓好像餓了。",
+            "觀測結果：薛丁格的貓叫了一聲。",
+            "觀測結果：薛丁格的貓跑走了。",
+            "觀測結果：貓的薛丁格已經不在了。",
+            "實驗結果：數量級是對的。",
             "系統提示：請檢查你的單位有沒有換算錯。"
         ];
 
         if (crystalBall) {
-            crystalBall.addEventListener('mousedown', () => {
-                crystalBall.style.transform = 'scale(1.5) rotate(360deg)';
-                crystalBall.style.transition = 'transform 3s cubic-bezier(0.68, -0.55, 0.27, 1.55)';
-                
-                pressTimer = setTimeout(() => {
-                    const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
-                    alert(`🔮 物理系水晶球顯示：\n\n${randomFortune}`);
-                    crystalBall.style.transform = ''; 
-                }, 3000); 
-            });
-
-            const cancelPress = () => {
-                clearTimeout(pressTimer);
-                crystalBall.style.transform = ''; 
-                crystalBall.style.transition = 'transform 0.5s ease'; 
-            };
+            // 改為點擊容器觸發 (更好的使用者體驗)
+            const logoContainer = document.getElementById('logo-container');
             
-            crystalBall.addEventListener('mouseup', cancelPress);
-            crystalBall.addEventListener('mouseleave', cancelPress);
+            logoContainer.addEventListener('click', (e) => {
+                // 如果是混沌模式，不進行算命
+                if (isChaos) return;
+                
+                ballClicks++;
+                
+                // 點擊視覺回饋：旋轉+放大
+                const rotation = ballClicks * 360;
+                crystalBall.style.transform = `scale(${1 + ballClicks * 0.2}) rotate(${rotation}deg)`;
+                
+                clearTimeout(ballTimer);
+                ballTimer = setTimeout(() => {
+                    ballClicks = 0;
+                    crystalBall.style.transform = ''; 
+                }, 1000); // 1秒內沒有繼續點擊就重置
+
+                if (ballClicks === 3) {
+                    const randomFortune = fortunes[Math.floor(Math.random() * fortunes.length)];
+                    alert(`🔮 水晶球浮出了：\n\n${randomFortune}`);
+                    
+                    // 重置狀態
+                    ballClicks = 0;
+                    crystalBall.style.transform = ''; 
+                }
+            });
         }
 
         // --- ⌨️ 2. Konami Code (駭客矩陣) & GITSAUCE (原始碼) ---
@@ -579,6 +631,8 @@
 
         const gitSauceCode = ['g', 'i', 't', 's', 'a', 'u', 'c', 'e'];
         let gitSauceIndex = 0;
+        
+        let isMatrixMode = false; // 駭客模式狀態標記
 
         document.addEventListener('keydown', (e) => {
             const key = e.key.toLowerCase();
@@ -588,7 +642,10 @@
             if (key === gitSauceCode[gitSauceIndex]) {
                 gitSauceIndex++;
                 if (gitSauceIndex === gitSauceCode.length) {
-                    openSourceCode();
+                    // 只有在 Matrix Mode 啟動時才有效
+                    if (isMatrixMode) {
+                        openSourceCode();
+                    }
                     gitSauceIndex = 0;
                 }
             } else {
@@ -611,33 +668,52 @@
 
         // 真正的原始碼開啟函式
         function openSourceCode() {
-             if (confirm("✨ 隱藏代碼觸發！\n即將開啟 Github 原始碼倉庫。")) {
-                window.open("https://github.com/syLyu-0434/magic-tools", "_blank");
-            }
+             // 直接開啟，不顯示訊息
+             window.open("https://github.com/syLyu-0434/magic-tools", "_blank");
         }
 
         function activateMatrixMode() {
+            isMatrixMode = true; // 啟動駭客模式狀態
             alert("System Hacked... Access Granted. Welcome to the Matrix.");
             
             const style = document.createElement('style');
             style.innerHTML = `
-                * {
+                /* 全局字體與顏色 */
+                body, h1, h2, h3, p, span, i, div, a, li {
                     color: #00ff00 !important;
                     font-family: 'Courier New', monospace !important;
                     text-shadow: 0 0 5px #00ff00 !important;
                     border-color: #00ff00 !important;
                 }
-                .glass-card, .sidebar-glass {
+                
+                /* 覆蓋卡片背景 */
+                .glass-card, .sidebar-glass, #score-board {
                     background: rgba(0, 20, 0, 0.9) !important;
                     border: 1px solid #00ff00 !important;
                     box-shadow: 0 0 20px #00ff00 !important;
                 }
+                
+                /* 覆蓋背景 */
                 body {
                     background: black !important;
                 }
                 #canvas-bg { opacity: 0.2; }
-                h1, h2, h3, p, span, i { color: #00ff00 !important; }
+                
+                /* 按鈕樣式 */
                 button { background: black !important; border: 1px solid #00ff00 !important; }
+                
+                /* 特別處理：確保 Logo 圓圈有邊框 */
+                .logo-circle {
+                    border: 2px solid #00ff00 !important;
+                    background: #000 !important;
+                }
+                
+                /* 特別處理：水晶球 Emoji */
+                #crystal-ball {
+                    /* Emoji 本身有顏色，可能需要濾鏡來讓它變綠 */
+                    filter: sepia(100%) hue-rotate(90deg) saturate(500%) brightness(0.8) contrast(1.2);
+                    text-shadow: 0 0 10px #00ff00 !important;
+                }
             `;
             document.head.appendChild(style);
         }
