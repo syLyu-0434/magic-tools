@@ -1,8 +1,6 @@
-# 🔮 瑜的神祕妙妙工具屋 (Yu's Mysterious Wonderful Toolhouse)</h1>
+# 🔮 瑜的神祕妙妙工具屋 (Yu's Magic Tool House)</h1>
 
 歡迎來到**瑜的神祕妙妙工具屋**。這是一個基於 GitHub Pages 構建的個人工具入口網，融合了賽博龐克 (Cyberpunk) 與魔法 (Magic) 的視覺風格，旨在存放各種「妙妙」的開發成果。
-
-https://sylyu-0434.github.io/magic-tools/
 
 ## 🌌 空間概覽
 
@@ -38,12 +36,12 @@ https://sylyu-0434.github.io/magic-tools/
 
 描述：存放破碎語錄與技術咒語的空間。
 
-狀態：封印中 (Development)
+狀態：已部署
 
 ## 🚀 如何進入工具屋？
 
 你可以直接訪問：
-👉
+👉 https://sylyu-0434.github.io/magic-tools/
 
 ## 🧙‍♂️ 技術堆疊 (Spell Book)
 
