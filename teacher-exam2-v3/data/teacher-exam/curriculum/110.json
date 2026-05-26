@@ -1,0 +1,427 @@
+[
+  {
+    "id": "curriculum-110-01",
+    "year": "110",
+    "number": 1,
+    "stem": "教師在編輯試卷時，試題排列宜採下列何種方式？",
+    "choices": {
+      "A": "由易至難",
+      "B": "由難至易",
+      "C": "難易穿插",
+      "D": "隨機排列"
+    },
+    "answer": "A",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-02",
+    "year": "110",
+    "number": 2,
+    "stem": "下列有關直接教學法(direct instruction)的敘述，何者為非？",
+    "choices": {
+      "A": "為教師中心的教學",
+      "B": "強調師生的共同學習",
+      "C": "認為教學是可以複製的",
+      "D": "主張學習者的行為可以預期"
+    },
+    "answer": "B",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-03",
+    "year": "110",
+    "number": 3,
+    "stem": "下列哪一種學習策略較無助於長期記憶？",
+    "choices": {
+      "A": "學生將所學內容與自身經驗相結合",
+      "B": "學生將課本中的概念，組織成樹狀圖筆記",
+      "C": "學生在上課前，先將課本內容快速瀏覽一遍",
+      "D": "學生利用週末，回顧一週所學的內容和要點"
+    },
+    "answer": "C",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-04",
+    "year": "110",
+    "number": 4,
+    "stem": "學校自辦校內語文競賽以選拔參加全縣語文競賽的選手，此種競賽成績之參照屬於 下列何種類型？",
+    "choices": {
+      "A": "自我參照",
+      "B": "常模參照",
+      "C": "標準參照",
+      "D": "效標參照"
+    },
+    "answer": "B",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-05",
+    "year": "110",
+    "number": 5,
+    "stem": "王老師掌握學生特定範圍的學習狀況，並使用評量結果來改進教學。此種評量 為下列何者？",
+    "choices": {
+      "A": "診斷性評量",
+      "B": "安置性評量",
+      "C": "形成性評量",
+      "D": "總結性評量"
+    },
+    "answer": "C",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-06",
+    "year": "110",
+    "number": 6,
+    "stem": "林老師帶領學生利用網路與史瓦帝尼的中學生進行交流。在交流中，小華發現當地 醫療資源貧瘠，立志長大後要投入醫療行列，幫助貧苦的人民。此學習經驗屬於下列 何者？",
+    "choices": {
+      "A": "潛在課程",
+      "B": "空白課程",
+      "C": "彈性課程",
+      "D": "顯著課程"
+    },
+    "answer": "A",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-07",
+    "year": "110",
+    "number": 7,
+    "stem": "黃老師在參與新課程改革後，拋棄原來學科中心的課程理念，轉而認同並努力實踐 學生中心的課程理念。黃老師的改變屬於下列哪一個層次？",
+    "choices": {
+      "A": "行為的改變",
+      "B": "角色的改變",
+      "C": "知識和理解",
+      "D": "價值的內化"
+    },
+    "answer": "D",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-08",
+    "year": "110",
+    "number": 8,
+    "stem": "某師資培育中心所規劃的實地學習課程與史懷哲專業服務活動，期待學生在過程中 培養教育愛，內化服務社會的態度與行為。此屬於情意領域目標的哪一個層級？",
+    "choices": {
+      "A": "接受",
+      "B": "反應",
+      "C": "評價",
+      "D": "品格化"
+    },
+    "answer": "D",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-09",
+    "year": "110",
+    "number": 9,
+    "stem": "依據《十二年國民基本教育課程綱要總綱》，下列何者屬於非正式課程？",
+    "choices": {
+      "A": "補救教學",
+      "B": "藝術、體育",
+      "C": "園遊會、運動會",
+      "D": "學生自主學習"
+    },
+    "answer": "C",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-10",
+    "year": "110",
+    "number": 10,
+    "stem": "下列何者為合理的探究式教學步驟？ 甲、提出可探究問題 乙、反思並發現新問題 丙、設計並執行探究活動 丁、分析數據並形成解釋",
+    "choices": {
+      "A": "甲－丁－丙－乙",
+      "B": "甲－丙－丁－乙",
+      "C": "乙－丁－丙－甲",
+      "D": "丁－丙－乙－甲"
+    },
+    "answer": "B",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-11",
+    "year": "110",
+    "number": 11,
+    "stem": "社會學習領域課程綱要中提到：「因果、互動、結構是分析歷史變遷的重要概念。」 此一敘述所表徵的是下列何者？",
+    "choices": {
+      "A": "事實(fact)",
+      "B": "概念(concept)",
+      "C": "通則(generalization)",
+      "D": "理論(theory)"
+    },
+    "answer": "C",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-12",
+    "year": "110",
+    "number": 12,
+    "stem": "多元評量可以指涉下列何種意義？ 甲、多元的評量目的 乙、多元能力的評量 丙、多元的評量方式 丁、多元文化的評量",
+    "choices": {
+      "A": "甲乙丙",
+      "B": "甲丙丁",
+      "C": "甲乙丁",
+      "D": "乙丙丁"
+    },
+    "answer": "A",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-13",
+    "year": "110",
+    "number": 13,
+    "stem": "下列關於英語文課程的敘述，何者符合課程設計中的「繼續性(continuity)」原則？",
+    "choices": {
+      "A": "單元內容編排從單字、句型再到篇章",
+      "B": "將課文中的主題連結其他學科的內容",
+      "C": "每單元都包含聽、說、讀、寫的技能",
+      "D": "單元內容包含先前單元的單字和句型"
+    },
+    "answer": "D",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-14",
+    "year": "110",
+    "number": 14,
+    "stem": "有關道德討論教學法的敘述，下列何者錯誤？",
+    "choices": {
+      "A": "不斷進行辯論與詰問",
+      "B": "發展學生道德判斷力",
+      "C": "直接教導道德的觀念",
+      "D": "運用兩難式問題情境"
+    },
+    "answer": "C",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-15",
+    "year": "110",
+    "number": 15,
+    "stem": "下列有關課程中學習經驗選擇的原則，何者有誤？",
+    "choices": {
+      "A": "學習經驗要能符合學生的能力範圍",
+      "B": "學習經驗的安排要能夠花費最少的經費",
+      "C": "為達課程目標，學生要有練習目標行為的經驗",
+      "D": "所提供的學習經驗，要讓學生獲得滿足感與成就感"
+    },
+    "answer": "B",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-16",
+    "year": "110",
+    "number": 16,
+    "stem": "李老師和夥伴教師共同備課時，發現自己隨性地配合學校活動指定作文題目，似乎 沒有依據課程綱要來發展學生的寫作能力。李老師的情況反映哪兩種課程的落差？",
+    "choices": {
+      "A": "理想課程和知覺課程",
+      "B": "運作課程和經驗課程",
+      "C": "正式課程和知覺課程",
+      "D": "正式課程和運作課程"
+    },
+    "answer": "D",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-17",
+    "year": "110",
+    "number": 17,
+    "stem": "下列有關小組成就區分法(STAD)的實施方式，何者不正確？",
+    "choices": {
+      "A": "表揚最優秀的小組作品",
+      "B": "學生學習活動是以組為單位",
+      "C": "將學生以異質方式進行編組",
+      "D": "個人進步分數是小組計分依據"
+    },
+    "answer": "A",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-18",
+    "year": "110",
+    "number": 18,
+    "stem": "下列哪一種做法最符合「評量即學習(assessment as learning)」的精神？",
+    "choices": {
+      "A": "以評分規準引導學習，培養學生自我評估與自我調整的能力",
+      "B": "教師針對紙筆測驗中學生的迷思概念，進行分析並回饋學習",
+      "C": "透過口頭問答診斷學生的先備知識，再提供學生學習的回饋",
+      "D": "利用測驗獲得學生學習資訊後，依據結果給予個人等第評價"
+    },
+    "answer": "A",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-19",
+    "year": "110",
+    "number": 19,
+    "stem": "依據《十二年國民基本教育課程綱要－議題融入說明手冊》對議題融入的敘述， 下列何者正確？",
+    "choices": {
+      "A": "議題不可以單獨設立科目進行教學",
+      "B": "議題可由教師視情形融入課堂教學",
+      "C": "議題融入應優先在團體活動時間實施",
+      "D": "每一門教學科目至少應包含1 個議題"
+    },
+    "answer": "B",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-20",
+    "year": "110",
+    "number": 20,
+    "stem": "小華在訂定段考的複習計畫時，針對自己較弱的數學科選擇投入比較長的時間準備， 而安排比較短的時間複習自己較強的社會科。此行為屬於哪一種知識類型之運用？",
+    "choices": {
+      "A": "事實性知識",
+      "B": "概念性知識",
+      "C": "程序性知識",
+      "D": "後設認知知識"
+    },
+    "answer": "D",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-21",
+    "year": "110",
+    "number": 21,
+    "stem": "王老師以價值澄清法進行休閒活動教學。下列哪一項是老師在「珍視」階段時， 會引導學生進行的活動？",
+    "choices": {
+      "A": "比較各種不同休閒活動的性質及花費",
+      "B": "討論各種不同休閒活動對自己的適切性",
+      "C": "選擇適合自己的休閒活動，並進行該項活動",
+      "D": "和同學分享自己喜歡的休閒活動，並說出其好處"
+    },
+    "answer": "D",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-22",
+    "year": "110",
+    "number": 22,
+    "stem": "以下是某班數學科四個考題其高低分組的答對率。哪一試題的鑑別度最佳？ 題號 1 2 3 4 高分組答對率 0.6 0.8 0.7 0.3 低分組答對率 0.4 0.2 0.3 0.3",
+    "choices": {
+      "A": "第1 題",
+      "B": "第2 題",
+      "C": "第3 題",
+      "D": "第4 題"
+    },
+    "answer": "B",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-23",
+    "year": "110",
+    "number": 23,
+    "stem": "下列哪一項問題引發學生的思考層次最高？",
+    "choices": {
+      "A": "民主制度與共產制度孰優孰劣？為什麼？",
+      "B": "裸子植物與被子植物的繁殖途徑有何異同？",
+      "C": "為何順向坡較逆向坡更常發生土石流現象？",
+      "D": "兄比弟大7 歲，弟比父親小36 歲，父親10 年前是52 歲。請問，兄與弟今年各為 幾歲？"
+    },
+    "answer": "A",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-24",
+    "year": "110",
+    "number": 24,
+    "stem": "這次實習課的主題是學習示波器的操作方式。蕭老師先要小義站在旁邊看他示範， 接著讓小義自己嘗試練習。之後針對操作步驟背後的原理進行提問，並假設故障發生 要小義思考如何解決。最後，蕭老師請小義說出對今天學習的想法，以及思考自己 哪些地方可以改進。此一系列的教學步驟，較接近下列何種教學模式？",
+    "choices": {
+      "A": "直接教學",
+      "B": "錨式教學",
+      "C": "認知學徒制",
+      "D": "問題導向學習"
+    },
+    "answer": "C",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "curriculum-110-25",
+    "year": "110",
+    "number": 25,
+    "stem": "有學者說：「課程是發展出來的。」請問此一意涵符合下列何者敘述？",
+    "choices": {
+      "A": "課程需倚賴能力較強的領導者來完成",
+      "B": "課程是一群專家決定的結果，不宜經常更動",
+      "C": "課程不宜在短時間內倉促完成，它是一個長期的歷程",
+      "D": "課程發展應建立在過去的文化傳統上，不宜快速改變"
+    },
+    "answer": "C",
+    "subject": "curriculum",
+    "subjectName": "課程教學與評量",
+    "groupId": null,
+    "groupStem": null
+  }
+]

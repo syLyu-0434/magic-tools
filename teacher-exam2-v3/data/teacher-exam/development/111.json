@@ -1,0 +1,427 @@
+[
+  {
+    "id": "development-111-01",
+    "year": "111",
+    "number": 1,
+    "stem": "十年級的曉華面臨選組的壓力，積極地在輔導課中探索自己的志向，雖然覺得輔導教 師和土木工程師都很好，但還是不知道哪一個最適合自己。根據馬西亞(J. Marcia)的統 合狀態，曉華較可能屬於下列哪一種？",
+    "choices": {
+      "A": "混淆(diffusion)",
+      "B": "早閉(foreclosure)",
+      "C": "未定(moratorium)",
+      "D": "成功(achievement)"
+    },
+    "answer": "C",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-02",
+    "year": "111",
+    "number": 2,
+    "stem": "下列敘述何者較接近維果茨基(L. Vygotsky)主張的社會文化學習觀點？",
+    "choices": {
+      "A": "提供楷模引導學生學習",
+      "B": "鼓勵不同能力同儕間的互動",
+      "C": "重視基模於學習中的重要性",
+      "D": "依學生認知發展階段進行教學"
+    },
+    "answer": "B",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-03",
+    "year": "111",
+    "number": 3,
+    "stem": "七年級的小均常出現重複性動作與刻板的行為，對於環境或例行工作的改變，會有情 緒反彈、不配合的情況，小均最有可能屬於下列何種障礙？",
+    "choices": {
+      "A": "自閉症",
+      "B": "智能障礙",
+      "C": "學習障礙",
+      "D": "聽覺障礙"
+    },
+    "answer": "A",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-04",
+    "year": "111",
+    "number": 4,
+    "stem": "阿嘉升上七年級後，母親發現他常常前一刻欣喜若狂，下一刻又生氣憤怒。這是屬於 下列哪一種青少年情緒發展的特徵？",
+    "choices": {
+      "A": "延續性",
+      "B": "豐富性",
+      "C": "隱藏性",
+      "D": "兩極波動性"
+    },
+    "answer": "D",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-05",
+    "year": "111",
+    "number": 5,
+    "stem": "下列哪一個諮商學派認為未竟事務(unfinished business) 會對個體造成無法預期的情緒 干擾，因而影響與他人的互動？",
+    "choices": {
+      "A": "現實治療",
+      "B": "完形治療",
+      "C": "認知治療",
+      "D": "存在主義治療"
+    },
+    "answer": "B",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-06",
+    "year": "111",
+    "number": 6,
+    "stem": "陳老師面對新班級時，每每點完名後，通常只能記得點名單前面與後面幾個同學的名 字，中間的都忘記了。陳老師的這個現象符合下列哪一個效應？",
+    "choices": {
+      "A": "馬太效應(Matthew effect)",
+      "B": "閃光燈效應(flashbulb effect)",
+      "C": "畢馬龍效應(Pygmalion effect)",
+      "D": "序列位置效應(serial position effect)"
+    },
+    "answer": "D",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-07",
+    "year": "111",
+    "number": 7,
+    "stem": "青春期的性生理改變主要由下列哪一種腺體促發？",
+    "choices": {
+      "A": "甲狀腺",
+      "B": "腎上腺",
+      "C": "松果體",
+      "D": "腦下垂體"
+    },
+    "answer": "D",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-08",
+    "year": "111",
+    "number": 8,
+    "stem": "學生拿到老師批改完成的數學考卷後， 下列哪一個反應比較屬於精熟目標 (mastery goals)？",
+    "choices": {
+      "A": "「我這次考了 88 分。還好，有達到媽媽的要求。」",
+      "B": "「我這次考了 92 分，只差 1 分就是全班最高分，下次要更努力。」",
+      "C": "「我這次考了 83 分，文字題中錯了一題。我很想弄清楚這一題為什麼會錯。」",
+      "D": "「我這次考了 72 分，我的生物成績一直以來都是這樣。只要不挨罵就可以了。」"
+    },
+    "answer": "C",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-09",
+    "year": "111",
+    "number": 9,
+    "stem": "讓當事人大量暴露於引發焦慮的刺激情境中，但他們所害怕的後果並不會發生，這是 下列哪一種治療方法？",
+    "choices": {
+      "A": "洪水法",
+      "B": "肌肉鬆弛法",
+      "C": "系統減敏感法",
+      "D": "漸進式暴露法"
+    },
+    "answer": "A",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-10",
+    "year": "111",
+    "number": 10,
+    "stem": "根據包姆林(D. Baumrind)的觀點，父母採用哪一種教養方式(parenting style)，子女在青 少年階段會較有自信，且問題行為較少？",
+    "choices": {
+      "A": "袖手旁觀型(uninvolved)",
+      "B": "寬容溺愛型(permissive)",
+      "C": "民主威信型(authoritative)",
+      "D": "獨斷專權型(authoritarian)"
+    },
+    "answer": "C",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-11",
+    "year": "111",
+    "number": 11,
+    "stem": "當輔導諮商人員判斷個案行為確實可能危及本身或第三者的生命安全時，應優先採取 下列哪一項措施？",
+    "choices": {
+      "A": "溝通勸導",
+      "B": "維護隱私",
+      "C": "知後同意",
+      "D": "預警責任"
+    },
+    "answer": "D",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-12",
+    "year": "111",
+    "number": 12,
+    "stem": "有關皮亞傑(J. Piaget)的認知發展論，下列何者較正確？",
+    "choices": {
+      "A": "個體具建構知識的主動性",
+      "B": "後天教養更勝於先天遺傳",
+      "C": "主張認知發展為連續的過程",
+      "D": "強調社會文化對認知發展的影響"
+    },
+    "answer": "A",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-13",
+    "year": "111",
+    "number": 13,
+    "stem": "下列何者屬於「鑑賞式稱讚」？",
+    "choices": {
+      "A": "「小宇，你是個很棒的學生，真高興我是你的老師。」",
+      "B": "「小宇，你的成績保持在 90 分以上，是個優秀的學生。」",
+      "C": "「小宇，阿華被同學欺負，你能挺身制止是很好的行為。」",
+      "D": "「小宇，你是個很好的班長，繼續加油，這個班就靠你了。」"
+    },
+    "answer": "C",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-14",
+    "year": "111",
+    "number": 14,
+    "stem": "根據現行《學校訂定教師輔導與管教學生辦法注意事項》，教師對於偏差行為學生的 管理，下列何者最不適切？",
+    "choices": {
+      "A": "限制該生參加正式課程以外的學校活動",
+      "B": "將該生安排在教學場所一隅上課，與其他同學保持適當距離",
+      "C": "要求該生站立反省，每次不超過一堂課，每日累計不超過兩小時",
+      "D": "嚴重偏差行為發生隔天，經其他教師同意，暫時轉送其他班級學習"
+    },
+    "answer": "D",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-15",
+    "year": "111",
+    "number": 15,
+    "stem": "小光在選擇參加哪些課後社團時，很清楚自己喜歡自然科學，也知道自己不擅長語文 類和音樂類的活動， 因此不想參加這幾類的社團 。 從迦納(H. Gardner)多元智能的觀點 ， 小光選擇社團時展現哪一種智力？",
+    "choices": {
+      "A": "人際智力",
+      "B": "內省智力",
+      "C": "自然觀察智力",
+      "D": "數學邏輯智力"
+    },
+    "answer": "B",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-16",
+    "year": "111",
+    "number": 16,
+    "stem": "輔導室提供處理學生問題行為的建議給九年級的陳老師，這是屬於學校輔導工作內容 的哪一項服務？",
+    "choices": {
+      "A": "安置",
+      "B": "資訊",
+      "C": "諮詢",
+      "D": "諮商"
+    },
+    "answer": "C",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-17",
+    "year": "111",
+    "number": 17,
+    "stem": "九年級的阿民是班長，非常強調遵守規範的重要性，面對違規的同學不論緣由皆依老 師的規定處理。根據柯柏格(L. Kohlberg)的道德發展理論，他最可能處在下列哪一個 階段？",
+    "choices": {
+      "A": "法律秩序取向(law and order orientation)",
+      "B": "社會契約取向(social and contract orientation)",
+      "C": "尋求認可取向(good boy or good girl orientation)",
+      "D": "相對功利取向(instrumental and relativist orientation)"
+    },
+    "answer": "A",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-18",
+    "year": "111",
+    "number": 18,
+    "stem": "現實治療學派會使用下列哪一個概念解釋青少年使用社群網站的原因？",
+    "choices": {
+      "A": "社會興趣(social interest)",
+      "B": "正常焦慮(normal anxiety)",
+      "C": "非理性信念(irrational beliefs)",
+      "D": "歸屬與愛(need to belong, to love)"
+    },
+    "answer": "D",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-19",
+    "year": "111",
+    "number": 19,
+    "stem": "陳老師在社會領域課堂提到，許多人到沖繩自駕旅遊(駕駛座在右邊)，即便在臺灣已 有多年駕駛經驗(駕駛座在左邊)，轉彎時依舊會猶疑不知該行駛哪一邊的車道。這是 下列何種現象導致？",
+    "choices": {
+      "A": "順攝抑制(proactive inhibition)",
+      "B": "倒攝抑制(retroactive inhibition)",
+      "C": "順攝助長(proactive facilitation)",
+      "D": "倒攝助長(retroactive facilitation)"
+    },
+    "answer": "A",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-20",
+    "year": "111",
+    "number": 20,
+    "stem": "許老師準備帶領一個國中生 「自我探索」 團體，下列哪一項是第一次團體的主要任務？",
+    "choices": {
+      "A": "解決成員困擾",
+      "B": "澄清團體目標與規範",
+      "C": "凝聚成員對團體的向心力",
+      "D": "處理團體中的風暴與衝突"
+    },
+    "answer": "B",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-21",
+    "year": "111",
+    "number": 21,
+    "stem": "小鵬在國小階段對於數學沒有特別的好惡。升上國一後，數學老師很兇，自此以後小 鵬就很害怕數學。小鵬害怕的情緒是屬於制約理論的哪一項概念？",
+    "choices": {
+      "A": "制約刺激",
+      "B": "制約反應",
+      "C": "非制約刺激",
+      "D": "非制約反應"
+    },
+    "answer": "B",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-22",
+    "year": "111",
+    "number": 22,
+    "stem": "小津曾經遭遇嚴重車禍，現在雖然身體復原，仍然常常夢到車禍當時的狀況而睡不安 穩，並且再也不敢坐車。他的狀況最接近下列哪一種心理疾患之典型症狀？",
+    "choices": {
+      "A": "恐慌症",
+      "B": "創傷後壓力症",
+      "C": "情感思覺失調症",
+      "D": "雙相情緒障礙症"
+    },
+    "answer": "B",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-23",
+    "year": "111",
+    "number": 23,
+    "stem": "以下是三位老師面對學生學習狀況不佳的詮釋或解決方法，這幾位老師所抱持的學習 觀點為何？\n王老師：學生學習狀況不佳，是因為缺少誘因，只要優秀的給獎賞，表現差的取消福 利，就會改善。\n張老師：學生的學習狀況不佳，是因為課堂上都只是被動接收資訊，需要給予更多機 會讓他們討論互動。\n徐老師：學生的學習狀況不佳，是因為他們缺少自我實現的機會，應該提供給學生更 多機會認識自己，發現自己的潛能。",
+    "choices": {
+      "A": "王老師—行為主義、張老師—社會建構論、徐老師—人本主義",
+      "B": "王老師—社會學習論、張老師—行為主義、徐老師—社會建構論",
+      "C": "王老師—社會認知論、張老師—訊息處理論、徐老師—人本主義",
+      "D": "王老師—行為主義、張老師—社會學習論、徐老師—社會建構論"
+    },
+    "answer": "A",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-24",
+    "year": "111",
+    "number": 24,
+    "stem": "導師發覺十年級的阿文對考試作弊的說詞前後矛盾，於是以面質技術詢問阿文。下列 哪一項最符合此技術的作法？",
+    "choices": {
+      "A": "「阿文，老師再也不想聽你作弊的理由，作弊就是不對，老師只好向學務處報告。」",
+      "B": "「阿文，你已經作弊至少三次，你也知道學 校對作弊的懲處很嚴重。你說 該 怎麼辦？」",
+      "C": "「阿文，你上星期說是真真傳字條給你，現在又說是從地上撿來的，究竟是怎麼 回事？」",
+      "D": "「阿文，老師也曾經考試時找同學幫忙，後來知道這是不對的，就努力讀書，你 認為呢？」"
+    },
+    "answer": "C",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  },
+  {
+    "id": "development-111-25",
+    "year": "111",
+    "number": 25,
+    "stem": "小永個性非常活潑，他的學業成績並不是很突出，不過他常常會將表面上看起來並不 相干的事物關聯在一起，出現一些獨特的 想法。小永的表現較屬於史坦柏格 (R. Sternberg)智力理論中的哪一種智力？",
+    "choices": {
+      "A": "創意智力(creative intelligence)",
+      "B": "實用智力(practical intelligence)",
+      "C": "分析智力(analytical intelligence)",
+      "D": "內省智力(intrapersonal intelligence)"
+    },
+    "answer": "A",
+    "subject": "development",
+    "subjectName": "學習者發展與適性輔導",
+    "groupId": null,
+    "groupStem": null
+  }
+]
