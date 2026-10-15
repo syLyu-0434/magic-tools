@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#020617">
+<title>牛頓第二定律與摩擦力 | 瑜的神祕妙妙工具屋</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Noto Sans TC",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;color:#e2e8f0;background:radial-gradient(ellipse at 70% 0%,#064e3b 0%,#020617 65%);line-height:1.65}
+main{max-width:1080px;margin:auto;padding:18px 16px 52px}
+a{color:#6ee7b7}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-size:clamp(1.5rem,4vw,2.4rem);line-height:1.3;margin:24px 0 8px}
+h2{font-size:1.1rem;margin:0 0 12px;color:#a7f3d0}
+p{margin:8px 0 16px;color:#94a3b8}
+.badge{font-size:.8rem;color:#6ee7b7;border:1px solid #065f46;border-radius:100px;padding:4px 12px}
+.panel{border:1px solid #164e42;border-radius:18px;background:rgba(15,23,42,.84);padding:18px;box-shadow:0 14px 32px rgba(0,0,0,.2)}
+.grid{display:grid;grid-template-columns:minmax(250px,310px) minmax(0,1fr);gap:18px;align-items:start}
+.stack{display:grid;gap:18px;min-width:0}
+.control{margin:12px 0 22px}
+.control label{display:flex;justify-content:space-between;gap:8px;font-size:.92rem}
+.control output{color:#6ee7b7;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:#10b981;cursor:pointer;margin-top:9px;min-height:24px}
+select{background:#0f172a;color:#e2e8f0;border:1px solid #475569;border-radius:7px;padding:6px}
+button{border:1px solid #10b981;background:#065f46;color:#ecfdf5;border-radius:9px;padding:10px 16px;cursor:pointer;font:inherit;font-weight:650;min-height:44px}
+button:hover{background:#047857}
+button.secondary{background:transparent;border-color:#475569}
+.actions{display:flex;gap:10px;flex-wrap:wrap}
+canvas{display:block;width:100%;background:#020617;border:1px solid #334155;border-radius:12px;touch-action:pan-y}
+#scene{height:285px}
+#graph{height:230px}
+.readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0}
+.readout{background:#020617;border:1px solid #1e293b;border-radius:10px;padding:10px}
+.readout small{display:block;color:#94a3b8;font-size:.74rem}
+.readout strong{display:block;font-variant-numeric:tabular-nums;font-size:1.05rem;overflow-wrap:anywhere}
+.equation{background:#022c22;color:#d1fae5;padding:12px;border-radius:10px;font-size:.91rem;overflow-wrap:anywhere}
+.note{font-size:.85rem;color:#94a3b8}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.82rem;color:#cbd5e1}
+.legend span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;background:var(--c)}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.panel{padding:14px}.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}#scene{height:260px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<main>
+<header><a href="../lab.html" aria-label="返回實驗室">← 返回實驗室</a><span class="badge">PHYSICS LAB</span></header>
+<h1>牛頓第二定律：推得動嗎？</h1>
+<p>調整水平拉力、質量與摩擦係數，觀察靜摩擦如何阻止啟動，以及開始滑動後加速度的變化。</p>
+<div class="grid">
+<section class="panel" aria-label="實驗參數">
+<h2>實驗控制台</h2>
+<div class="control"><label for="mass">滑車質量 m <output id="massValue">2.0 kg</output></label><input id="mass" type="range" min="0.5" max="6" step="0.5" value="2"></div>
+<div class="control"><label for="force">水平拉力 F <output id="forceValue">12 N</output></label><input id="force" type="range" min="0" max="60" step="1" value="12"></div>
+<div class="control"><label for="muS">靜摩擦係數 μs <output id="muSValue">0.40</output></label><input id="muS" type="range" min="0" max="0.8" step="0.05" value="0.4"></div>
+<div class="control"><label for="muK">動摩擦係數 μk <output id="muKValue">0.30</output></label><input id="muK" type="range" min="0" max="0.8" step="0.05" value="0.3"></div>
+<div class="control"><label for="gravity">重力加速度 g</label><select id="gravity"><option value="10">10 m/s²（課堂近似）</option><option value="9.81">9.81 m/s²</option></select></div>
+<div class="actions"><button id="toggle" type="button">▶ 開始</button><button id="reset" class="secondary" type="button">↺ 重設</button></div>
+<p class="note" id="hint" role="status" aria-live="polite">改變參數會重設時間與位置。</p>
+</section>
+<div class="stack">
+<section class="panel">
+<h2>滑車運動與受力圖</h2>
+<canvas id="scene" aria-label="水平滑車動畫，箭頭表示拉力、摩擦力、正向力及重力" role="img"></canvas>
+<div class="legend"><span style="--c:#34d399">拉力 F</span><span style="--c:#fda4af">摩擦力 f</span><span style="--c:#60a5fa">正向力 N</span><span style="--c:#fbbf24">重力 mg</span></div>
+<div class="readouts">
+<div class="readout"><small>時間 t</small><strong id="tValue">0.00 s</strong></div>
+<div class="readout"><small>位移 x</small><strong id="xValue">0.00 m</strong></div>
+<div class="readout"><small>速度 v</small><strong id="vValue">0.00 m/s</strong></div>
+<div class="readout"><small>合力 ΣF</small><strong id="netValue">0.00 N</strong></div>
+<div class="readout"><small>加速度 a</small><strong id="aValue">0.00 m/s²</strong></div>
+<div class="readout"><small>摩擦力 f</small><strong id="frictionValue">0.00 N</strong></div>
+</div>
+<div class="equation" id="equation" aria-live="polite"></div>
+</section>
+<section class="panel">
+<h2>固定質量與摩擦係數時，拉力和加速度的關係</h2>
+<canvas id="graph" aria-label="拉力 F 對加速度 a 的關係圖，標出靜摩擦臨界值與目前參數" role="img"></canvas>
+<p class="note">實線表示從靜止開始施力的結果。臨界拉力 F = μs mg 時仍可維持靜止；超過後採用動摩擦力 μk mg。圖上的跳躍來自理想化的靜、動摩擦模型。</p>
+</section>
+</div>
+</div>
+<p class="note">模型假設：水平地面、拉力保持水平且恆定、滑車從靜止出發、忽略空氣阻力，且 0 ≤ μk ≤ μs。啟動後以恆定加速度運動，位置由解析式 x = ½at² 計算。此模擬不包含滑車到達軌道端點的碰撞。</p>
+</main>
+<script>
+"use strict";
+const $ = id => document.getElementById(id);
+const ids = ["mass","force","muS","muK"];
+const scene = $("scene"), graph = $("graph");
+const ctx = scene.getContext("2d"), gc = graph.getContext("2d");
+let time = 0, running = false, previousFrame = null;
+function dynamics(m,F,muS,muK,g){
+  const N = m*g, threshold = muS*N;
+  if(F <= threshold + 1e-10) return {N,threshold,friction:F,net:0,a:0,stationary:true};
+  const friction = muK*N, net = F-friction;
+  return {N,threshold,friction,net,a:net/m,stationary:false};
+}
+function parameters(){
+  return {m:+$("mass").value,F:+$("force").value,muS:+$("muS").value,muK:+$("muK").value,g:+$("gravity").value};
+}
+function current(){const p=parameters();return {...p,...dynamics(p.m,p.F,p.muS,p.muK,p.g)};}
+function number(v,d=2){return v.toFixed(d);}
+function reset(){
+  running=false;time=0;previousFrame=null;$("toggle").textContent="▶ 開始";
+  draw();
+}
+function resize(canvas,context){
+  const ratio=Math.min(window.devicePixelRatio||1,2);
+  const w=canvas.clientWidth,h=canvas.clientHeight;
+  if(!w||!h)return {w:0,h:0};
+  if(canvas.width!==Math.round(w*ratio)||canvas.height!==Math.round(h*ratio)){
+    canvas.width=Math.round(w*ratio);canvas.height=Math.round(h*ratio);
+  }
+  context.setTransform(ratio,0,0,ratio,0,0);
+  return {w,h};
+}
+function arrow(context,x1,y1,x2,y2,color,label){
+  const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy);
+  if(len<3)return;
+  const angle=Math.atan2(dy,dx);
+  context.strokeStyle=color;context.fillStyle=color;context.lineWidth=3;
+  context.beginPath();context.moveTo(x1,y1);context.lineTo(x2,y2);context.stroke();
+  context.beginPath();context.moveTo(x2,y2);
+  context.lineTo(x2-9*Math.cos(angle-.5),y2-9*Math.sin(angle-.5));
+  context.lineTo(x2-9*Math.cos(angle+.5),y2-9*Math.sin(angle+.5));context.closePath();context.fill();
+  context.font="bold 12px system-ui";context.textAlign="center";
+  context.fillText(label,x2+12*Math.cos(angle),y2+14*Math.sin(angle)-6);
+}
+function drawScene(s){
+  const {w,h}=resize(scene,ctx);if(!w)return;
+  ctx.clearRect(0,0,w,h);
+  const ground=h*.72,pxPerMeter=36,worldX=.5*s.a*time*time;
+  const cartX=Math.min(w*.62,Math.max(78,70+worldX*pxPerMeter));
+  const cameraOffset=70+worldX*pxPerMeter-cartX;
+  ctx.strokeStyle="#334155";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,ground);ctx.lineTo(w,ground);ctx.stroke();
+  ctx.font="11px system-ui";ctx.textAlign="center";ctx.fillStyle="#64748b";
+  const first=Math.max(0,Math.ceil((cameraOffset-70)/pxPerMeter));
+  const last=Math.floor((w+cameraOffset-70)/pxPerMeter);
+  for(let n=first;n<=last&&n<first+100;n++){
+    const sx=70+n*pxPerMeter-cameraOffset;
+    ctx.beginPath();ctx.moveTo(sx,ground);ctx.lineTo(sx,ground+8);ctx.stroke();
+    ctx.fillText(n+" m",sx,ground+22);
+  }
+  ctx.fillStyle="#10b981";ctx.fillRect(cartX-31,ground-46,62,36);
+  ctx.fillStyle="#6ee7b7";ctx.fillRect(cartX-25,ground-42,50,8);
+  ctx.fillStyle="#94a3b8";
+  for(const dx of [-21,21]){ctx.beginPath();ctx.arc(cartX+dx,ground-5,7,0,Math.PI*2);ctx.fill();}
+  ctx.textAlign="left";ctx.fillStyle="#cbd5e1";ctx.font="12px system-ui";
+  ctx.fillText(s.stationary?"靜止（靜摩擦）":"滑動（動摩擦）",12,24);
+  const scale=3.2,fy=ground-56;
+  if(s.F>0)arrow(ctx,cartX+28,fy,Math.min(w-15,cartX+28+Math.max(14,s.F*scale)),fy,"#34d399","F");
+  if(s.friction>0)arrow(ctx,cartX-28,fy+21,Math.max(12,cartX-28-Math.max(14,s.friction*scale)),fy+21,"#fda4af","f");
+  const vertical=Math.min(58,Math.max(22,s.N*1.1));
+  arrow(ctx,cartX,ground-46,cartX,ground-46-vertical,"#60a5fa","N");
+  arrow(ctx,cartX,ground-10,cartX,Math.min(h-14,ground-10+vertical),"#fbbf24","mg");
+}
+function drawGraph(s){
+  const {w,h}=resize(graph,gc);if(!w)return;
+  gc.clearRect(0,0,w,h);
+  const left=46,right=w-16,top=18,bottom=h-35,plotW=right-left,plotH=bottom-top;
+  const maxF=60,maxA=Math.max(1,(maxF-s.muK*s.N)/s.m);
+  const x=F=>left+F/maxF*plotW,y=a=>bottom-a/maxA*plotH;
+  gc.strokeStyle="#334155";gc.lineWidth=1;gc.font="11px system-ui";gc.textAlign="center";gc.fillStyle="#94a3b8";
+  for(let F=0;F<=60;F+=15){const xx=x(F);gc.beginPath();gc.moveTo(xx,top);gc.lineTo(xx,bottom);gc.stroke();gc.fillText(F,xx,bottom+16);}
+  for(let i=0;i<=4;i++){const a=maxA*i/4,yy=y(a);gc.beginPath();gc.moveTo(left,yy);gc.lineTo(right,yy);gc.stroke();gc.textAlign="right";gc.fillText(number(a,1),left-5,yy+4);}
+  gc.textAlign="center";gc.fillText("拉力 F (N)",(left+right)/2,h-4);
+  gc.save();gc.translate(11,(top+bottom)/2);gc.rotate(-Math.PI/2);gc.fillText("a (m/s²)",0,0);gc.restore();
+  gc.lineWidth=3;gc.strokeStyle="#94a3b8";gc.beginPath();gc.moveTo(x(0),y(0));gc.lineTo(x(Math.min(60,s.threshold)),y(0));gc.stroke();
+  if(s.threshold<60){
+    const start=s.threshold;
+    gc.strokeStyle="#34d399";gc.beginPath();gc.moveTo(x(start),y((start-s.muK*s.N)/s.m));gc.lineTo(x(60),y((60-s.muK*s.N)/s.m));gc.stroke();
+    gc.fillStyle="#34d399";gc.beginPath();gc.arc(x(start),y((start-s.muK*s.N)/s.m),4,0,Math.PI*2);gc.fill();
+  }
+  if(s.threshold<=60){
+    gc.strokeStyle="#fbbf24";gc.setLineDash([4,4]);gc.beginPath();gc.moveTo(x(s.threshold),top);gc.lineTo(x(s.threshold),bottom);gc.stroke();gc.setLineDash([]);
+  }
+  gc.fillStyle="#fda4af";gc.beginPath();gc.arc(x(s.F),y(s.a),5,0,Math.PI*2);gc.fill();
+  gc.fillStyle="#cbd5e1";gc.textAlign="right";gc.fillText("● 目前設定",right,top+10);
+}
+function draw(){
+  const s=current(),v=s.a*time,x=.5*s.a*time*time;
+  $("tValue").textContent=number(time)+" s";$("xValue").textContent=number(x)+" m";
+  $("vValue").textContent=number(v)+" m/s";$("netValue").textContent=number(s.net)+" N";
+  $("aValue").textContent=number(s.a)+" m/s²";$("frictionValue").textContent=number(s.friction)+" N";
+  $("equation").textContent=s.stationary
+    ?"靜摩擦力 "+number(s.friction)+" N，抵消水平拉力；合力為 0，滑車維持靜止。最大靜摩擦力為 "+number(s.threshold)+" N。"
+    :"已克服最大靜摩擦力 "+number(s.threshold)+" N。滑動時 fₖ = μₖmg = "+number(s.friction)+" N；a = (F − fₖ)/m = "+number(s.a)+" m/s²。";
+  drawScene(s);drawGraph(s);
+}
+ids.forEach(id=>$(id).addEventListener("input",()=>{
+  if(+$("muK").value>+$("muS").value)$("muK").value=$("muS").value;
+  $("massValue").textContent=number(+$("mass").value,1)+" kg";
+  $("forceValue").textContent=$("force").value+" N";
+  $("muSValue").textContent=number(+$("muS").value);
+  $("muKValue").textContent=number(+$("muK").value);
+  reset();
+}));
+$("gravity").addEventListener("change",reset);
+$("toggle").addEventListener("click",()=>{
+  if(time>=30)time=0;
+  running=!running;previousFrame=null;
+  $("toggle").textContent=running?"⏸ 暫停":"▶ 繼續";
+  draw();
+});
+$("reset").addEventListener("click",reset);
+document.addEventListener("visibilitychange",()=>{if(document.hidden&&running){running=false;previousFrame=null;$("toggle").textContent="▶ 繼續";}});
+window.addEventListener("resize",draw);
+function frame(stamp){
+  if(running){
+    if(previousFrame!==null)time=Math.min(30,time+Math.max(0,Math.min(.1,(stamp-previousFrame)/1000)));
+    if(time>=30){running=false;$("toggle").textContent="▶ 重新播放";}
+    draw();
+  }
+  previousFrame=stamp;requestAnimationFrame(frame);
+}
+draw();requestAnimationFrame(frame);
+</script>
+</body>
+</html>
