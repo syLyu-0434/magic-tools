@@ -130,14 +130,14 @@ const $=id=>document.getElementById(id);
 const controls={m:$("mass"),g:$("gravity"),a:$("accel"),u:$("initialV"),t:$("time")};
 const canvas={scene:$("scene"),forces:$("forces"),plot:$("plot")};
 const context={scene:canvas.scene.getContext("2d"),forces:canvas.forces.getContext("2d"),plot:canvas.plot.getContext("2d")};
-let playing=false,previousFrame=null,rafId=null;
+let playing=false,previousFrame=null,rafId=null,timeSeconds=0;
 function physics(m,g,a,v0,t){
   if(!(m>0 && g>0 && a>=-g-1e-9 && t>=0))throw new RangeError("Invalid physical parameters");
   const W=m*g,N=Math.max(0,m*(g+a));
   return {m,g,a,v0,t,W,N,ratio:N/W,v:v0+a*t,y:v0*t+0.5*a*t*t,net:m*a};
 }
 function parameters(){
-  return {m:+controls.m.value,g:+controls.g.value,a:+controls.a.value,v0:+controls.u.value,t:+controls.t.value};
+  return {m:+controls.m.value,g:+controls.g.value,a:+controls.a.value,v0:+controls.u.value,t:timeSeconds};
 }
 function arrow(ctx,x1,y1,x2,y2,color,label){
   const d=Math.hypot(x2-x1,y2-y1);
@@ -261,27 +261,28 @@ function pause(){
   if(rafId!==null){cancelAnimationFrame(rafId);rafId=null;}
   $("play").textContent="▶ 播放";$("play").setAttribute("aria-pressed","false");
 }
-function resetTime(){pause();controls.t.value="0";render();}
+function resetTime(){pause();timeSeconds=0;controls.t.value="0";render();}
 function frame(stamp){
   if(!playing)return;
   if(previousFrame!==null){
     const step=Math.min(0.06,Math.max(0,(stamp-previousFrame)/1000));
-    controls.t.value=Math.min(MAX_TIME,+controls.t.value+step).toFixed(2);
+    timeSeconds=Math.min(MAX_TIME,timeSeconds+step);
+    controls.t.value=timeSeconds.toFixed(2);
     render();
-    if(+controls.t.value>=MAX_TIME){pause();return;}
+    if(timeSeconds>=MAX_TIME){pause();return;}
   }
   previousFrame=stamp;
   rafId=requestAnimationFrame(frame);
 }
 $("play").addEventListener("click",()=>{
   if(playing){pause();return;}
-  if(+controls.t.value>=MAX_TIME)controls.t.value=0;
+  if(timeSeconds>=MAX_TIME){timeSeconds=0;controls.t.value="0";}
   playing=true;previousFrame=null;$("play").textContent="Ⅱ 暫停";
   $("play").setAttribute("aria-pressed","true");
   rafId=requestAnimationFrame(frame);
 });
 $("reset").addEventListener("click",resetTime);
-controls.t.addEventListener("input",()=>{pause();render();});
+controls.t.addEventListener("input",()=>{pause();timeSeconds=+controls.t.value;render();});
 for(const control of [controls.m,controls.a,controls.u]){
   control.addEventListener("input",()=>{
     document.querySelectorAll("[data-scene]").forEach(b=>b.setAttribute("aria-pressed","false"));
