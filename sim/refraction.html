@@ -87,7 +87,7 @@ function draw(){
   ctx.textAlign="left";ctx.font="bold 13px system-ui";ctx.fillStyle="#94a3b8";
   ctx.fillText("n₁ = "+s.n1.toFixed(2),12,24);ctx.fillText("n₂ = "+s.n2.toFixed(2),12,h-16);
   line(A,O,"#34d399",3);
-  line(O,R,"#60a5fa",2.5);
+  if(Math.abs(s.n1-s.n2)>1e-10)line(O,R,"#60a5fa",2.5);
   if(!s.tir)line(O,T,"#fbbf24",3);
   dot(O,"#e2e8f0",5);
   ctx.font="12px system-ui";ctx.textAlign="right";ctx.fillStyle="#cbd5e1";
@@ -95,7 +95,7 @@ function draw(){
   if(running){
     const progress=phase<.5?phase*2:Math.min(1,(phase-.5)*2);
     if(phase<.5)dot(point(A,O,progress),"#a7f3d0",5);
-    else{dot(point(O,R,progress),"#93c5fd",5);if(!s.tir)dot(point(O,T,progress),"#fde68a",5);}
+    else{if(Math.abs(s.n1-s.n2)>1e-10)dot(point(O,R,progress),"#93c5fd",5);if(!s.tir)dot(point(O,T,progress),"#fde68a",5);}
   }
 }
 function render(){
@@ -105,7 +105,7 @@ function render(){
   $("refraction").textContent=s.tir?"無（全反射）":s.theta2.toFixed(1)+"°";
   $("critical").textContent=s.critical===null?"不存在":s.critical.toFixed(2)+"°";
   $("status").textContent=s.tir?"已發生全反射：所有幾何光線反射回上方介質。":
-   s.critical!==null&&Math.abs(s.theta1-s.critical)<.5?"接近臨界角，折射光沿界面傳播。":
+   s.critical!==null&&Math.abs(s.theta1-s.critical)<.5?"接近臨界角，折射光幾乎沿界面傳播。":
    s.n1>s.n2?"由高折射率射向低折射率，折射角較大。":
    s.n1<s.n2?"由低折射率射向高折射率，折射角較小。":"折射率相同，光線方向不變。";
   draw();
