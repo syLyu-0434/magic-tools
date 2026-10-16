@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#020617">
+<title>折射與全反射：光線實驗室 | 瑜的神祕妙妙工具屋</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Noto Sans TC",sans-serif}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 60% 0%,#064e3b,#020617 70%);color:#e2e8f0;line-height:1.7}
+main{max-width:1080px;margin:0 auto;padding:18px 16px 52px}header{display:flex;align-items:center;justify-content:space-between;gap:10px}a{color:#6ee7b7}h1{font-size:clamp(1.7rem,4vw,2.5rem);line-height:1.3;margin:24px 0 10px}h2{font-size:1.15rem;color:#a7f3d0;margin:0 0 13px}p{color:#94a3b8}.lead{margin:0 0 22px}.pill{border:1px solid #065f46;color:#6ee7b7;border-radius:99px;padding:4px 12px}
+.grid{display:grid;grid-template-columns:minmax(250px,320px) minmax(0,1fr);gap:18px;align-items:start}
+.card{background:rgba(15,23,42,.9);border:1px solid rgba(52,211,153,.25);border-radius:20px;padding:19px;min-width:0}
+.control{margin:18px 0}.control label{display:flex;align-items:center;justify-content:space-between;gap:12px}.control output{color:#6ee7b7;font-variant-numeric:tabular-nums;font-weight:700}
+input[type=range]{width:100%;accent-color:#10b981;min-height:34px}button{background:#065f46;border:1px solid #10b981;border-radius:10px;color:#ecfdf5;min-height:43px;padding:10px 13px;font:inherit;cursor:pointer}
+button:hover{background:#047857}button.secondary{background:#0f172a;border-color:#475569}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #a7f3d0;outline-offset:3px}
+.presets{display:flex;flex-wrap:wrap;gap:8px}.presets button{font-size:.88rem;background:#0f172a;border-color:#475569}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+canvas{display:block;width:100%;height:385px;border-radius:12px;border:1px solid #334155;background:#020617}
+.readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:14px 0}
+.metric{background:#020617;border-radius:10px;padding:10px;min-width:0}.metric small{display:block;color:#94a3b8}.metric strong{color:#6ee7b7;display:block;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.explain{background:#022c22;border-left:3px solid #34d399;padding:13px 15px;border-radius:7px}.hint{font-size:.87rem}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.card{padding:15px}}
+@media(max-width:480px){canvas{height:315px}.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:12px 12px 40px}}
+</style>
+</head>
+<body>
+<main>
+<header><a href="../lab.html">← 返回實驗室</a><span class="pill">PHYSICS LAB</span></header>
+<h1>光線轉個彎：折射與全反射</h1>
+<p class="lead">控制光線入射角與兩側介質折射率，觀察折射角如何改變。當光從高折射率介質射向低折射率介質時，會在什麼角度發生全反射？</p>
+<div class="grid">
+<section class="card">
+<h2>實驗參數</h2>
+<div class="presets"><button type="button" data-preset="air">空氣 → 水</button><button type="button" data-preset="water">水 → 空氣</button><button type="button" data-preset="glass">玻璃 → 空氣</button></div>
+<div class="control"><label for="n1">上方介質折射率 n₁ <output id="n1Out">1.50</output></label><input id="n1" type="range" min="1" max="2.4" step="0.01" value="1.5"></div>
+<div class="control"><label for="n2">下方介質折射率 n₂ <output id="n2Out">1.00</output></label><input id="n2" type="range" min="1" max="2.4" step="0.01" value="1"></div>
+<div class="control"><label for="angle">入射角 θ₁ <output id="angleOut">30°</output></label><input id="angle" type="range" min="0" max="89" step="1" value="30"></div>
+<div class="actions"><button id="play" type="button" aria-pressed="false">▶ 播放光線</button><button id="reset" type="button" class="secondary">↺ 還原參數</button></div>
+<p class="hint">角度均由界面的法線量起。按播放可觀察沿光線方向移動的光點，線段代表幾何光學中的光線。</p>
+</section>
+<section class="card">
+<h2>即時光路</h2>
+<canvas id="scene" role="img" aria-label="介質界面、法線、入射光、反射光與折射光示意，移動的光點表示傳播方向"></canvas>
+<div class="readouts">
+<div class="metric"><small>入射角 θ₁</small><strong id="incidence">30.0°</strong></div>
+<div class="metric"><small>折射角 θ₂</small><strong id="refraction">48.6°</strong></div>
+<div class="metric"><small>臨界角 θc</small><strong id="critical">41.8°</strong></div>
+</div>
+<div class="explain">
+<strong>n₁ sin θ₁ = n₂ sin θ₂</strong>
+<div id="status" role="status" aria-live="polite"></div>
+</div>
+<p class="hint">綠色：入射光；藍色：反射光；黃色：折射光。未模擬反射與透射強度，也未考慮色散與吸收。臨界角僅在 n₁ &gt; n₂ 時存在。全反射時省略界面附近的倏逝場。</p>
+<p class="hint">參考：<a href="https://openstax.org/books/university-physics-volume-3/pages/1-4-total-internal-reflection" target="_blank" rel="noopener noreferrer">OpenStax University Physics 3，第 1.4 節</a>。</p>
+</section>
+</div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id),RAD=Math.PI/180;
+const inputs={n1:$("n1"),n2:$("n2"),angle:$("angle")},canvas=$("scene"),ctx=canvas.getContext("2d");
+let running=false,last=null,phase=0,request=null;
+function snell(n1,n2,deg){
+  if(!(n1>0&&n2>0&&deg>=0&&deg<90))throw new RangeError("Invalid refractive index or angle");
+  const ratio=n1*Math.sin(deg*RAD)/n2;
+  const critical=n1>n2?Math.asin(n2/n1)/RAD:null;
+  return {ratio,critical,tir:ratio>1+1e-12,theta2:ratio>1+1e-12?null:Math.asin(Math.min(1,ratio))/RAD};
+}
+function current(){const n1=+inputs.n1.value,n2=+inputs.n2.value,theta1=+inputs.angle.value;return {n1,n2,theta1,...snell(n1,n2,theta1)};}
+function line(a,b,color,width=3){
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
+}
+function dot(a,color,r=6){ctx.fillStyle=color;ctx.beginPath();ctx.arc(a.x,a.y,r,0,2*Math.PI);ctx.fill();}
+function point(a,b,t){return {x:a.x+(b.x-a.x)*t,y:a.y+(b.y-a.y)*t};}
+function draw(){
+  const s=current(),rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height,dpr=Math.min(window.devicePixelRatio||1,2);
+  if(!w||!h)return;
+  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  const ox=w*.5,oy=h*.51,r=Math.min(w*.37,h*.43),a=s.theta1*RAD,b=s.theta2===null?0:s.theta2*RAD;
+  const O={x:ox,y:oy},A={x:ox-r*Math.sin(a),y:oy-r*Math.cos(a)},R={x:ox+r*Math.sin(a),y:oy-r*Math.cos(a)};
+  const T={x:ox+r*Math.sin(b),y:oy+r*Math.cos(b)};
+  ctx.fillStyle="#062c37";ctx.fillRect(0,0,w,oy);
+  ctx.fillStyle="#062b26";ctx.fillRect(0,oy,w,h-oy);
+  ctx.strokeStyle="#64748b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,oy);ctx.lineTo(w,oy);ctx.stroke();
+  ctx.setLineDash([5,5]);ctx.strokeStyle="#94a3b8";ctx.beginPath();ctx.moveTo(ox,8);ctx.lineTo(ox,h-8);ctx.stroke();ctx.setLineDash([]);
+  ctx.textAlign="left";ctx.font="bold 13px system-ui";ctx.fillStyle="#94a3b8";
+  ctx.fillText("n₁ = "+s.n1.toFixed(2),12,24);ctx.fillText("n₂ = "+s.n2.toFixed(2),12,h-16);
+  line(A,O,"#34d399",3);
+  if(Math.abs(s.n1-s.n2)>1e-10)line(O,R,"#60a5fa",2.5);
+  if(!s.tir)line(O,T,"#fbbf24",3);
+  dot(O,"#e2e8f0",5);
+  ctx.font="12px system-ui";ctx.textAlign="right";ctx.fillStyle="#cbd5e1";
+  ctx.fillText("法線",w-14,25);
+  if(running){
+    const progress=phase<.5?phase*2:Math.min(1,(phase-.5)*2);
+    if(phase<.5)dot(point(A,O,progress),"#a7f3d0",5);
+    else{if(Math.abs(s.n1-s.n2)>1e-10)dot(point(O,R,progress),"#93c5fd",5);if(!s.tir)dot(point(O,T,progress),"#fde68a",5);}
+  }
+}
+function render(){
+  const s=current();
+  $("n1Out").textContent=s.n1.toFixed(2);$("n2Out").textContent=s.n2.toFixed(2);
+  $("angleOut").textContent=s.theta1.toFixed(0)+"°";$("incidence").textContent=s.theta1.toFixed(1)+"°";
+  $("refraction").textContent=s.tir?"無（全反射）":s.theta2.toFixed(1)+"°";
+  $("critical").textContent=s.critical===null?"不存在":s.critical.toFixed(2)+"°";
+  $("status").textContent=s.tir?"已發生全反射：所有幾何光線反射回上方介質。":
+   s.critical!==null&&Math.abs(s.theta1-s.critical)<.5?"接近臨界角，折射光幾乎沿界面傳播。":
+   s.n1>s.n2?"由高折射率射向低折射率，折射角較大。":
+   s.n1<s.n2?"由低折射率射向高折射率，折射角較小。":"折射率相同，光線方向不變。";
+  draw();
+}
+function pause(){running=false;last=null;if(request!==null)cancelAnimationFrame(request);request=null;$("play").textContent="▶ 播放光線";$("play").setAttribute("aria-pressed","false");}
+function frame(t){if(!running)return;if(last!==null)phase=(phase+Math.max(0,Math.min(.06,(t-last)/1000))*.6)%1;last=t;draw();request=requestAnimationFrame(frame);}
+$("play").addEventListener("click",()=>{if(running)pause();else{running=true;last=null;$("play").textContent="Ⅱ 暫停";$("play").setAttribute("aria-pressed","true");request=requestAnimationFrame(frame);}});
+for(const input of Object.values(inputs))input.addEventListener("input",()=>{phase=0;render();});
+const presets={air:[1,1.33,40],water:[1.33,1,50],glass:[1.5,1,50]};
+document.querySelectorAll("[data-preset]").forEach(button=>button.addEventListener("click",()=>{
+  const v=presets[button.dataset.preset];inputs.n1.value=v[0];inputs.n2.value=v[1];inputs.angle.value=v[2];phase=0;render();
+}));
+$("reset").addEventListener("click",()=>{pause();inputs.n1.value=1.5;inputs.n2.value=1;inputs.angle.value=30;phase=0;render();});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)pause();});
+window.addEventListener("resize",render);
+if("ResizeObserver" in window)new ResizeObserver(render).observe(canvas);
+render();
+</script>
+</body>
+</html>

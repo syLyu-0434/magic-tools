@@ -1,31 +1,318 @@
 <!doctype html>
-<html lang="zh-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>電梯磅秤實驗 | 瑜的神祕妙妙工具屋</title>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#020617">
+<title>電梯裡的磅秤：視重實驗室 | 瑜的神祕妙妙工具屋</title>
 <style>
-*{box-sizing:border-box}body{margin:0;padding:20px;background:radial-gradient(circle at top,#064e3b,#020617 60%);color:#e2e8f0;font-family:system-ui,"Noto Sans TC",sans-serif}main,header{max-width:1050px;margin:auto}header{display:flex;justify-content:space-between;align-items:center;gap:12px}a{color:#6ee7b7}h1{font-size:clamp(1.5rem,4vw,2.4rem)}p{line-height:1.7;color:#94a3b8}.grid{display:grid;grid-template-columns:minmax(250px,330px) minmax(0,1fr);gap:18px}.card{background:rgba(15,23,42,.85);border:1px solid rgba(52,211,153,.28);border-radius:20px;padding:20px;min-width:0}.row{margin:20px 0}.row label{display:flex;justify-content:space-between;gap:8px}.row output{color:#6ee7b7;font-weight:bold}.row input{width:100%;accent-color:#10b981;margin-top:12px}.row small{display:flex;justify-content:space-between;color:#94a3b8}button{padding:10px 18px;border-radius:10px;border:1px solid #10b981;background:#065f46;color:white;cursor:pointer}button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid #6ee7b7;outline-offset:3px}canvas{width:100%;height:auto;border:1px solid #334155;border-radius:12px;background:#020617}.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.stat{padding:12px;background:#020617;border-radius:12px}.stat small{display:block;color:#94a3b8}.stat b{color:#6ee7b7;font-size:1.25rem}.explain{padding:12px;border-left:3px solid #10b981;background:rgba(16,185,129,.1);line-height:1.8}.hint{font-size:.85rem}@media(max-width:720px){.grid{grid-template-columns:1fr}.card{padding:15px}body{padding:12px}}
-</style></head><body>
-<header><a href="../lab.html">← 返回實驗室</a><strong>PHYSICS LAB</strong></header><main><h1>電梯裡的磅秤</h1><p>改變電梯的速度、加速度與乘客質量，觀察受力圖和磅秤讀數。向上移動就一定比較重嗎？</p><div class="grid"><section class="card"><h2>實驗參數</h2>
-<div class="row"><label for="m">質量 m <output id="mv">60 kg</output></label><input id="m" type="range" min="10" max="120" step="5" value="60"></div>
-<div class="row"><label for="a">加速度 a <output id="av">0.00 m/s²</output></label><input id="a" type="range" min="-9.81" max="9.81" step="0.01" value="0"><small><span>向下 9.81</span><span>向上 9.81</span></small></div>
-<div class="row"><label for="u">初速度 v₀ <output id="uv">0.0 m/s</output></label><input id="u" type="range" min="-8" max="8" step="0.5" value="0"><small><span>向下 8</span><span>向上 8</span></small></div>
-<div class="row"><label for="t">時間 t <output id="tv">0.00 s</output></label><input id="t" type="range" min="0" max="4" step="0.01" value="0"></div>
-<button id="play">▶ 播放</button> <button id="reset">↺ 重設</button><p class="hint">向上為正，g = 9.81 m/s²。限制 a ≥ −g，乘客與磅秤保持接觸。位置為示意，非等比例。</p></section>
-<section class="card"><h2>即時觀測</h2><canvas id="scene" width="600" height="280" role="img" aria-label="電梯運動與乘客受力示意圖"></canvas>
-<div class="stats"><div class="stat"><small>磅秤讀數 N</small><b id="N">588.6 N</b></div><div class="stat"><small>重力 mg</small><b id="W">588.6 N</b></div><div class="stat"><small>速度 v</small><b id="v">0.00 m/s</b></div><div class="stat"><small>位移 Δy</small><b id="y">0.00 m</b></div></div>
-<canvas id="plot" width="600" height="190" role="img" aria-label="磅秤讀數與加速度關係圖"></canvas><p class="hint">圖中黃點為目前參數。綠色箭頭為正向力 N，粉色箭頭為重力 mg。</p>
-<div class="explain">N − mg = ma<br><strong>N = m(g + a)</strong><br><span id="msg">等速或靜止時，磅秤讀數等於重力。</span></div><p class="hint">速度方向和加速度方向可以相反。自由落下時磅秤讀數為零，重力依然存在。</p></section></div></main>
+:root{color-scheme:dark;font-family:system-ui,"Noto Sans TC",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 70% 0%,#064e3b,#020617 65%);color:#e2e8f0;line-height:1.65}
+main{max-width:1150px;margin:0 auto;padding:18px 16px 56px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+a{color:#6ee7b7}
+a:hover{text-decoration:underline}
+h1{font-size:clamp(1.65rem,4vw,2.5rem);line-height:1.25;margin:24px 0 10px}
+h2{font-size:1.1rem;color:#a7f3d0;margin:0 0 14px}
+h3{font-size:.96rem;margin:0 0 10px;color:#e2e8f0}
+p{color:#a3b4c7}
+.lead{margin:0 0 22px}
+.pill{border:1px solid #065f46;color:#6ee7b7;border-radius:99px;padding:4px 13px;font-size:.83rem}
+.layout{display:grid;grid-template-columns:minmax(260px,316px) minmax(0,1fr);gap:18px;align-items:start}
+.stack{min-width:0;display:grid;gap:18px}
+.panel{min-width:0;background:rgba(15,23,42,.9);border:1px solid rgba(52,211,153,.24);border-radius:20px;padding:20px;box-shadow:0 14px 32px #0003}
+.control{margin:15px 0 20px}
+.control label{display:flex;justify-content:space-between;gap:12px;font-size:.94rem}
+output{color:#6ee7b7;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+input[type=range]{width:100%;accent-color:#10b981;cursor:pointer;min-height:32px;margin-top:5px}
+select{background:#020617;border:1px solid #475569;border-radius:9px;padding:10px;color:#e2e8f0;width:100%;font:inherit}
+.extent{display:flex;justify-content:space-between;font-size:.74rem;color:#94a3b8}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{font:inherit;border-radius:10px;padding:10px 12px;min-height:44px;cursor:pointer;color:#ecfdf5;background:#065f46;border:1px solid #10b981}
+button:hover{background:#047857}
+button.secondary,.presets button{background:#0f172a;border-color:#475569}
+.presets button:hover,button.secondary:hover{background:#1e293b}
+button[aria-pressed=true]{border-color:#6ee7b7;background:#064e3b}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #a7f3d0;outline-offset:3px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:8px 0}
+.actions button{flex:1}
+canvas{display:block;width:100%;background:#020617;border:1px solid #334155;border-radius:12px}
+#scene{height:344px}
+#forces{height:260px}
+#plot{height:230px}
+.visuals{display:grid;grid-template-columns:1.05fr .95fr;gap:12px}
+.visuals>div{min-width:0}
+.caption{color:#94a3b8;font-size:.8rem;margin:6px 0 0}
+.readouts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.metric{border:1px solid #1e293b;background:#020617;border-radius:12px;padding:10px}
+.metric small{display:block;color:#94a3b8;font-size:.76rem}
+.metric strong{display:block;font-size:clamp(.95rem,2vw,1.16rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere;color:#6ee7b7}
+.explain{border-left:3px solid #34d399;background:#022c22;padding:13px 15px;border-radius:6px;line-height:1.8}
+.explain strong{color:#d1fae5}
+.note{color:#94a3b8;font-size:.88rem}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin:6px 0;font-size:.84rem}
+.legend span:before{content:"";display:inline-block;width:10px;height:10px;margin-right:6px;border-radius:50%;background:var(--c)}
+details{margin-top:16px;border-top:1px solid #334155;padding-top:12px}
+summary{cursor:pointer;color:#a7f3d0}
+@media(max-width:790px){.layout{grid-template-columns:1fr}.panel{padding:16px}}
+@media(max-width:480px){.visuals{grid-template-columns:1fr}#scene{height:290px}#forces{height:240px}.readouts{grid-template-columns:repeat(2,minmax(0,1fr))}main{padding:12px 12px 40px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header><a href="../lab.html">← 返回實驗室</a><span class="pill">PHYSICS LAB</span></header>
+<h1>電梯裡的磅秤</h1>
+<p class="lead">電梯正在往上走，磅秤一定會變重嗎？分別調整速度與加速度，觀察乘客受到的力、運動方向與視重。</p>
+<div class="layout">
+<section class="panel" aria-labelledby="controlsHeading">
+<h2 id="controlsHeading">實驗控制台</h2>
+<h3>先選一個情境</h3>
+<div class="presets" id="presets">
+<button type="button" data-scene="still" aria-pressed="true">靜止</button>
+<button type="button" data-scene="up">向上加速</button>
+<button type="button" data-scene="brake">向上減速</button>
+<button type="button" data-scene="down">向下加速</button>
+<button type="button" data-scene="fall">自由落下</button>
+</div>
+<div class="control"><label for="mass">乘客質量 m <output id="massOut" for="mass">60 kg</output></label>
+<input id="mass" type="range" min="10" max="120" step="5" value="60"></div>
+<div class="control"><label for="gravity">重力加速度 g</label>
+<select id="gravity"><option value="9.81">9.81 m/s²（一般近似）</option><option value="10">10 m/s²（課堂常用）</option></select></div>
+<div class="control"><label for="accel">電梯加速度 a <output id="accelOut" for="accel">0.00 m/s²</output></label>
+<input id="accel" type="range" min="-9.81" max="9.81" step="0.01" value="0"><div class="extent"><span>向下 −g</span><span>0</span><span>向上 +g</span></div></div>
+<div class="control"><label for="initialV">初速度 v₀ <output id="initialVOut" for="initialV">0.0 m/s</output></label>
+<input id="initialV" type="range" min="-8" max="8" step="0.5" value="0"><div class="extent"><span>向下 8 m/s</span><span>向上 8 m/s</span></div></div>
+<h3>播放與時間</h3>
+<div class="actions"><button id="play" type="button" aria-pressed="false">▶ 播放</button><button id="reset" type="button" class="secondary">↺ 回到起點</button></div>
+<div class="control"><label for="time">時間 t <output id="timeOut" for="time">0.00 s</output></label><input id="time" type="range" min="0" max="6" step="0.01" value="0"><div class="extent"><span>0 s</span><span>6 s</span></div></div>
+<p class="note">向上為正。調整質量、速度、加速度或重力時，時間會回到 0 s。你也可以拖曳時間軸逐格觀察。</p>
+</section>
+<div class="stack">
+<section class="panel" aria-labelledby="observationHeading">
+<h2 id="observationHeading">運動與受力觀察</h2>
+<div class="visuals">
+<div><h3>電梯運動</h3><canvas id="scene" role="img" aria-label="電梯在井道中移動；綠色乘客隨電梯移動，右側標示速度與加速度方向"></canvas><p class="caption">井道位置採壓縮示意，請以數值為準。</p></div>
+<div><h3>乘客受力圖</h3><canvas id="forces" role="img" aria-label="乘客受地板正向力向上及重力向下，箭頭長度表示力的大小"></canvas><p class="caption">箭頭按相對大小繪製；N = 0 時不畫向上的力。</p></div>
+</div>
+<div class="legend"><span style="--c:#34d399">正向力 N</span><span style="--c:#fb7185">重力 mg</span><span style="--c:#60a5fa">速度 v</span><span style="--c:#fbbf24">加速度 a</span></div>
+<div class="readouts" aria-live="off">
+<div class="metric"><small>磅秤讀數（正向力）</small><strong id="normalOut">588.6 N</strong></div>
+<div class="metric"><small>重力 mg</small><strong id="weightOut">588.6 N</strong></div>
+<div class="metric"><small>視重 / 重力</small><strong id="ratioOut">1.00 倍</strong></div>
+<div class="metric"><small>瞬時速度 v</small><strong id="velocityOut">0.00 m/s</strong></div>
+<div class="metric"><small>位移 Δy</small><strong id="distanceOut">0.00 m</strong></div>
+<div class="metric"><small>合力 ΣF</small><strong id="netOut">0.0 N</strong></div>
+</div>
+<div class="explain">
+<strong>N − mg = ma，所以 N = m(g + a)</strong>
+<div id="interpretation" role="status" aria-live="polite">等速或靜止時，磅秤讀數等於重力。</div>
+</div>
+</section>
+<section class="panel">
+<h2>磅秤讀數 N 與加速度 a</h2>
+<canvas id="plot" role="img" aria-label="N 隨 a 呈線性增加的關係圖，標出目前設定與正常重力讀數"></canvas>
+<p class="caption">綠色直線為 N = m(g + a)。紫色虛線表示 a = 0 時的讀數 mg，黃色圓點代表目前設定。</p>
+<details>
+<summary>模型假設與參考資料</summary>
+<p class="note">電梯和乘客具有相同的鉛直加速度，乘客與磅秤維持接觸或恰好不施力。忽略空氣阻力，假設 a 在 0 至 6 秒內保持恆定，且 a ≥ −g，避免需要另外處理乘客與地板分離的情形。地面或樓層端點與實際電梯運轉控制未納入。速度及位移分別由 v = v₀ + at、Δy = v₀t + ½at² 計算。</p>
+<p class="note">依據：<a href="https://openstax.org/books/college-physics-2e/pages/4-7-further-applications-of-newtons-laws-of-motion" target="_blank" rel="noopener noreferrer">OpenStax College Physics 2e，4.7 節</a>。自由落下時 N = 0，仍受重力 mg。</p>
+</details>
+</section>
+</div>
+</div>
+</main>
 <script>
-const g=9.81,$=id=>document.getElementById(id),inputs=['m','a','u','t'].map($);let running=false,last=null;
-function physics(m,a,u,t){return {N:m*(g+a),W:m*g,v:u+a*t,y:u*t+.5*a*t*t}}
-function arrow(c,x,y,len,up,color,label){if(len<1)return;let e=y+(up?-len:len);c.strokeStyle=c.fillStyle=color;c.lineWidth=4;c.beginPath();c.moveTo(x,y);c.lineTo(x,e);c.stroke();c.beginPath();c.moveTo(x-6,e+(up?9:-9));c.lineTo(x,e);c.lineTo(x+6,e+(up?9:-9));c.stroke();c.font='16px sans-serif';c.fillText(label,x+10,(y+e)/2)}
-function render(){let [m,a,u,t]=inputs.map(x=>+x.value),p=physics(m,a,u,t);
-$('mv').textContent=m+' kg';$('av').textContent=a.toFixed(2)+' m/s²';$('uv').textContent=u.toFixed(1)+' m/s';$('tv').textContent=t.toFixed(2)+' s';
-for(let k of ['N','W','v','y'])$(k).textContent=p[k].toFixed(k==='N'||k==='W'?1:2)+(k==='N'||k==='W'?' N':k==='v'?' m/s':' m');
-$('msg').textContent=a===-g?'自由落下：N = 0，仍受重力。':a>0?'向上加速：N > mg。':a<0?'向下加速：N < mg。':'a = 0：靜止或等速時 N = mg。';
-let c=$('scene').getContext('2d');c.clearRect(0,0,600,280);let cy=45-35*Math.tanh(p.y/16);c.strokeStyle='#475569';c.lineWidth=3;c.strokeRect(45,10,240,255);c.strokeStyle='#94a3b8';c.strokeRect(70,cy,190,180);c.fillStyle='#334155';c.fillRect(70,cy+165,190,15);c.fillStyle='#6ee7b7';c.beginPath();c.arc(165,cy+75,17,0,Math.PI*2);c.fill();c.fillRect(155,cy+93,20,56);c.fillRect(145,cy+145,40,18);
-arrow(c,215,cy+156,Math.min(100,75*p.N/(m*g)),true,'#34d399','N');arrow(c,115,cy+83,75,false,'#f472b6','mg');c.fillStyle='#e2e8f0';c.font='17px sans-serif';c.fillText('a = '+a.toFixed(2)+' m/s²',330,90);c.fillText('v = '+p.v.toFixed(2)+' m/s',330,122);c.fillText('↑ 正方向',330,165);
-c=$('plot').getContext('2d');c.clearRect(0,0,600,190);const X=z=>55+(z+g)/(2*g)*510,Y=z=>152-z/(2*m*g)*120;c.strokeStyle='#64748b';c.lineWidth=1;c.beginPath();c.moveTo(55,25);c.lineTo(55,152);c.lineTo(565,152);c.stroke();c.strokeStyle='#34d399';c.lineWidth=3;c.beginPath();c.moveTo(X(-g),Y(0));c.lineTo(X(g),Y(2*m*g));c.stroke();c.fillStyle='#fbbf24';c.beginPath();c.arc(X(a),Y(p.N),6,0,2*Math.PI);c.fill();c.fillStyle='#cbd5e1';c.font='14px sans-serif';c.fillText('N (N)',10,20);c.fillText('a (m/s²)',490,182);c.fillText('−g',45,171);c.fillText('0',X(0),171);c.fillText('+g',545,171)}
-function pause(){running=false;last=null;$('play').textContent='▶ 播放'}
-function tick(now){if(!running)return;if(last!==null){let t=Math.min(4,+$('t').value+(now-last)/1000);$('t').value=t.toFixed(2);render();if(t>=4){pause();return}}last=now;requestAnimationFrame(tick)}
-$('play').onclick=()=>{if(running){pause();return}if(+$('t').value>=4)$('t').value=0;running=true;last=null;$('play').textContent='Ⅱ 暫停';requestAnimationFrame(tick)};
-$('reset').onclick=()=>{pause();$('t').value=0;render()};inputs.forEach(el=>el.addEventListener('input',()=>{if(el.id==='t')pause();render()}));render();
-</script></body></html>
+"use strict";
+const G0=9.81,MAX_TIME=6;
+const $=id=>document.getElementById(id);
+const controls={m:$("mass"),g:$("gravity"),a:$("accel"),u:$("initialV"),t:$("time")};
+const canvas={scene:$("scene"),forces:$("forces"),plot:$("plot")};
+const context={scene:canvas.scene.getContext("2d"),forces:canvas.forces.getContext("2d"),plot:canvas.plot.getContext("2d")};
+let playing=false,previousFrame=null,rafId=null,timeSeconds=0;
+function physics(m,g,a,v0,t){
+  if(!(m>0 && g>0 && a>=-g-1e-9 && t>=0))throw new RangeError("Invalid physical parameters");
+  const W=m*g,N=Math.max(0,m*(g+a));
+  return {m,g,a,v0,t,W,N,ratio:N/W,v:v0+a*t,y:v0*t+0.5*a*t*t,net:m*a};
+}
+function parameters(){
+  return {m:+controls.m.value,g:+controls.g.value,a:+controls.a.value,v0:+controls.u.value,t:timeSeconds};
+}
+function arrow(ctx,x1,y1,x2,y2,color,label){
+  const d=Math.hypot(x2-x1,y2-y1);
+  if(d<2)return;
+  const angle=Math.atan2(y2-y1,x2-x1);
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=3;ctx.lineCap="round";
+  ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x2,y2);ctx.lineTo(x2-9*Math.cos(angle-.45),y2-9*Math.sin(angle-.45));
+  ctx.lineTo(x2-9*Math.cos(angle+.45),y2-9*Math.sin(angle+.45));ctx.closePath();ctx.fill();
+  if(label){ctx.font="bold 12px system-ui";ctx.fillText(label,x2+8,y2-7);}
+}
+function prepare(name){
+  const c=canvas[name],ctx=context[name],rect=c.getBoundingClientRect();
+  const w=Math.max(0,rect.width),h=Math.max(0,rect.height),dpr=Math.min(window.devicePixelRatio||1,2);
+  if(w<1||h<1)return {ctx,w:0,h:0};
+  const bw=Math.round(w*dpr),bh=Math.round(h*dpr);
+  if(c.width!==bw||c.height!==bh){c.width=bw;c.height=bh;}
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  return {ctx,w,h};
+}
+function motionLabel(value){
+  return Math.abs(value)<1e-8?"0":value>0?"↑":"↓";
+}
+function drawScene(s){
+  const {ctx,w,h}=prepare("scene");if(!w)return;
+  const cx=w*.37,shaftHalf=Math.min(78,w*.27),top=18,bottom=h-20;
+  const cageHalf=shaftHalf-13,cageHeight=Math.min(174,h*.54);
+  const offset=Math.tanh(s.y/18)*Math.min(58,h*.17);
+  const cy=h*.48-offset;
+  ctx.strokeStyle="#334155";ctx.lineWidth=3;ctx.beginPath();
+  ctx.moveTo(cx-shaftHalf,top);ctx.lineTo(cx-shaftHalf,bottom);
+  ctx.moveTo(cx+shaftHalf,top);ctx.lineTo(cx+shaftHalf,bottom);ctx.stroke();
+  ctx.strokeStyle="#1e293b";ctx.lineWidth=1;
+  for(let yy=35;yy<h-10;yy+=46){ctx.beginPath();ctx.moveTo(cx-shaftHalf+3,yy);ctx.lineTo(cx+shaftHalf-3,yy);ctx.stroke();}
+  ctx.fillStyle="#0f3d3a";ctx.fillRect(cx-cageHalf,cy-cageHeight/2,cageHalf*2,cageHeight);
+  ctx.strokeStyle="#6ee7b7";ctx.lineWidth=2;ctx.strokeRect(cx-cageHalf,cy-cageHeight/2,cageHalf*2,cageHeight);
+  ctx.fillStyle="#334155";ctx.fillRect(cx-cageHalf,cy+cageHeight/2-13,cageHalf*2,13);
+  const headY=cy-cageHeight*.19;
+  ctx.fillStyle="#6ee7b7";ctx.beginPath();ctx.arc(cx,headY,13,0,2*Math.PI);ctx.fill();
+  ctx.strokeStyle="#6ee7b7";ctx.lineWidth=10;ctx.lineCap="round";ctx.beginPath();
+  ctx.moveTo(cx,headY+20);ctx.lineTo(cx,cy+cageHeight/2-43);ctx.stroke();
+  ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(cx,cy+cageHeight/2-43);
+  ctx.lineTo(cx-15,cy+cageHeight/2-15);ctx.moveTo(cx,cy+cageHeight/2-43);
+  ctx.lineTo(cx+15,cy+cageHeight/2-15);ctx.stroke();
+  ctx.fillStyle="#0ea5e9";ctx.fillRect(cx-24,cy+cageHeight/2-15,48,5);
+  ctx.fillStyle="#94a3b8";ctx.font="11px system-ui";ctx.textAlign="center";
+  ctx.fillText("位置示意",cx,h-7);
+  const vx=w*.74,small=w<360;
+  ctx.textAlign="left";ctx.fillStyle="#cbd5e1";ctx.font="bold "+(small?11:13)+"px system-ui";
+  ctx.fillText("運動方向",vx-16,31);
+  function vector(value,y,color,symbol){
+    const abs=Math.abs(value),base=abs<1e-8?0:Math.min(54,16+abs*5);
+    ctx.fillStyle=color;ctx.font="bold 12px system-ui";
+    ctx.fillText(symbol+" "+motionLabel(value),vx-14,y-38);
+    if(base){arrow(ctx,vx+3,y+10,vx+3,y+10-(value>0?base:-base),color,"");}
+    else{ctx.fillStyle=color;ctx.beginPath();ctx.arc(vx+3,y-2,5,0,2*Math.PI);ctx.fill();}
+  }
+  vector(s.v,h*.38,"#60a5fa","v");
+  vector(s.a,h*.76,"#fbbf24","a");
+}
+function drawForces(s){
+  const {ctx,w,h}=prepare("forces");if(!w)return;
+  const x=w*.45,y=h*.47,scale=Math.min(78,h*.29)/Math.max(s.W,s.N);
+  ctx.strokeStyle="#64748b";ctx.lineWidth=2;ctx.setLineDash([4,5]);
+  ctx.beginPath();ctx.moveTo(x,15);ctx.lineTo(x,h-18);ctx.stroke();ctx.setLineDash([]);
+  ctx.fillStyle="#e2e8f0";ctx.beginPath();ctx.arc(x,y,12,0,2*Math.PI);ctx.fill();
+  ctx.textAlign="left";
+  if(s.N>1e-7){arrow(ctx,x,y-13,x,y-13-s.N*scale,"#34d399","");}
+  arrow(ctx,x,y+13,x,y+13+s.W*scale,"#fb7185","");
+  ctx.font="bold 12px system-ui";ctx.fillStyle="#34d399";
+  ctx.fillText("N = "+s.N.toFixed(1)+" N",10,20);
+  ctx.fillStyle="#fb7185";ctx.fillText("mg = "+s.W.toFixed(1)+" N",10,h-11);
+  ctx.fillStyle="#94a3b8";ctx.font="11px system-ui";
+  ctx.fillText(s.N<1e-7?"N = 0：無支撐力":"受力物體：乘客",10,h*.51);
+}
+function drawPlot(s){
+  const {ctx,w,h}=prepare("plot");if(!w)return;
+  const left=49,right=w-14,top=18,bottom=h-37,plotW=right-left,plotH=bottom-top;
+  const x=a=>left+(a/s.g+1)*plotW/2, y=N=>bottom-N/(2*s.W)*plotH;
+  ctx.strokeStyle="#334155";ctx.lineWidth=1;ctx.font="11px system-ui";ctx.fillStyle="#94a3b8";
+  for(let i=0;i<=4;i++){const xx=left+i*plotW/4;
+    ctx.beginPath();ctx.moveTo(xx,top);ctx.lineTo(xx,bottom);ctx.stroke();
+    ctx.textAlign="center";ctx.fillText((s.g*(i/2-1)).toFixed(2),xx,bottom+16);}
+  for(let i=0;i<=2;i++){const yy=y(s.W*i);
+    ctx.beginPath();ctx.moveTo(left,yy);ctx.lineTo(right,yy);ctx.stroke();
+    ctx.textAlign="right";ctx.fillText((s.W*i).toFixed(0),left-5,yy+4);}
+  ctx.strokeStyle="#a78bfa";ctx.lineWidth=1.5;ctx.setLineDash([5,5]);
+  ctx.beginPath();ctx.moveTo(left,y(s.W));ctx.lineTo(right,y(s.W));ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle="#34d399";ctx.lineWidth=3;ctx.beginPath();
+  ctx.moveTo(x(-s.g),y(0));ctx.lineTo(x(s.g),y(2*s.W));ctx.stroke();
+  ctx.fillStyle="#fbbf24";ctx.beginPath();ctx.arc(x(s.a),y(s.N),6,0,2*Math.PI);ctx.fill();
+  ctx.fillStyle="#cbd5e1";ctx.textAlign="center";ctx.font="12px system-ui";
+  ctx.fillText("加速度 a (m/s²)",(left+right)/2,h-5);
+  ctx.save();ctx.translate(12,(top+bottom)/2);ctx.rotate(-Math.PI/2);
+  ctx.fillText("正向力 N (N)",0,0);ctx.restore();
+}
+function interpret(s){
+  if(s.N<1e-7)return "自由落下：地板對乘客的正向力為 0 N，重力仍然存在。";
+  const weight=s.a>1e-8?"讀數大於重力":s.a< -1e-8?"讀數小於重力":"讀數等於重力";
+  const velocity=Math.abs(s.v)<1e-8?"瞬間靜止":s.v>0?"正在向上移動":"正在向下移動";
+  const acceleration=Math.abs(s.a)<1e-8?"加速度為零":s.a>0?"加速度向上":"加速度向下";
+  return velocity+"，"+acceleration+"，"+weight+"。注意運動方向不決定磅秤讀數。";
+}
+function render(){
+  const p=parameters(),s=physics(p.m,p.g,p.a,p.v0,p.t);
+  $("massOut").textContent=p.m.toFixed(0)+" kg";
+  $("accelOut").textContent=p.a.toFixed(2)+" m/s²";
+  $("initialVOut").textContent=p.v0.toFixed(1)+" m/s";
+  $("timeOut").textContent=p.t.toFixed(2)+" s";
+  $("normalOut").textContent=s.N.toFixed(1)+" N";
+  $("weightOut").textContent=s.W.toFixed(1)+" N";
+  $("ratioOut").textContent=s.ratio.toFixed(2)+" 倍";
+  $("velocityOut").textContent=s.v.toFixed(2)+" m/s";
+  $("distanceOut").textContent=s.y.toFixed(2)+" m";
+  $("netOut").textContent=s.net.toFixed(1)+" N";
+  $("interpretation").textContent=interpret(s);
+  drawScene(s);drawForces(s);drawPlot(s);
+}
+function pause(){
+  playing=false;previousFrame=null;
+  if(rafId!==null){cancelAnimationFrame(rafId);rafId=null;}
+  $("play").textContent="▶ 播放";$("play").setAttribute("aria-pressed","false");
+}
+function resetTime(){pause();timeSeconds=0;controls.t.value="0";render();}
+function frame(stamp){
+  if(!playing)return;
+  if(previousFrame!==null){
+    const step=Math.min(0.06,Math.max(0,(stamp-previousFrame)/1000));
+    timeSeconds=Math.min(MAX_TIME,timeSeconds+step);
+    controls.t.value=timeSeconds.toFixed(2);
+    render();
+    if(timeSeconds>=MAX_TIME){pause();return;}
+  }
+  previousFrame=stamp;
+  rafId=requestAnimationFrame(frame);
+}
+$("play").addEventListener("click",()=>{
+  if(playing){pause();return;}
+  if(timeSeconds>=MAX_TIME){timeSeconds=0;controls.t.value="0";}
+  playing=true;previousFrame=null;$("play").textContent="Ⅱ 暫停";
+  $("play").setAttribute("aria-pressed","true");
+  rafId=requestAnimationFrame(frame);
+});
+$("reset").addEventListener("click",resetTime);
+controls.t.addEventListener("input",()=>{pause();timeSeconds=+controls.t.value;render();});
+for(const control of [controls.m,controls.a,controls.u]){
+  control.addEventListener("input",()=>{
+    document.querySelectorAll("[data-scene]").forEach(b=>b.setAttribute("aria-pressed","false"));
+    resetTime();
+  });
+}
+controls.g.addEventListener("change",()=>{
+  const g=+controls.g.value,oldA=+controls.a.value;
+  controls.a.min=(-g).toFixed(2);controls.a.max=g.toFixed(2);
+  controls.a.value=Math.max(-g,Math.min(g,oldA)).toFixed(2);
+  document.querySelectorAll("[data-scene]").forEach(b=>b.setAttribute("aria-pressed","false"));
+  resetTime();
+});
+const scenarios={
+  still:{a:0,u:0},up:{a:2,u:1},brake:{a:-2,u:4},
+  down:{a:-2,u:-1},fall:{a:"free",u:0}
+};
+document.querySelectorAll("[data-scene]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    const s=scenarios[button.dataset.scene];
+    controls.a.value=s.a==="free"?controls.a.min:String(s.a);
+    controls.u.value=String(s.u);
+    document.querySelectorAll("[data-scene]").forEach(b=>b.setAttribute("aria-pressed",String(b===button)));
+    resetTime();
+  });
+});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)pause();});
+window.addEventListener("resize",render);
+if("ResizeObserver" in window){new ResizeObserver(render).observe(canvas.scene);}
+render();
+</script>
+</body>
+</html>
