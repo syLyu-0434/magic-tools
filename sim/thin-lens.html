@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#020617">
+<meta name="description" content="互動調整凸透鏡與凹透鏡的焦距、物距與物高，觀察主光線、實像、虛像及放大率。">
+<title>薄透鏡成像與光路追跡 | 瑜的神祕妙妙工具屋</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,"Noto Sans TC",sans-serif}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 60% 0%,#083c42,#020617 67%);color:#e2e8f0;line-height:1.65}
+main{max-width:1160px;margin:0 auto;padding:18px 16px 54px}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+a{color:#67e8f9}a:hover{text-decoration:underline}
+h1{font-size:clamp(1.65rem,4vw,2.5rem);line-height:1.3;margin:24px 0 9px}
+h2{font-size:1.13rem;color:#a5f3fc;margin:0 0 15px}
+h3{font-size:.96rem;margin:0 0 9px}
+p{color:#a6b6c8}.lead{margin:0 0 24px}
+.pill{border:1px solid #155e75;border-radius:99px;color:#67e8f9;font-size:.84rem;padding:4px 12px}
+.layout{display:grid;grid-template-columns:minmax(260px,318px) minmax(0,1fr);gap:18px;align-items:start}
+.panel{min-width:0;border:1px solid rgba(34,211,238,.22);background:rgba(15,23,42,.9);border-radius:20px;padding:20px;box-shadow:0 14px 34px #0004}
+.control{margin:16px 0 20px}.control label{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:.94rem}
+.control output{color:#67e8f9;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+input[type=range]{width:100%;min-height:35px;accent-color:#06b6d4;cursor:pointer}
+select{width:100%;background:#020617;color:#e2e8f0;border:1px solid #475569;border-radius:10px;padding:11px;font:inherit}
+.range{display:flex;justify-content:space-between;font-size:.75rem;color:#94a3b8}
+button{min-height:44px;border:1px solid #0891b2;border-radius:10px;background:#155e75;color:#ecfeff;font:inherit;padding:9px 13px;cursor:pointer}
+button:hover{background:#0e7490}button.secondary,.presets button{background:#0f172a;border-color:#475569}
+button.secondary:hover,.presets button:hover{background:#1e293b}
+button[aria-pressed=true]{border-color:#67e8f9;background:#164e63}
+button:focus-visible,a:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #67e8f9;outline-offset:3px}
+.presets{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.presets button{font-size:.87rem;padding:8px 6px}
+.actions{display:flex;gap:10px;margin-top:15px}.actions button{flex:1}
+canvas{display:block;width:100%;height:380px;border:1px solid #334155;border-radius:12px;background:#020617}
+.legend{display:flex;flex-wrap:wrap;gap:7px 15px;margin:12px 0;font-size:.84rem;color:#cbd5e1}
+.legend span::before{content:"";display:inline-block;width:11px;height:4px;background:var(--swatch);vertical-align:middle;margin-right:7px;border-radius:2px}
+.legend .virtual::before{background:repeating-linear-gradient(90deg,#e2e8f0 0 4px,transparent 4px 7px)}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:16px 0}
+.metric{min-width:0;background:#020617;border:1px solid #1e293b;border-radius:12px;padding:11px}
+.metric small{display:block;font-size:.76rem;color:#94a3b8}
+.metric strong{display:block;color:#67e8f9;font-size:clamp(.96rem,2vw,1.15rem);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.explain{background:#082f49;border-left:3px solid #22d3ee;padding:13px 15px;border-radius:7px;line-height:1.85}
+.explain strong{color:#cffafe}
+.note{font-size:.87rem;color:#94a3b8}
+#rangeNote{margin:6px 0 0;min-height:1.4em}
+details{margin-top:17px;padding-top:12px;border-top:1px solid #334155}
+summary{cursor:pointer;color:#a5f3fc}
+@media(max-width:800px){.layout{grid-template-columns:1fr}.panel{padding:16px}}
+@media(max-width:490px){main{padding:12px 12px 42px}canvas{height:305px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<main>
+<header><a href="../lab.html">← 返回實驗室</a><span class="pill">OPTICS LAB</span></header>
+<h1>薄透鏡成像：鬼影到底在哪裡？</h1>
+<p class="lead">用兩條主光線找出像的位置。切換凸透鏡與凹透鏡，拖曳物距與焦距，觀察實像、虛像、正立、倒立及焦點上的特殊情況。鬼影只是萬聖節的標題，光學計算是認真的。</p>
+<div class="layout">
+<section class="panel" aria-labelledby="controlTitle">
+<h2 id="controlTitle">光學控制台</h2>
+<h3>典型情境</h3>
+<div class="presets">
+<button type="button" data-preset="real" aria-pressed="true">倒立實像</button>
+<button type="button" data-preset="focus" aria-pressed="false">物體在焦點</button>
+<button type="button" data-preset="virtual" aria-pressed="false">放大虛像</button>
+<button type="button" data-preset="diverge" aria-pressed="false">凹透鏡縮小像</button>
+</div>
+<div class="control"><label for="lensType">透鏡種類</label>
+<select id="lensType"><option value="convex">凸透鏡（會聚，f &gt; 0）</option><option value="concave">凹透鏡（發散，f &lt; 0）</option></select></div>
+<div class="control"><label for="focal">焦距絕對值 |f| <output id="focalOut" for="focal">20 cm</output></label>
+<input id="focal" type="range" min="10" max="40" step="1" value="20">
+<div class="range"><span>10 cm</span><span>40 cm</span></div></div>
+<div class="control"><label for="objectDistance">物距 dₒ <output id="distanceOut" for="objectDistance">60 cm</output></label>
+<input id="objectDistance" type="range" min="8" max="120" step="1" value="60">
+<div class="range"><span>8 cm</span><span>120 cm</span></div></div>
+<div class="control"><label for="objectHeight">物高 hₒ <output id="heightOut" for="objectHeight">10 cm</output></label>
+<input id="objectHeight" type="range" min="4" max="18" step="1" value="10">
+<div class="range"><span>4 cm</span><span>18 cm</span></div></div>
+<div class="actions"><button type="button" id="play">▶ 播放光路</button><button type="button" id="reset" class="secondary">↺ 重設</button></div>
+<p class="note">光路播放是逐步繪製示意，並不代表真實光速。若系統啟用減少動態效果，會直接顯示完整光路。</p>
+</section>
+<section class="panel" aria-labelledby="observationTitle">
+<h2 id="observationTitle">主光線與成像位置</h2>
+<canvas id="diagram" role="img" aria-label="物體、透鏡、兩側焦點與兩條主光線的幾何光學成像圖"></canvas>
+<div class="legend">
+<span style="--swatch:#34d399">物體</span>
+<span style="--swatch:#38bdf8">平行入射光線</span>
+<span style="--swatch:#fbbf24">經光心光線</span>
+<span style="--swatch:#c084fc">像</span>
+<span class="virtual">虛像反向延長線</span>
+</div>
+<p id="rangeNote" class="note" aria-live="polite"></p>
+<div class="metrics" aria-live="off">
+<div class="metric"><small>帶正負號焦距 f</small><strong id="fOut">+20 cm</strong></div>
+<div class="metric"><small>像距 dᵢ</small><strong id="imageDistanceOut">30 cm</strong></div>
+<div class="metric"><small>橫向放大率 m</small><strong id="magOut">−0.50</strong></div>
+<div class="metric"><small>像高 hᵢ</small><strong id="imageHeightOut">−5 cm</strong></div>
+<div class="metric"><small>像的性質</small><strong id="typeOut">實像、倒立</strong></div>
+<div class="metric"><small>能否投影在屏幕</small><strong id="screenOut">可以</strong></div>
+</div>
+<div class="explain">
+<strong>1/f = 1/dₒ + 1/dᵢ　　m = −dᵢ/dₒ = hᵢ/hₒ</strong>
+<div id="explanation" role="status" aria-live="polite">物體在焦點外，兩條折射光線實際相交，形成倒立實像。</div>
+</div>
+<details>
+<summary>模型假設、正負號與資料來源</summary>
+<p class="note">採用近軸、理想薄透鏡模型，忽略像差、色散與鏡片厚度。物體位於入射側，物距 dₒ 為正；凸透鏡焦距 f 為正，凹透鏡為負；像距 dᵢ 為正表示另一側的實像，為負表示物側的虛像。像高與放大率的正負表示正立或倒立。焦點上的凸透鏡出射光線互相平行，沒有有限位置的像。</p>
+<p class="note">畫布對水平及垂直距離採用相同縮放比例。當像距或像高過大，會將像留在畫面外並保留精確數值；虛線僅表示光線的反向延長線，並無光沿虛線向後傳播。</p>
+<p class="note">參考：<a href="https://openstax.org/books/university-physics-volume-3/pages/2-4-thin-lenses" target="_blank" rel="noopener noreferrer">OpenStax University Physics Volume 3，2.4 Thin Lenses</a>。</p>
+</details>
+</section>
+</div>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const controls={type:$("lensType"),f:$("focal"),d:$("objectDistance"),h:$("objectHeight")};
+const canvas=$("diagram"),ctx=canvas.getContext("2d");
+const reduceMotion=window.matchMedia?window.matchMedia("(prefers-reduced-motion: reduce)"):null;
+let progress=1,playing=false,frameId=null,startTime=null;
+function solve(doCm,fCm,hCm){
+  if(!(doCm>0&&fCm!==0&&hCm>0&&Number.isFinite(doCm)&&Number.isFinite(fCm)&&Number.isFinite(hCm)))throw new RangeError("Invalid thin lens parameters");
+  if(Math.abs(doCm-fCm)<1e-10)return {atInfinity:true,di:Infinity,magnification:null,hi:null,kind:"infinity"};
+  const di=fCm*doCm/(doCm-fCm);
+  const magnification=-di/doCm;
+  return {atInfinity:false,di,magnification,hi:magnification*hCm,kind:di>0?"real":"virtual"};
+}
+function parameters(){
+  const fAbs=+controls.f.value;
+  return {doCm:+controls.d.value,fCm:controls.type.value==="convex"?fAbs:-fAbs,hCm:+controls.h.value};
+}
+function screenPoint(x,y,originX,originY,scale){return {x:originX+x*scale,y:originY-y*scale};}
+function segment(a,b,color,width=2,dash=false,fraction=1){
+  if(fraction<=0)return;
+  const end={x:a.x+(b.x-a.x)*Math.min(1,fraction),y:a.y+(b.y-a.y)*Math.min(1,fraction)};
+  ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(end.x,end.y);
+  ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap="round";
+  ctx.setLineDash(dash?[5,6]:[]);ctx.stroke();ctx.setLineDash([]);
+}
+function stage(from,to){return Math.max(0,Math.min(1,(progress-from)/(to-from)));}
+function verticalArrow(x,y,color,label,originX,originY,scale){
+  const base=screenPoint(x,0,originX,originY,scale),tip=screenPoint(x,y,originX,originY,scale);
+  segment(base,tip,color,3,false);
+  const sign=y>=0?-1:1;
+  ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(tip.x,tip.y);
+  ctx.lineTo(tip.x-7,tip.y-sign*10);ctx.lineTo(tip.x+7,tip.y-sign*10);ctx.closePath();ctx.fill();
+  ctx.font="bold 12px system-ui";ctx.textAlign="left";
+  ctx.fillText(label,tip.x+9,tip.y+(sign<0?-8:15));
+}
+function fitCanvas(){
+  const rect=canvas.getBoundingClientRect(),w=rect.width,h=rect.height,dpr=Math.min(2,window.devicePixelRatio||1);
+  if(!w||!h)return {w:0,h:0};
+  const bw=Math.round(w*dpr),bh=Math.round(h*dpr);
+  if(canvas.width!==bw||canvas.height!==bh){canvas.width=bw;canvas.height=bh;}
+  ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);
+  return {w,h};
+}
+function geometry(p,s,w,h){
+  const originX=w*.53,originY=h*.52,fAbs=Math.abs(p.fCm);
+  const within=!s.atInfinity&&Math.abs(s.di)<=3*Math.max(p.doCm,fAbs,30)&&Math.abs(s.hi)<=3*p.hCm;
+  const left=Math.max(p.doCm,fAbs,within&&s.di<0?-s.di:0,10);
+  const right=Math.max(fAbs,within&&s.di>0?s.di:0,10);
+  const maxHeight=Math.max(p.hCm,within?Math.abs(s.hi):0,6);
+  const scale=Math.max(.01,Math.min((originX-24)/left,(w-originX-22)/right,(Math.min(originY,h-originY)-26)/maxHeight));
+  return {originX,originY,scale,within};
+}
+function draw(){
+  const p=parameters(),s=solve(p.doCm,p.fCm,p.hCm),size=fitCanvas();
+  if(!size.w)return;
+  const w=size.w,h=size.h,g=geometry(p,s,w,h),ox=g.originX,oy=g.originY,k=g.scale;
+  const at=(x,y)=>screenPoint(x,y,ox,oy,k);
+  ctx.strokeStyle="#1e293b";ctx.lineWidth=1;
+  for(let i=-6;i<=6;i++){
+    const y=oy+i*20*k;
+    if(y>=0&&y<=h){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+  }
+  ctx.strokeStyle="#64748b";ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(9,oy);ctx.lineTo(w-9,oy);ctx.stroke();
+  ctx.strokeStyle="#22d3ee";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(ox,14);ctx.lineTo(ox,h-14);ctx.stroke();
+  ctx.fillStyle="#67e8f9";ctx.font="12px system-ui";ctx.textAlign="center";
+  ctx.fillText(p.fCm>0?"凸透鏡":"凹透鏡",ox,13);
+  for(const sign of [-1,1]){
+    const focus=at(sign*Math.abs(p.fCm),0);
+    ctx.fillStyle="#cbd5e1";ctx.beginPath();ctx.arc(focus.x,focus.y,4,0,Math.PI*2);ctx.fill();
+    ctx.fillText(sign<0?"F₁":"F₂",focus.x,focus.y+19);
+  }
+  const A=at(-p.doCm,p.hCm),P=at(0,p.hCm),O=at(0,0);
+  const xRight=(w-16-ox)/k;
+  const B=at(xRight,p.hCm-xRight*p.hCm/p.fCm);
+  const C=at(xRight,-xRight*p.hCm/p.doCm);
+  segment(A,P,"#38bdf8",2.6,false,stage(0,.45));
+  segment(A,O,"#fbbf24",2.6,false,stage(0,.45));
+  segment(P,B,"#38bdf8",2.6,false,stage(.45,1));
+  segment(O,C,"#fbbf24",2.6,false,stage(.45,1));
+  if(s.kind==="virtual"&&g.within&&progress>=.88){
+    const I=at(s.di,s.hi);
+    segment(P,I,"#cbd5e1",1.5,true);
+    segment(O,I,"#cbd5e1",1.5,true);
+  }
+  verticalArrow(-p.doCm,p.hCm,"#34d399","物",ox,oy,k);
+  if(g.within)verticalArrow(s.di,s.hi,"#c084fc","像",ox,oy,k);
+  ctx.fillStyle="#94a3b8";ctx.font="11px system-ui";ctx.textAlign="left";
+  ctx.fillText("↑ 正向物高",12,h-10);
+}
+function fmt(value,decimals=2){
+  if(value===null)return "無有限值";
+  if(!Number.isFinite(value))return "∞";
+  const v=Math.abs(value)<1e-9?0:value;
+  return (v>0?"+":"") + v.toFixed(decimals);
+}
+function render(){
+  const p=parameters(),s=solve(p.doCm,p.fCm,p.hCm);
+  $("focalOut").textContent=Math.abs(p.fCm).toFixed(0)+" cm";
+  $("distanceOut").textContent=p.doCm.toFixed(0)+" cm";
+  $("heightOut").textContent=p.hCm.toFixed(0)+" cm";
+  $("fOut").textContent=fmt(p.fCm,0)+" cm";
+  $("imageDistanceOut").textContent=s.atInfinity?"∞（無有限像）":fmt(s.di,2)+" cm";
+  $("magOut").textContent=fmt(s.magnification,2);
+  $("imageHeightOut").textContent=s.atInfinity?"無有限值":fmt(s.hi,2)+" cm";
+  $("typeOut").textContent=s.atInfinity?"無有限位置的像":s.kind==="real"?"實像、倒立":"虛像、正立";
+  $("screenOut").textContent=s.kind==="real"?"可以":"不可以";
+  $("explanation").textContent=s.atInfinity?
+    "物體位於凸透鏡焦點，兩條出射光線平行，因此沒有有限位置的像。":
+    s.kind==="real"?
+    "兩條出射光線在透鏡另一側實際相交，形成倒立實像，可以用屏幕接收。":
+    p.fCm>0?
+    "物體位於凸透鏡焦點內，反向延長線在物側相交，形成正立放大虛像。":
+    "凹透鏡使光線發散，反向延長線在物側相交，形成正立縮小虛像。";
+  const size=canvas.getBoundingClientRect();
+  const g=geometry(p,s,Math.max(1,size.width),Math.max(1,size.height));
+  $("rangeNote").textContent=s.atInfinity?"焦點情境：沒有有限像距。":
+    !g.within?"像的位置或高度超出光路視窗，請以數值為準。":"實線代表光線，虛線代表反向延長線；圖形按同一尺度繪製。";
+  draw();
+}
+function stop(){
+  playing=false;startTime=null;
+  if(frameId!==null){cancelAnimationFrame(frameId);frameId=null;}
+  $("play").textContent="▶ 播放光路";
+  $("play").setAttribute("aria-pressed","false");
+}
+function tick(timestamp){
+  if(!playing)return;
+  if(startTime===null)startTime=timestamp;
+  progress=Math.min(1,(timestamp-startTime)/2200);
+  render();
+  if(progress>=1){stop();return;}
+  frameId=requestAnimationFrame(tick);
+}
+function restartDrawing(){stop();progress=1;render();}
+$("play").addEventListener("click",()=>{
+  if(playing){stop();return;}
+  if(reduceMotion&&reduceMotion.matches){progress=1;render();return;}
+  progress=0;playing=true;startTime=null;
+  $("play").textContent="Ⅱ 暫停";
+  $("play").setAttribute("aria-pressed","true");
+  frameId=requestAnimationFrame(tick);
+});
+$("reset").addEventListener("click",()=>{
+  controls.type.value="convex";controls.f.value=20;controls.d.value=60;controls.h.value=10;
+  document.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.preset==="real")));
+  restartDrawing();
+});
+for(const el of Object.values(controls)){
+  el.addEventListener(el.tagName==="SELECT"?"change":"input",()=>{
+    document.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed","false"));
+    restartDrawing();
+  });
+}
+const presets={real:["convex",20,60,10],focus:["convex",20,20,10],virtual:["convex",20,12,10],diverge:["concave",20,50,10]};
+document.querySelectorAll("[data-preset]").forEach(button=>{
+  button.addEventListener("click",()=>{
+    const p=presets[button.dataset.preset];
+    controls.type.value=p[0];controls.f.value=p[1];controls.d.value=p[2];controls.h.value=p[3];
+    document.querySelectorAll("[data-preset]").forEach(b=>b.setAttribute("aria-pressed",String(b===button)));
+    restartDrawing();
+  });
+});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)stop();});
+window.addEventListener("resize",render);
+if("ResizeObserver" in window)new ResizeObserver(render).observe(canvas);
+render();
+</script>
+</body>
+</html>
