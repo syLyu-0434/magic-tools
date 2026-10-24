@@ -959,9 +959,11 @@
 
         // 萬聖節彩蛋採用原生 dialog，可用 Escape 關閉，不干擾既有混沌核心。
         (function initHalloweenEasterEgg() {
-            const today = new Date();
-            const month = today.getMonth() + 1;
-            const day = today.getDate();
+            const taipeiDate = new Intl.DateTimeFormat('en-US', {
+                timeZone: 'Asia/Taipei', month: 'numeric', day: 'numeric'
+            }).formatToParts(new Date());
+            const month = Number(taipeiDate.find(part => part.type === 'month').value);
+            const day = Number(taipeiDate.find(part => part.type === 'day').value);
             const inSeason = (month === 10 && day >= 25) || (month === 11 && day === 1);
             const launch = document.getElementById('halloween-launch');
             if (!inSeason || !launch) return;
