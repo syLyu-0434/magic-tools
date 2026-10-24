@@ -182,6 +182,47 @@
         ::-webkit-scrollbar-track { background: #020617; }
         ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+
+        /* 萬聖節期間限定彩蛋，與正常物理模擬隔離 */
+        #halloween-launch[hidden] { display: none !important; }
+        #halloween-dialog {
+            width: min(92vw, 510px);
+            max-height: min(88vh, 660px);
+            overflow-y: auto;
+            margin: auto;
+            padding: 0;
+            color: #f8fafc;
+            background: radial-gradient(circle at 50% 0%, #431407, #111827 65%);
+            border: 1px solid rgba(251, 146, 60, .7);
+            border-radius: 24px;
+            box-shadow: 0 20px 80px rgba(0, 0, 0, .75), 0 0 40px rgba(249, 115, 22, .15);
+        }
+        #halloween-dialog::backdrop { background: rgba(2, 6, 23, .82); backdrop-filter: blur(5px); }
+        #halloween-dialog .halloween-content { padding: clamp(20px, 5vw, 34px); text-align: center; }
+        #halloween-dialog .halloween-ghost { display: inline-block; font-size: 4rem; animation: halloween-hover 3s ease-in-out infinite; }
+        #halloween-dialog .halloween-report {
+            min-height: 105px;
+            margin: 20px 0;
+            padding: 18px;
+            border: 1px solid rgba(251, 146, 60, .3);
+            border-radius: 16px;
+            background: rgba(15, 23, 42, .65);
+            color: #fed7aa;
+            font-size: 1.08rem;
+            line-height: 1.9;
+        }
+        #halloween-dialog .halloween-action { min-height: 44px; border-radius: 12px; padding: 10px 16px; }
+        #halloween-dialog button:focus-visible, #halloween-open:focus-visible {
+            outline: 3px solid #fdba74; outline-offset: 3px;
+        }
+        @keyframes halloween-hover { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-9px); } }
+        @media (prefers-reduced-motion: reduce) {
+            .halloween-ghost, .glitch::before, .glitch::after,
+            .animate-float, .animate-float-delay, .chaos-active, .shake {
+                animation: none !important;
+            }
+            #halloween-dialog, #halloween-open { transition: none !important; }
+        }
     </style>
 </head>
 <body class="min-h-screen selection:bg-cyan-500 selection:text-white">
@@ -298,6 +339,11 @@
                 </h3>
                 <ul class="space-y-3 text-sm text-slate-300">
                     <li class="flex flex-col sm:flex-row gap-1 sm:gap-3 border-b border-white/5 pb-2 last:border-0 last:pb-0">
+                        <span class="text-orange-400 font-mono shrink-0">2026.10.25</span>
+                        <span>🎃 Beta 2.8 萬聖節特別版：新增「薄透鏡成像」互動教學與限時靈異物理彩蛋。</span>
+                    </li>
+
+                    <li class="flex flex-col sm:flex-row gap-1 sm:gap-3 border-b border-white/5 pb-2 last:border-0 last:pb-0">
                         <span class="text-cyan-500 font-mono shrink-0">2026.10.16</span>
                         <span>🛗 Beta 2.7：重製「電梯裡的磅秤」，新增「折射與全反射」互動教學。</span>
                     </li>
@@ -388,10 +434,33 @@
             <div class="absolute inset-0 rounded-full bg-white opacity-0 group-hover:animate-ping pointer-events-none"></div>
         </button>
 
+        <!-- 期間限定萬聖節彩蛋，正常工具不受影響 -->
+        <div id="halloween-launch" hidden class="mt-5 flex flex-col items-center gap-2 text-center">
+            <button id="halloween-open" type="button"
+                class="px-6 py-3 rounded-full border border-orange-400/70 bg-orange-950/80 hover:bg-orange-900 text-orange-100 font-bold shadow-lg">
+                🎃 這顆南瓜裡藏著一份物理報告
+            </button>
+            <p class="text-xs text-slate-400">萬聖節限定，完全自願觸發，隨時可以離開。</p>
+        </div>
+
     </main>
 
+    <dialog id="halloween-dialog" aria-labelledby="halloween-title" aria-describedby="halloween-disclaimer">
+        <div class="halloween-content">
+            <div class="halloween-ghost" aria-hidden="true">👻</div>
+            <h2 id="halloween-title" class="text-2xl font-bold text-orange-200 mt-3">靈異物理審查室</h2>
+            <p class="text-slate-300 text-sm mt-2">今日審查員：一隻尚未通過教師檢定的幽靈。</p>
+            <p id="halloween-report" class="halloween-report" role="status" aria-live="polite"></p>
+            <p id="halloween-disclaimer" class="text-sm text-orange-200/80 mb-5">※ 這是萬聖節虛構彩蛋，內容刻意荒謬，請勿當作物理定律或實驗數據。</p>
+            <div class="flex flex-wrap justify-center gap-3">
+                <button id="halloween-next" type="button" class="halloween-action bg-orange-700 hover:bg-orange-600 text-white font-semibold">👻 再抽一份荒謬報告</button>
+                <button id="halloween-close" type="button" class="halloween-action border border-slate-500 bg-slate-800 hover:bg-slate-700 text-white">關閉，返回正常宇宙</button>
+            </div>
+        </div>
+    </dialog>
+
     <footer class="relative z-10 py-12 text-center text-slate-600 text-xs tracking-widest uppercase">
-        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | Beta 2.7</p>
+        <p>&copy; <span id="year"></span> 瑜的神祕妙妙工具屋 | Beta 2.8</p>
     </footer>
 
     <script>
@@ -887,6 +956,49 @@
                 card.style.transform = '';
             });
         });
+
+        // 萬聖節彩蛋採用原生 dialog，可用 Escape 關閉，不干擾既有混沌核心。
+        (function initHalloweenEasterEgg() {
+            const today = new Date();
+            const month = today.getMonth() + 1;
+            const day = today.getDate();
+            const inSeason = (month === 10 && day >= 25) || (month === 11 && day === 1);
+            const launch = document.getElementById('halloween-launch');
+            if (!inSeason || !launch) return;
+            const opener = document.getElementById('halloween-open');
+            const dialog = document.getElementById('halloween-dialog');
+            const report = document.getElementById('halloween-report');
+            const next = document.getElementById('halloween-next');
+            const close = document.getElementById('halloween-close');
+            if (!opener || !dialog || typeof dialog.showModal !== 'function') return;
+            const reports = [
+                '【靈異實驗 001】電梯裡站了一隻鬼。磅秤回報：請先確認乘客是否具有可測量的質量。',
+                '【數據異常 002】實驗產率高達 300%。審查員決定先調查是不是把萬聖節糖果也算進去了。',
+                '【牛頓第四定律】段考前一天，作業會自發性地增加。提醒：此定律完全不存在。',
+                '【量測紀錄 004】彈簧原長為負值。幽靈表示：量尺可能還在另一個維度。',
+                '【同儕審查 005】鬼魂說自己能穿牆。老師問：你的受力圖呢？',
+                '【教學現場 006】學生問自由落下會不會失去重力。鬼魂已經去畫受力圖了。',
+                '【物理系生存指南】不要用「粗心」當作數據單位。審查員現在比幽靈還要透明。',
+                '【系統回報 008】偵測到薛丁格的南瓜。打開盒子之前，請先確認裡面沒有期中考卷。'
+            ];
+            let lastIndex = -1;
+            function nextReport() {
+                const offset = 1 + Math.floor(Math.random() * (reports.length - 1));
+                lastIndex = (lastIndex + offset + reports.length) % reports.length;
+                report.textContent = reports[lastIndex];
+            }
+            launch.hidden = false;
+            opener.addEventListener('click', function () {
+                nextReport();
+                dialog.showModal();
+            });
+            next.addEventListener('click', nextReport);
+            close.addEventListener('click', function () { dialog.close(); });
+            dialog.addEventListener('click', function (event) {
+                if (event.target === dialog) dialog.close();
+            });
+            dialog.addEventListener('close', function () { opener.focus(); });
+        })();
     </script>
 </body>
 </html>
