@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#020617">
+<title>阿特伍德機與受力圖 | 瑜的神祕妙妙工具屋</title>
+<style>
+:root{font-family:system-ui,"Noto Sans TC",sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 65% 0%,#064e3b,#020617 68%);color:#e2e8f0;line-height:1.65}
+main{max-width:1120px;margin:auto;padding:18px 16px 48px}
+a{color:#6ee7b7}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+h1{font-size:clamp(1.6rem,4vw,2.45rem);margin:22px 0 8px}
+h2{font-size:1.12rem;color:#a7f3d0;margin:0 0 14px}
+p{color:#a5b4c5}
+.grid{display:grid;grid-template-columns:minmax(245px,305px) minmax(0,1fr);gap:18px}
+.stack{display:grid;gap:18px;min-width:0}
+.panel{background:rgba(15,23,42,.9);border:1px solid #145442;border-radius:18px;padding:18px;min-width:0}
+.control{margin:14px 0 24px}
+.control label{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+output,.value{color:#6ee7b7;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:#10b981;min-height:30px;margin-top:8px;cursor:pointer}
+select{background:#020617;border:1px solid #64748b;border-radius:9px;padding:9px;color:#fff;font:inherit}
+button{background:#065f46;border:1px solid #10b981;border-radius:10px;color:white;font:inherit;font-weight:650;padding:10px 15px;min-height:44px;cursor:pointer}
+button.secondary{background:transparent;border-color:#64748b}
+button:hover{filter:brightness(1.15)}
+:focus-visible{outline:3px solid #6ee7b7;outline-offset:3px}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+canvas{display:block;width:100%;background:#020617;border:1px solid #334155;border-radius:12px}
+#scene{height:300px}#graph{height:250px}
+.readouts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
+.readout{background:#020617;border:1px solid #1e293b;border-radius:10px;padding:10px;min-width:0}
+.readout small{display:block;color:#94a3b8;font-size:.8rem}
+.readout strong{display:block;color:#d1fae5;overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.equations{background:#022c22;border-radius:10px;padding:12px;overflow-wrap:anywhere}
+.note{font-size:.88rem;color:#94a3b8}
+.badge{color:#6ee7b7;border:1px solid #065f46;border-radius:999px;padding:4px 12px;font-size:.78rem}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.panel{padding:14px}#scene{height:285px}#graph{height:230px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<header><a href="../lab.html">← 返回實驗室</a><span class="badge">PHYSICS LAB</span></header>
+<h1>阿特伍德機：繩張力去哪裡了？</h1>
+<p>改變兩側質量，觀察運動方向、兩物體受力圖、繩張力及速度與位移曲線。兩端質量相等時，張力仍然存在。</p>
+<div class="grid">
+<section class="panel" aria-label="實驗控制台">
+<h2>實驗控制台</h2>
+<div class="control"><label for="m1">左側質量 m₁ <output id="m1out">3.0 kg</output></label><input id="m1" type="range" min="1" max="10" step="0.5" value="3"></div>
+<div class="control"><label for="m2">右側質量 m₂ <output id="m2out">5.0 kg</output></label><input id="m2" type="range" min="1" max="10" step="0.5" value="5"></div>
+<div class="control"><label for="g">重力加速度 g</label><select id="g"><option value="10">10 m/s²（課堂近似）</option><option value="9.81">9.81 m/s²</option></select></div>
+<div class="control"><label for="time">時間 t <output id="tout">0.00 s</output></label><input id="time" type="range" min="0" max="5" step="0.01" value="0"></div>
+<div class="actions"><button id="play" type="button">▶ 播放</button><button id="reset" type="button" class="secondary">↺ 重設</button></div>
+<p class="note" id="limit" aria-live="polite"></p>
+<p class="note">模型假設：滑輪無質量且無摩擦，繩不可伸長、質量可忽略，兩物體由靜止釋放，忽略空氣阻力。為避免畫面中的物體碰到滑輪或地面，位移達 1.00 m 時停止顯示，不模擬碰撞。</p>
+</section>
+<div class="stack">
+<section class="panel">
+<h2>運動動畫與受力圖</h2>
+<canvas id="scene" role="img" aria-label="阿特伍德機動畫：兩物體受重力向下及繩張力向上，兩端運動方向相反"></canvas>
+<p class="note">藍色為左側 m₁，綠色為右側 m₂。兩物體加速度大小相同，方向相反。黃色向上箭頭表示張力，粉紅向下箭頭表示重力。</p>
+<div class="readouts">
+<div class="readout"><small>右側向下為正，加速度 a</small><strong id="aout"></strong></div>
+<div class="readout"><small>兩側繩張力 T</small><strong id="T"></strong></div>
+<div class="readout"><small>右側速度 v₂</small><strong id="vout"></strong></div>
+<div class="readout"><small>右側位移 Δy₂</small><strong id="sout"></strong></div>
+</div>
+<div class="equations">
+<div>左側（向上為正）：T − m₁g = m₁a</div>
+<div>右側（向下為正）：m₂g − T = m₂a</div>
+<strong>a = (m₂ − m₁)g / (m₁ + m₂)</strong><br>
+<strong>T = 2m₁m₂g / (m₁ + m₂)</strong>
+<p id="message" style="margin:8px 0 0;color:#d1fae5" aria-live="polite"></p>
+</div>
+</section>
+<section class="panel">
+<h2>速度與位移隨時間變化</h2>
+<canvas id="graph" role="img" aria-label="右側物體的速度時間圖與位移時間圖"></canvas>
+<p class="note">兩圖皆以右側向下為正。速度 v₂ = at，位移 Δy₂ = ½at²；黃點表示目前時間。</p>
+</section>
+</div>
+</div>
+<p class="note">延伸閱讀：<a href="https://openstax.org/books/university-physics-volume-1/pages/6-1-solving-problems-with-newtons-laws" target="_blank" rel="noopener noreferrer">OpenStax《University Physics》6.1，Example 6.5</a>。理想繩張力在兩側相等，但不必等於任一物體的重量。</p>
+</main>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const scene=$("scene"),graph=$("graph"),sc=scene.getContext("2d"),gc=graph.getContext("2d");
+const travel=1, maxTime=5;
+let playing=false,previous=null;
+function physics(m1,m2,g){
+  const a=(m2-m1)*g/(m1+m2);
+  const T=2*m1*m2*g/(m1+m2);
+  const tmax=Math.min(maxTime,Math.abs(a)<1e-12?maxTime:Math.sqrt(2*travel/Math.abs(a)));
+  return {a,T,tmax};
+}
+function parameters(){
+  const m1=+$("m1").value,m2=+$("m2").value,g=+$("g").value;
+  const p=physics(m1,m2,g);
+  $("time").max=p.tmax.toFixed(3);
+  if(+$("time").value>p.tmax)$("time").value=p.tmax;
+  const t=+$("time").value;
+  return {m1,m2,g,t,...p,v:p.a*t,s:.5*p.a*t*t};
+}
+function canvasSize(canvas,ctx){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  const w=canvas.clientWidth,h=canvas.clientHeight;
+  if(!w||!h)return {w:0,h:0};
+  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){
+    canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
+  }
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  return {w,h};
+}
+function arrow(ctx,x,y,dy,color,label){
+  const ey=y+dy;
+  ctx.strokeStyle=color;ctx.fillStyle=color;ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,ey);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(x,ey);ctx.lineTo(x-5,ey-(dy>0?8:-8));ctx.lineTo(x+5,ey-(dy>0?8:-8));ctx.closePath();ctx.fill();
+  ctx.font="12px system-ui";ctx.textAlign="left";ctx.fillText(label,x+6,ey+(dy>0?5:-3));
+}
+function drawScene(p){
+  const {w,h}=canvasSize(scene,sc);if(!w)return;
+  sc.clearRect(0,0,w,h);
+  const cx=w/2,r=Math.min(46,Math.max(34,w*.12)),cy=58,x1=cx-r,x2=cx+r;
+  const y0=h*.53,shift=p.s*48,y1=y0-shift,y2=y0+shift,bh=44,bw=Math.min(52,Math.max(42,w*.14));
+  sc.strokeStyle="#475569";sc.lineWidth=2;sc.beginPath();sc.moveTo(10,h-18);sc.lineTo(w-10,h-18);sc.stroke();
+  sc.fillStyle="#1e293b";sc.beginPath();sc.arc(cx,cy,r+4,0,Math.PI*2);sc.fill();
+  sc.strokeStyle="#94a3b8";sc.lineWidth=3;sc.stroke();
+  sc.fillStyle="#94a3b8";sc.beginPath();sc.arc(cx,cy,6,0,Math.PI*2);sc.fill();
+  sc.strokeStyle="#fbbf24";sc.lineWidth=3;sc.beginPath();
+  sc.moveTo(x1,y1-bh/2);sc.lineTo(x1,cy);sc.arc(cx,cy,r,Math.PI,0,false);sc.lineTo(x2,y2-bh/2);sc.stroke();
+  function block(x,y,m,color){
+    sc.fillStyle=color;sc.fillRect(x-bw/2,y-bh/2,bw,bh);
+    sc.strokeStyle="#e2e8f0";sc.lineWidth=1;sc.strokeRect(x-bw/2,y-bh/2,bw,bh);
+    sc.fillStyle="#020617";sc.font="bold 13px system-ui";sc.textAlign="center";sc.fillText(m.toFixed(1)+" kg",x,y+4);
+  }
+  block(x1,y1,p.m1,"#60a5fa");block(x2,y2,p.m2,"#34d399");
+  const f1=x1-(bw/2+19),f2=x2+(bw/2+13);
+  const scale=32/Math.max(p.m1*p.g,p.m2*p.g,p.T,1);
+  for(const [x,y,m] of [[f1,y1,p.m1],[f2,y2,p.m2]]){
+    arrow(sc,x,y,-Math.max(15,p.T*scale),"#fbbf24","T");
+    arrow(sc,x,y,Math.max(15,m*p.g*scale),"#fb7185","mg");
+  }
+  sc.fillStyle="#cbd5e1";sc.font="12px system-ui";sc.textAlign="left";
+  sc.fillText("m₁",Math.max(8,x1-bw/2),28);sc.textAlign="right";sc.fillText("m₂",Math.min(w-8,x2+bw/2),28);
+  sc.textAlign="left";sc.fillStyle="#94a3b8";sc.fillText("向下：右側正方向",10,h-26);
+}
+function drawGraph(p){
+  const {w,h}=canvasSize(graph,gc);if(!w)return;
+  gc.clearRect(0,0,w,h);
+  const left=46,right=w-14,plotW=Math.max(20,right-left),unitH=(h-12)/2;
+  function panel(row,title,fn,maxAbs,color){
+    const top=row*unitH+8,mid=top+unitH*.44,amp=unitH*.31;
+    gc.strokeStyle="#475569";gc.lineWidth=1;gc.beginPath();
+    gc.moveTo(left,top+3);gc.lineTo(left,top+unitH-14);gc.moveTo(left,mid);gc.lineTo(right,mid);gc.stroke();
+    gc.fillStyle="#cbd5e1";gc.font="12px system-ui";gc.textAlign="left";gc.fillText(title,left+5,top+12);
+    gc.fillStyle="#94a3b8";gc.font="11px system-ui";gc.fillText("0",left-20,mid+4);
+    gc.textAlign="right";gc.fillText(p.tmax.toFixed(2)+" s",right,top+unitH-5);
+    const X=t=>left+(t/p.tmax)*plotW,Y=v=>mid-v/maxAbs*amp;
+    gc.strokeStyle=color;gc.lineWidth=2.5;gc.beginPath();
+    for(let i=0;i<=100;i++){const t=p.tmax*i/100;if(i===0)gc.moveTo(X(t),Y(fn(t)));else gc.lineTo(X(t),Y(fn(t)));}
+    gc.stroke();gc.fillStyle="#fbbf24";gc.beginPath();gc.arc(X(p.t),Y(fn(p.t)),4,0,Math.PI*2);gc.fill();
+  }
+  panel(0,"v₂ (m/s)",t=>p.a*t,Math.max(.1,Math.abs(p.a*p.tmax)),"#60a5fa");
+  panel(1,"Δy₂ (m)",t=>.5*p.a*t*t,Math.max(.1,Math.abs(.5*p.a*p.tmax*p.tmax)),"#34d399");
+}
+function render(){
+  const p=parameters();
+  $("m1out").textContent=p.m1.toFixed(1)+" kg";$("m2out").textContent=p.m2.toFixed(1)+" kg";
+  $("tout").textContent=p.t.toFixed(2)+" s";$("aout").textContent=p.a.toFixed(2)+" m/s²";
+  $("T").textContent=p.T.toFixed(2)+" N";$("vout").textContent=p.v.toFixed(2)+" m/s";
+  $("sout").textContent=p.s.toFixed(2)+" m";
+  $("limit").textContent="本組參數最多播放 "+p.tmax.toFixed(2)+" s；行程上限 1.00 m，最長 5.00 s。";
+  $("message").textContent=Math.abs(p.a)<1e-10?"質量相等，從靜止保持靜止，但張力 T = mg，並未消失。":p.a>0?"m₂ 較重，右側向下加速，左側向上加速。":"m₁ 較重，左側向下加速，右側向上加速。";
+  drawScene(p);drawGraph(p);return p;
+}
+function pause(){playing=false;previous=null;$("play").textContent="▶ 播放";}
+function reset(){pause();$("time").value="0";render();}
+function tick(now){
+  if(!playing)return;
+  const p=parameters();
+  if(previous!==null)$("time").value=Math.min(p.tmax,p.t+Math.min(.06,Math.max(0,(now-previous)/1000)));
+  previous=now;
+  const next=render();
+  if(next.t>=next.tmax-.011){pause();return;}
+  requestAnimationFrame(tick);
+}
+$("play").addEventListener("click",()=>{
+  if(playing){pause();return;}
+  const p=parameters();
+  if(p.t>=p.tmax-.011)$("time").value="0";
+  if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+    $("time").value=p.tmax;render();return;
+  }
+  playing=true;previous=null;$("play").textContent="Ⅱ 暫停";requestAnimationFrame(tick);
+});
+$("reset").addEventListener("click",reset);
+["m1","m2","g"].forEach(id=>$(id).addEventListener("input",reset));
+$("time").addEventListener("input",()=>{pause();render();});
+document.addEventListener("visibilitychange",()=>{if(document.hidden)pause();});
+window.addEventListener("resize",render);
+render();
+</script>
+</body>
+</html>
