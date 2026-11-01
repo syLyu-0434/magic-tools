@@ -15,7 +15,8 @@
 <label class="toggle"><input type="checkbox" id="velocity" checked>速度向量 v</label>
 <label class="toggle"><input type="checkbox" id="accel">加速度向量 a</label>
 <label class="toggle"><input type="checkbox" id="tension" checked>繩張力 T</label>
-<label class="toggle"><input type="checkbox" id="components">顯示錐動擺張力分量</label><label class="toggle"><input type="checkbox" id="weight">重力 mg</label>
+<label class="toggle"><input type="checkbox" id="components">顯示錐動擺張力分量</label>
+<label class="toggle"><input type="checkbox" id="vectorSum" checked>顯示向量首尾相接（開啟合力後）</label><label class="toggle"><input type="checkbox" id="weight">重力 mg</label>
 <label class="toggle"><input type="checkbox" id="normal">正向力 N</label>
 <label class="toggle"><input type="checkbox" id="resultant">合力 ΣF（預設隱藏）</label>
 <label class="toggle"><input type="checkbox" id="equations">顯示物理方程式（預設隱藏）</label></div>
@@ -29,12 +30,12 @@
 <div id="equationBox" hidden style="margin-top:12px;padding:12px;background:#1b344b;border-radius:10px;line-height:2"><span id="equationText">鉛直：N − mg = 0<br>水平徑向：T = mv²/r</span></div></div>
 <div class="section"><h2>物理狀態</h2><div id="message" role="status">繩子完整。小球做等速率圓周運動。</div>
 <div class="legend"><span><i class="dot" style="background:#63cdf6"></i>速度</span><span><i class="dot" style="background:#f1b65c"></i>張力</span><span><i class="dot" style="background:#df83c8"></i>重力</span><span><i class="dot" style="background:#76d1a6"></i>正向力</span><span><i class="dot" style="background:#f87b6b"></i>合力</span></div>
-<p class="note">模型假設：物體為質點、細繩不可伸長且質量可忽略，忽略空氣阻力。水平模式有光滑桌面支撐；錐動擺模式無桌面支撐，剪斷後小球先沿切線方向運動並受重力作用，進行拋體運動。場景使用可旋轉的 3D 投影，向量方向依模型計算，箭頭有統一顯示縮放。</p></div></aside></main><footer>瑜的神祕妙妙工具屋 · 向心力教學演示 · 理想模型</footer>
+<p class="note">模型假設：物體為質點、細繩不可伸長且質量可忽略，忽略空氣阻力。水平模式有光滑桌面支撐；錐動擺模式無桌面支撐，剪斷後小球先沿切線方向運動並受重力作用，進行拋體運動。場景使用可旋轉的 3D 投影，向量方向依模型計算，實際作用力與合力的箭頭採用同一比例尺。</p></div></aside></main><footer>瑜的神祕妙妙工具屋 · 向心力教學演示 · 理想模型</footer>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), canvas=$('scene'),ctx=canvas.getContext('2d');
 const state={mode:"horizontal",running:true,cut:false,t:0,theta:.65,free:null,points:[],yaw:-.8,pitch:.93,zoom:1.0,view:'3d',last:0};
-const toggles=['trail','velocity','accel','tension','components','weight','normal','resultant','equations'];
+const toggles=['trail','velocity','accel','tension','components','vectorSum','weight','normal','resultant','equations'];
 let scale=1,W=800,H=600;
 const num=id=>Number($(id).value);
 const pivotHeight=2.7;
@@ -76,23 +77,45 @@ function draw(){
  let circ=[];for(let i=0;i<=180;i++){let a=i*2*Math.PI/180;circ.push(project(p.r*Math.cos(a),p.r*Math.sin(a),state.mode==='conical'?p.z:.015));}
  ctx.beginPath();ctx.moveTo(...circ[0]);for(let i=1;i<circ.length;i++)ctx.lineTo(...circ[i]);ctx.strokeStyle='#5d8ca9';ctx.lineWidth=1.7;ctx.setLineDash([7,6]);ctx.stroke();ctx.setLineDash([]);
  let anchor=state.mode==='conical'?[0,0,pivotHeight]:[0,0,.07];circle(project(...anchor),6,'#d6a35e');
- if(state.mode==='conical'){line(project(0,0,0),project(...anchor),'#56788e',1.5,[5,5]);}
+ if(state.mode==='conical'){
+ line(project(0,0,0),project(...anchor),'#56788e',1.5,[5,5]);
+ if(!state.cut){
+  const out=[pos.x/p.r,pos.y/p.r,0],arc=[];
+  for(let i=0;i<=30;i++){const q=p.alpha*i/30;arc.push(project(anchor[0]+out[0]*.46*Math.sin(q),anchor[1]+out[1]*.46*Math.sin(q),anchor[2]-.46*Math.cos(q)));}
+  ctx.beginPath();ctx.moveTo(...arc[0]);arc.slice(1).forEach(a=>ctx.lineTo(...a));ctx.strokeStyle='#e3b9ff';ctx.lineWidth=3;ctx.stroke();
+  line(project(...anchor),project(0,0,pivotHeight-.78),'#b7a0d7',1.5,[5,4]);
+  const q=p.alpha*.57,l=project(anchor[0]+out[0]*.66*Math.sin(q),anchor[1]+out[1]*.66*Math.sin(q),anchor[2]-.66*Math.cos(q));
+  ctx.font='bold 18px system-ui';ctx.fillStyle='#eed2ff';ctx.fillText('θ',l[0]+6,l[1]-3);
+ }
+}
  if(!state.cut)line(project(...anchor),project(...ball),'#f5b85c',3);
  if($('trail').checked&&state.points.length>1){ctx.beginPath();state.points.forEach((q,i)=>{let a=project(q.x,q.y,q.z);if(i===0)ctx.moveTo(...a);else ctx.lineTo(...a);});ctx.strokeStyle='#55e9d0';ctx.lineWidth=2.7;ctx.stroke();}
  const radial=state.cut?[0,0,0]:[-pos.x/p.r,-pos.y/p.r,0],tan=[pos.vx/p.v,pos.vy/p.v,0],v3=state.cut?[pos.vx,pos.vy,pos.vz]:tan;
  const len=Math.hypot(...v3)||1,vel=v3.map(x=>x/len);
- // Arrow geometry is scaled for visibility. Actual components are computed from equilibrium.
- const tensionDirection=state.mode==='conical'?[radial[0]*Math.sin(p.alpha),radial[1]*Math.sin(p.alpha),Math.cos(p.alpha)]:radial;
+ // Actual forces and resultant share one vector magnitude scale.
+ const weight=[0,0,-p.m*9.81],normal=[0,0,p.N];
+ const tension=!state.cut?(state.mode==='conical'?[radial[0]*p.T*Math.sin(p.alpha),radial[1]*p.T*Math.sin(p.alpha),p.T*Math.cos(p.alpha)]:[radial[0]*p.T,radial[1]*p.T,0]):[0,0,0];
+ const total=[tension[0]+weight[0]+normal[0],tension[1]+weight[1]+normal[1],tension[2]+weight[2]+normal[2]];
+ const forceScale=1.03/Math.max(p.T,p.m*9.81,p.N,.001);
  if($('velocity').checked)arrow(ball,vel,'#63cdf6','v',.65);
  if($('accel').checked){if(!state.cut)arrow(ball,radial,'#a89cf7','a',.64);else if(state.mode==='conical'&&pos.z>0)arrow(ball,[0,0,-1],'#a89cf7','a = g',.58);}
- if($('tension').checked&&!state.cut)arrow(ball,tensionDirection,'#f1b65c','T',.85);
+ if($('tension').checked&&!state.cut)arrow(ball,tension,'#f1b65c','T',forceScale);
  if($('components').checked&&state.mode==='conical'&&!state.cut){
-  arrow([ball[0],ball[1],ball[2]+.12],[radial[0],radial[1],0],'#f6d78c','T sinθ',.72);
-  arrow([ball[0],ball[1],ball[2]+.12],[0,0,1],'#f6d78c','T cosθ',.74);
+  const th=[tension[0],tension[1],0],tv=[0,0,tension[2]];
+  arrow(ball,th,'#f6d78c','T sinθ',forceScale);
+  arrow([ball[0]+th[0]*forceScale,ball[1]+th[1]*forceScale,ball[2]],tv,'#f6d78c','T cosθ',forceScale);
  }
- if($('weight').checked)arrow(ball,[0,0,-1],'#df83c8','mg',.72);
- if($('normal').checked&&state.mode==='horizontal')arrow(ball,[0,0,1],'#76d1a6','N',.72);
- if($('resultant').checked){if(!state.cut)arrow([ball[0],ball[1],ball[2]+.15],radial,'#f87b6b','ΣF',.94);else if(state.mode==='conical'&&pos.z>0)arrow(ball,[0,0,-1],'#f87b6b','ΣF',.88);}
+ if($('weight').checked)arrow(ball,weight,'#df83c8','mg',forceScale);
+ if($('normal').checked&&state.mode==='horizontal')arrow(ball,normal,'#76d1a6','N',forceScale);
+ if($('resultant').checked){
+  if($('vectorSum').checked){
+   let tail=[...ball];
+   const vectors=state.mode==='conical'?[tension,weight]:[tension,weight,normal];
+   const colors=['#f1b65c','#df83c8','#76d1a6'],names=['T','mg','N'];
+   vectors.forEach((f,i)=>{if(Math.hypot(...f)>1e-8){arrow(tail,f,colors[i],names[i],forceScale);tail=tail.map((v,j)=>v+f[j]*forceScale);}});
+  }
+  if(Math.hypot(...total)>1e-8)arrow(ball,total,'#f87b6b','ΣF',forceScale);
+ }
  circle(project(...ball),11,'#5ab7ef','#d3f2ff');ctx.fillStyle='#a4c2d9';ctx.font='13px system-ui';ctx.fillText(state.mode==='conical'?'懸點':'圓心',...project(...anchor));
 }
 function pushPoint(){const p=params(),v=current(p),a=state.points.at(-1);if(!a||Math.hypot(v.x-a.x,v.y-a.y,v.z-a.z)>.012){state.points.push({x:v.x,y:v.y,z:v.z});if(state.points.length>1600)state.points.shift();}}
