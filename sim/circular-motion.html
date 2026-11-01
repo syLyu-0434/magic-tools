@@ -6,7 +6,7 @@
 *{box-sizing:border-box}body{margin:0;font-family:system-ui,"Noto Sans TC",sans-serif;background:radial-gradient(circle at 40% 0%,#15314a,var(--bg) 68%);color:var(--ink)}header{padding:20px clamp(16px,3vw,42px);border-bottom:1px solid #27405c}header a{color:#91e5df;text-decoration:none}h1{margin:8px 0;font-size:clamp(23px,2.8vw,38px)}header p{margin:5px 0;color:var(--muted)}main{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(290px,1fr);gap:18px;padding:18px;max-width:1700px;margin:auto}.card{background:#101d30eb;border:1px solid #35506a;border-radius:18px;overflow:hidden;box-shadow:0 15px 40px #0004}.stagebar,.toolbar{padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;border-bottom:1px solid var(--line)}button,select{background:#20354f;color:var(--ink);border:1px solid #4b6585;border-radius:9px;padding:9px 12px;cursor:pointer;font:inherit}button:hover{background:#2f5273}button.active{background:#176b79;border-color:#48d8de}button.danger{background:#6b2838;border-color:#a55668}button:disabled{opacity:.5;cursor:default}.stage{position:relative;min-height:480px;height:clamp(480px,62vh,780px)}canvas{width:100%;height:100%;display:block;touch-action:none}#hint{position:absolute;left:14px;bottom:12px;color:#c9d9e8c7;font-size:13px;pointer-events:none}.controls{padding:18px;display:grid;gap:16px}.section{border-bottom:1px solid #30445e;padding-bottom:15px}.section:last-child{border:0}.section h2{font-size:15px;letter-spacing:.05em;margin:0 0 12px;color:#a5d3ed}.toggle{display:flex;align-items:center;gap:10px;margin:10px 0;cursor:pointer}.toggle input{accent-color:#40d2cb;width:18px;height:18px}label.range{display:block;margin:12px 0;color:#d5e5f3}.range .value{float:right;color:#77e5da;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#41cfce}.metric{display:grid;grid-template-columns:1fr 1fr;gap:8px}.metric div{background:#182d46;padding:12px;border-radius:10px}.metric small{display:block;color:#9fb4cc}.metric strong{display:block;font-size:19px;margin-top:4px;font-variant-numeric:tabular-nums}.note{font-size:13px;color:#b2c7dd;line-height:1.65}.legend{display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#c7d5e5}.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}#message{margin:12px 0;padding:10px;border:1px solid #3d6275;background:#132c3d;border-radius:9px;color:#b8edee}footer{padding:18px;text-align:center;color:#7f94af;font-size:12px}@media(max-width:900px){main{grid-template-columns:1fr}.stage{height:52vh;min-height:390px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}</style>
 </head><body>
 <header><a href="../lab.html">← 返回妙妙實驗室</a><h1>向心力實驗室 <span style="color:#66dfd8">Circular Motion</span></h1><p>水平光滑桌面 · 繫繩小球 · 實際作用力與合力分層觀察</p></header>
-<main><section class="card"><div class="stagebar">
+<main><section class="card"><div class="stagebar"><button data-mode="horizontal" class="active">水平桌面</button><button data-mode="conical">錐動擺</button></div><div class="stagebar">
 <button id="play" class="active">⏸ 暫停</button><button id="back">◀ 退一步</button><button id="forward">進一步 ▶</button><button id="reset">↺ 重設</button><button id="cut" class="danger">✂ 剪斷繩子</button><button id="restore">重新繫繩</button></div>
 <div class="toolbar"><button data-view="3d" class="active">立體視角</button><button data-view="top">俯視</button><button data-view="side">側視</button><button id="cleartrail">清除軌跡</button><button id="fullscreen">全螢幕</button></div>
 <div class="stage" id="stage"><canvas id="scene" aria-label="圓周運動與受力向量模擬畫面"></canvas><div id="hint">拖曳旋轉視角 · 滾輪縮放 · 受力箭頭與合力可分別顯示</div></div></section>
@@ -15,60 +15,102 @@
 <label class="toggle"><input type="checkbox" id="velocity" checked>速度向量 v</label>
 <label class="toggle"><input type="checkbox" id="accel">加速度向量 a</label>
 <label class="toggle"><input type="checkbox" id="tension" checked>繩張力 T</label>
-<label class="toggle"><input type="checkbox" id="weight">重力 mg</label>
+<label class="toggle"><input type="checkbox" id="components">顯示錐動擺張力分量</label><label class="toggle"><input type="checkbox" id="weight">重力 mg</label>
 <label class="toggle"><input type="checkbox" id="normal">正向力 N</label>
 <label class="toggle"><input type="checkbox" id="resultant">合力 ΣF（預設隱藏）</label>
 <label class="toggle"><input type="checkbox" id="equations">顯示物理方程式（預設隱藏）</label></div>
 <div class="section"><h2>模型參數</h2>
 <label class="range">質量 m <span class="value" id="mval"></span><input id="mass" type="range" min=".2" max="3" value=".5" step=".1"></label>
 <label class="range">繩長／半徑 r <span class="value" id="rval"></span><input id="radius" type="range" min=".6" max="2.4" value="1.2" step=".1"></label>
-<label class="range">速率 v <span class="value" id="vval"></span><input id="speed" type="range" min=".4" max="5" value="2" step=".1"></label></div>
+<div id="speedControl"><label class="range">速率 v <span class="value" id="vval"></span><input id="speed" type="range" min=".4" max="5" value="2" step=".1"></label></div><div id="angleControl" hidden><label class="range">繩與鉛直夾角 θ <span class="value" id="angleval"></span><input id="angle" type="range" min="10" max="65" value="35" step="1"></label><p class="note">錐動擺的速率與張力由角度和繩長決定，無法任意獨立設定。</p></div></div>
 <div class="section"><h2>即時讀數</h2><div class="metric">
 <div><small>向心加速度</small><strong id="aval"></strong></div><div><small>角速度</small><strong id="wval"></strong></div>
-<div><small>繩張力</small><strong id="tval"></strong></div><div><small>週期</small><strong id="period"></strong></div></div>
-<div id="equationBox" hidden style="margin-top:12px;padding:12px;background:#1b344b;border-radius:10px;line-height:2">鉛直：N − mg = 0<br>水平徑向：T = mv²/r<br>剪斷後：T = 0，ΣF = 0（理想光滑水平面）</div></div>
+<div><small>繩張力</small><strong id="tval"></strong></div><div><small>週期</small><strong id="period"></strong></div><div><small>旋轉半徑</small><strong id="effectiveRadius"></strong></div><div><small>鉛直平衡</small><strong id="balance"></strong></div></div>
+<div id="equationBox" hidden style="margin-top:12px;padding:12px;background:#1b344b;border-radius:10px;line-height:2"><span id="equationText">鉛直：N − mg = 0<br>水平徑向：T = mv²/r</span></div></div>
 <div class="section"><h2>物理狀態</h2><div id="message" role="status">繩子完整。小球做等速率圓周運動。</div>
 <div class="legend"><span><i class="dot" style="background:#63cdf6"></i>速度</span><span><i class="dot" style="background:#f1b65c"></i>張力</span><span><i class="dot" style="background:#df83c8"></i>重力</span><span><i class="dot" style="background:#76d1a6"></i>正向力</span><span><i class="dot" style="background:#f87b6b"></i>合力</span></div>
-<p class="note">模型假設：物體為質點、繩質量可忽略、桌面水平且無摩擦，繩長固定。剪斷繩子後，物體仍由桌面支撐，鉛直方向重力與正向力抵銷，因此以當下速度沿切線做等速度直線運動。畫面使用可旋轉的 3D 投影，箭頭長度會依顯示比例調整。</p></div></aside></main><footer>瑜的神祕妙妙工具屋 · 向心力教學演示 · 理想模型</footer>
+<p class="note">模型假設：物體為質點、細繩不可伸長且質量可忽略，忽略空氣阻力。水平模式有光滑桌面支撐；錐動擺模式無桌面支撐，剪斷後小球先沿切線方向運動並受重力作用，進行拋體運動。場景使用可旋轉的 3D 投影，向量方向依模型計算，箭頭有統一顯示縮放。</p></div></aside></main><footer>瑜的神祕妙妙工具屋 · 向心力教學演示 · 理想模型</footer>
 <script>
 (()=>{'use strict';
 const $=id=>document.getElementById(id), canvas=$('scene'),ctx=canvas.getContext('2d');
-const state={running:true,cut:false,t:0,theta:.65,free:null,points:[],yaw:-.8,pitch:.93,zoom:1.0,view:'3d',last:0};
-const toggles=['trail','velocity','accel','tension','weight','normal','resultant','equations'];
+const state={mode:"horizontal",running:true,cut:false,t:0,theta:.65,free:null,points:[],yaw:-.8,pitch:.93,zoom:1.0,view:'3d',last:0};
+const toggles=['trail','velocity','accel','tension','components','weight','normal','resultant','equations'];
 let scale=1,W=800,H=600;
 const num=id=>Number($(id).value);
-function params(){let m=num('mass'),r=num('radius'),v=num('speed');return {m,r,v,a:v*v/r,w:v/r,T:m*v*v/r,P:2*Math.PI*r/v,N:m*9.81};}
-function current(p){if(state.cut)return {...state.free,angle:state.theta};const a=state.theta;return {x:p.r*Math.cos(a),y:p.r*Math.sin(a),vx:-p.v*Math.sin(a),vy:p.v*Math.cos(a),angle:a};}
-function updateReadouts(){let p=params();$('mval').textContent=p.m.toFixed(1)+' kg';$('rval').textContent=p.r.toFixed(1)+' m';$('vval').textContent=p.v.toFixed(1)+' m/s';$('aval').textContent=p.a.toFixed(2)+' m/s²';$('wval').textContent=p.w.toFixed(2)+' rad/s';$('tval').textContent=(state.cut?0:p.T).toFixed(2)+' N';$('period').textContent=p.P.toFixed(2)+' s';$('equationBox').hidden=!$('equations').checked;$('play').textContent=state.running?'⏸ 暫停':'▶ 播放';$('play').classList.toggle('active',state.running);$('cut').disabled=state.cut;$('message').textContent=state.cut?'繩子已剪斷：繩張力為零，小球沿剪斷瞬間的切線方向等速前進。':'繩子完整：小球在水平光滑桌面上做等速率圓周運動。';}
+const pivotHeight=2.7;
+function params(){
+ const m=num('mass'),L=num('radius'),g=9.81,alpha=num('angle')*Math.PI/180;
+ if(state.mode==='conical'){
+  const r=L*Math.sin(alpha), w=Math.sqrt(g/(L*Math.cos(alpha))),v=w*r;
+  return {m,r,L,v,a:v*v/r,w,T:m*g/Math.cos(alpha),P:2*Math.PI/w,N:0,alpha,z:pivotHeight-L*Math.cos(alpha)};
+ }
+ const r=L,v=num('speed');return {m,r,L,v,a:v*v/r,w:v/r,T:m*v*v/r,P:2*Math.PI*r/v,N:m*g,alpha:0,z:.07};
+}
+function current(p){
+ if(state.cut)return {...state.free,angle:state.theta};
+ const a=state.theta;
+ return {x:p.r*Math.cos(a),y:p.r*Math.sin(a),z:p.z,vx:-p.v*Math.sin(a),vy:p.v*Math.cos(a),vz:0,angle:a};
+}
+function updateReadouts(){
+ let p=params();$('mval').textContent=p.m.toFixed(1)+' kg';$('rval').textContent=p.L.toFixed(1)+' m';$('vval').textContent=p.v.toFixed(2)+' m/s';$('angleval').textContent=num('angle')+'°';
+ $('aval').textContent=p.a.toFixed(2)+' m/s²';$('wval').textContent=p.w.toFixed(2)+' rad/s';$('tval').textContent=(state.cut?0:p.T).toFixed(2)+' N';$('period').textContent=p.P.toFixed(2)+' s';
+ $('effectiveRadius').textContent=p.r.toFixed(2)+' m';$('balance').textContent=state.mode==='conical'?'T cosθ = mg':'N = mg';
+ $('angleControl').hidden=state.mode!=='conical';$('speedControl').hidden=state.mode==='conical';
+ $('normal').disabled=state.mode==='conical';$('components').disabled=state.mode!=='conical';
+ $('equationText').innerHTML=state.mode==='conical'?'鉛直：T cosθ = mg<br>徑向：T sinθ = mv²/r<br>r = L sinθ，ω² = g/(L cosθ)<br>剪斷後：只有重力，依拋體運動':'鉛直：N − mg = 0<br>徑向：T = mv²/r<br>剪斷後：T = 0，ΣF = 0';
+ $('equationBox').hidden=!$('equations').checked;
+ $('play').textContent=state.running?'⏸ 暫停':'▶ 播放';$('play').classList.toggle('active',state.running);$('cut').disabled=state.cut;
+ $('message').textContent=state.cut?(state.mode==='conical'?'錐動擺繩子已剪斷：保留瞬間切線速度，之後受重力作用做拋體運動。':'繩子已剪斷：張力為零，小球沿切線等速前進。'):(state.mode==='conical'?'錐動擺：張力與重力的合力水平指向圓心，鉛直方向平衡。':'水平桌面：繩張力提供徑向合力。');
+ document.querySelectorAll('[data-mode]').forEach(b=>b.classList.toggle('active',b.dataset.mode===state.mode));
+}
 function resize(){let box=canvas.getBoundingClientRect(),dpr=Math.min(devicePixelRatio||1,2);W=box.width;H=box.height;canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
 function project(x,y,z=0){let yaw=state.yaw,pitch=state.pitch,c=Math.cos(yaw),s=Math.sin(yaw);let X=x*c-y*s,Y=x*s+y*c;let cy=Math.cos(pitch),sy=Math.sin(pitch);let py=Y*cy-z*sy;return [W*.5+X*scale,H*.53+py*scale];}
 function line(a,b,color,width=2,dash=[]){ctx.beginPath();ctx.setLineDash(dash);ctx.moveTo(...a);ctx.lineTo(...b);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();ctx.setLineDash([]);}
 function circle(pos,r,fill,stroke){ctx.beginPath();ctx.arc(...pos,r,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill();if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=2;ctx.stroke();}}
 function arrow(origin,vector,color,label,factor=1){let a=project(...origin),b=project(origin[0]+vector[0]*factor,origin[1]+vector[1]*factor,(origin[2]||0)+(vector[2]||0)*factor);let dx=b[0]-a[0],dy=b[1]-a[1],L=Math.hypot(dx,dy);if(L<4)return;line(a,b,color,3.3);let u=dx/L,v=dy/L;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-u*12-v*5,b[1]-v*12+u*5);ctx.lineTo(b[0]-u*12+v*5,b[1]-v*12-u*5);ctx.closePath();ctx.fillStyle=color;ctx.fill();ctx.font='600 15px system-ui';ctx.fillStyle=color;ctx.fillText(label,b[0]+8,b[1]-8);}
-function draw(){ctx.clearRect(0,0,W,H);let p=params();scale=Math.min(W/7.5,H/5.6)*state.zoom;let pos=current(p);const ball=[pos.x,pos.y,.07];
-let extent=3.5;
-ctx.fillStyle='#0e2439';ctx.fillRect(0,0,W,H);
-for(let i=-6;i<=6;i++){let n=i*.5;line(project(-extent,n,0),project(extent,n,0),'#24425a',.8);line(project(n,-extent,0),project(n,extent,0),'#24425a',.8);}
-let circ=[];for(let i=0;i<=180;i++){let a=i*2*Math.PI/180;circ.push(project(p.r*Math.cos(a),p.r*Math.sin(a),.015));}ctx.beginPath();ctx.moveTo(...circ[0]);for(let i=1;i<circ.length;i++)ctx.lineTo(...circ[i]);ctx.strokeStyle='#5d8ca9';ctx.lineWidth=1.7;ctx.setLineDash([7,6]);ctx.stroke();ctx.setLineDash([]);
-circle(project(0,0,0),6,'#d6a35e');if(!state.cut)line(project(0,0,.07),project(...ball),'#f5b85c',3);
-if($('trail').checked&&state.points.length>1){ctx.beginPath();state.points.forEach((q,i)=>{let a=project(q.x,q.y,.02);if(i===0)ctx.moveTo(...a);else ctx.lineTo(...a);});ctx.strokeStyle='#55e9d0';ctx.lineWidth=2.7;ctx.stroke();}
-let vMag=p.v,aMag=p.a;let vel=[pos.vx/p.v,pos.vy/p.v,0], radial=state.cut?[0,0,0]:[-pos.x/p.r,-pos.y/p.r,0];
-if($('velocity').checked)arrow(ball,vel,'#63cdf6','v',.65);
-if($('accel').checked&&!state.cut)arrow(ball,radial,'#a89cf7','a',.63);
-if($('tension').checked&&!state.cut)arrow(ball,radial,'#f1b65c','T',.82);
-if($('weight').checked)arrow(ball,[0,0,-1],'#df83c8','mg',.72);
-if($('normal').checked)arrow(ball,[0,0,1],'#76d1a6','N',.72);
-if($('resultant').checked&&!state.cut)arrow([ball[0],ball[1],.22],radial,'#f87b6b','ΣF',.95);
-circle(project(...ball),11,'#5ab7ef','#d3f2ff');ctx.fillStyle='#a4c2d9';ctx.font='13px system-ui';ctx.fillText(state.cut?'繩子已斷':'圓心',...project(0,0,.19));}
-function pushPoint(){const p=params(),v=current(p),a=state.points.at(-1);if(!a||Math.hypot(v.x-a.x,v.y-a.y)>.012){state.points.push({x:v.x,y:v.y});if(state.points.length>1600)state.points.shift();}}
-function advance(dt){const p=params();if(state.cut){state.free.x+=state.free.vx*dt;state.free.y+=state.free.vy*dt;}else state.theta+=p.w*dt;state.t+=dt;pushPoint();}
+function draw(){
+ ctx.clearRect(0,0,W,H);const p=params(),pos=current(p),ball=[pos.x,pos.y,pos.z];
+ scale=Math.min(W/7.5,H/5.6)*state.zoom;
+ ctx.fillStyle='#0e2439';ctx.fillRect(0,0,W,H);
+ for(let i=-6;i<=6;i++){let n=i*.5;line(project(-3.5,n,0),project(3.5,n,0),'#24425a',.8);line(project(n,-3.5,0),project(n,3.5,0),'#24425a',.8);}
+ let circ=[];for(let i=0;i<=180;i++){let a=i*2*Math.PI/180;circ.push(project(p.r*Math.cos(a),p.r*Math.sin(a),state.mode==='conical'?p.z:.015));}
+ ctx.beginPath();ctx.moveTo(...circ[0]);for(let i=1;i<circ.length;i++)ctx.lineTo(...circ[i]);ctx.strokeStyle='#5d8ca9';ctx.lineWidth=1.7;ctx.setLineDash([7,6]);ctx.stroke();ctx.setLineDash([]);
+ let anchor=state.mode==='conical'?[0,0,pivotHeight]:[0,0,.07];circle(project(...anchor),6,'#d6a35e');
+ if(state.mode==='conical'){line(project(0,0,0),project(...anchor),'#56788e',1.5,[5,5]);}
+ if(!state.cut)line(project(...anchor),project(...ball),'#f5b85c',3);
+ if($('trail').checked&&state.points.length>1){ctx.beginPath();state.points.forEach((q,i)=>{let a=project(q.x,q.y,q.z);if(i===0)ctx.moveTo(...a);else ctx.lineTo(...a);});ctx.strokeStyle='#55e9d0';ctx.lineWidth=2.7;ctx.stroke();}
+ const radial=state.cut?[0,0,0]:[-pos.x/p.r,-pos.y/p.r,0],tan=[pos.vx/p.v,pos.vy/p.v,0],v3=state.cut?[pos.vx,pos.vy,pos.vz]:tan;
+ const len=Math.hypot(...v3)||1,vel=v3.map(x=>x/len);
+ // Arrow geometry is scaled for visibility. Actual components are computed from equilibrium.
+ const tensionDirection=state.mode==='conical'?[radial[0]*Math.sin(p.alpha),radial[1]*Math.sin(p.alpha),Math.cos(p.alpha)]:radial;
+ if($('velocity').checked)arrow(ball,vel,'#63cdf6','v',.65);
+ if($('accel').checked){if(!state.cut)arrow(ball,radial,'#a89cf7','a',.64);else if(state.mode==='conical'&&pos.z>0)arrow(ball,[0,0,-1],'#a89cf7','a = g',.58);}
+ if($('tension').checked&&!state.cut)arrow(ball,tensionDirection,'#f1b65c','T',.85);
+ if($('components').checked&&state.mode==='conical'&&!state.cut){
+  arrow([ball[0],ball[1],ball[2]+.12],[radial[0],radial[1],0],'#f6d78c','T sinθ',.72);
+  arrow([ball[0],ball[1],ball[2]+.12],[0,0,1],'#f6d78c','T cosθ',.74);
+ }
+ if($('weight').checked)arrow(ball,[0,0,-1],'#df83c8','mg',.72);
+ if($('normal').checked&&state.mode==='horizontal')arrow(ball,[0,0,1],'#76d1a6','N',.72);
+ if($('resultant').checked){if(!state.cut)arrow([ball[0],ball[1],ball[2]+.15],radial,'#f87b6b','ΣF',.94);else if(state.mode==='conical'&&pos.z>0)arrow(ball,[0,0,-1],'#f87b6b','ΣF',.88);}
+ circle(project(...ball),11,'#5ab7ef','#d3f2ff');ctx.fillStyle='#a4c2d9';ctx.font='13px system-ui';ctx.fillText(state.mode==='conical'?'懸點':'圓心',...project(...anchor));
+}
+function pushPoint(){const p=params(),v=current(p),a=state.points.at(-1);if(!a||Math.hypot(v.x-a.x,v.y-a.y,v.z-a.z)>.012){state.points.push({x:v.x,y:v.y,z:v.z});if(state.points.length>1600)state.points.shift();}}
+function advance(dt){const p=params();
+ if(state.cut){
+  if(state.mode==='conical'){
+   if(state.free.z>0 || dt<0){state.free.x+=state.free.vx*dt;state.free.y+=state.free.vy*dt;state.free.z=Math.max(0,state.free.z+state.free.vz*dt-4.905*dt*dt);state.free.vz-=9.81*dt;if(state.free.z===0&&dt>0)state.running=false;}
+  }else{state.free.x+=state.free.vx*dt;state.free.y+=state.free.vy*dt;}
+ }else state.theta+=p.w*dt;
+ state.t+=dt;pushPoint();
+}
 function reset(){state.cut=false;state.t=0;state.theta=.65;state.free=null;state.points=[];pushPoint();updateReadouts();draw();}
 function cut(){if(state.cut)return;const p=params();state.free=current(p);state.cut=true;pushPoint();updateReadouts();}
 $('play').onclick=()=>{state.running=!state.running;updateReadouts();};
 $('reset').onclick=reset;$('restore').onclick=reset;$('cut').onclick=cut;$('cleartrail').onclick=()=>{state.points=[];pushPoint();draw();};
 $('forward').onclick=()=>{state.running=false;advance(1/24);updateReadouts();draw();};$('back').onclick=()=>{state.running=false;if(!state.cut){state.theta-=2*params().w/24;advance(1/24);}else{advance(-1/24);}updateReadouts();draw();};
-for(const id of ['mass','radius','speed'])$(id).addEventListener('input',()=>{reset();});
-toggles.forEach(id=>$(id).addEventListener('change',()=>{updateReadouts();draw();}));
+for(const id of ['mass','radius','speed','angle'])$(id).addEventListener('input',()=>{reset();});
+toggles.forEach(id=>$(id).addEventListener('change',()=>{updateReadouts();draw();}));document.querySelectorAll('[data-mode]').forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;reset();});
 document.querySelectorAll('[data-view]').forEach(b=>b.onclick=()=>{state.view=b.dataset.view;if(state.view==='top'){state.yaw=0;state.pitch=0;}else if(state.view==='side'){state.yaw=0;state.pitch=Math.PI/2;}else{state.yaw=-.8;state.pitch=.93;}document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x===b));draw();});
 $('fullscreen').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else $('stage').requestFullscreen?.();};
 let drag=null;canvas.addEventListener('pointerdown',e=>{drag={x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId);});canvas.addEventListener('pointermove',e=>{if(!drag)return;state.yaw+=(e.clientX-drag.x)*.008;state.pitch=Math.max(.05,Math.min(1.53,state.pitch+(e.clientY-drag.y)*.008));drag={x:e.clientX,y:e.clientY};draw();});canvas.addEventListener('pointerup',()=>drag=null);canvas.addEventListener('wheel',e=>{e.preventDefault();state.zoom=Math.max(.55,Math.min(2.2,state.zoom*Math.exp(-e.deltaY*.001)));draw();},{passive:false});
